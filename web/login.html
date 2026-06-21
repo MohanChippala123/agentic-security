@@ -1,0 +1,168 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Log in — AgentShield</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#000;--panel:#111;--ink:#f0efe8;--muted:rgba(240,239,232,.4);
+  --border:rgba(255,255,255,.1);--border2:rgba(255,255,255,.18);
+  --lime:#c4f135;--mono:"JetBrains Mono",ui-monospace,monospace
+}
+html,body{height:100%;background:var(--bg);color:var(--ink);font-family:"Inter",system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+a{color:inherit;text-decoration:none}
+
+body::after{
+  content:'';position:fixed;width:600px;height:500px;bottom:-180px;right:-180px;
+  background:radial-gradient(ellipse,rgba(50,100,50,.22) 0%,transparent 68%);
+  filter:blur(90px);pointer-events:none;z-index:0
+}
+
+.page{
+  min-height:100vh;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;padding:40px 20px;
+  position:relative;z-index:1
+}
+
+/* back link */
+.back{
+  position:fixed;top:22px;left:22px;
+  font-family:var(--mono);font-size:11px;text-transform:uppercase;letter-spacing:.08em;
+  color:rgba(255,255,255,.3);transition:color .12s
+}
+.back:hover{color:rgba(255,255,255,.65)}
+
+/* logo */
+.logo{display:flex;align-items:center;gap:8px;font-weight:700;font-size:14px;margin-bottom:40px}
+.logo .mk{width:26px;height:26px;border:1.5px solid rgba(255,255,255,.35);display:grid;place-items:center;font-size:12px}
+
+/* card */
+.card{width:100%;max-width:400px}
+.card h1{font-size:24px;font-weight:700;letter-spacing:-.02em}
+.card .lead{font-size:14px;color:var(--muted);margin-top:6px;margin-bottom:28px}
+
+/* fields */
+.field{margin-bottom:14px}
+.field label{
+  display:block;font-family:var(--mono);font-size:9.5px;text-transform:uppercase;
+  letter-spacing:.14em;color:var(--muted);margin-bottom:7px
+}
+.field input{
+  width:100%;background:rgba(255,255,255,.04);
+  border:1px solid var(--border);outline:none;
+  padding:12px 14px;font-family:"Inter",sans-serif;font-size:14px;color:var(--ink);
+  transition:border-color .12s
+}
+.field input:focus{border-color:var(--border2)}
+.field input::placeholder{color:rgba(255,255,255,.2)}
+
+/* submit */
+.btn{
+  width:100%;margin-top:8px;background:var(--lime);color:#000;border:none;
+  padding:13px;font-family:var(--mono);font-size:11.5px;font-weight:700;
+  text-transform:uppercase;letter-spacing:.1em;cursor:pointer;transition:opacity .12s
+}
+.btn:hover{opacity:.88}
+.btn:disabled{opacity:.45;cursor:default}
+
+/* error */
+.msg{
+  margin-top:12px;font-size:12.5px;padding:10px 13px;
+  background:rgba(240,106,130,.1);border:1px solid rgba(240,106,130,.25);
+  color:#f06a82;display:none
+}
+.msg.show{display:block}
+
+/* demo box */
+.demo{
+  margin-top:20px;background:rgba(255,255,255,.04);border:1px solid var(--border);
+  padding:12px 14px;font-family:var(--mono);font-size:11px;
+  color:rgba(255,255,255,.4);line-height:1.8
+}
+.demo span{color:rgba(255,255,255,.7)}
+
+/* alt link */
+.alt{margin-top:20px;font-size:13px;color:var(--muted);text-align:center}
+.alt a{color:var(--lime);font-weight:500}
+.alt a:hover{opacity:.8}
+</style>
+</head>
+<body>
+<a class="back" href="/">← Home</a>
+
+<div class="page">
+  <div class="logo"><span class="mk">⛨</span> AgentShield <span style="font-weight:400;font-size:11px;opacity:.55;margin-left:6px">by Mohan</span></div>
+
+  <div class="card">
+    <h1 id="heading">Welcome back</h1>
+    <p class="lead" id="lead">Log in to your Security LLM console.</p>
+
+    <form id="form" onsubmit="return doSubmit(event)">
+      <div class="field" id="nameField" style="display:none">
+        <label>Name</label>
+        <input id="name" type="text" autocomplete="name" placeholder="Your name">
+      </div>
+      <div class="field">
+        <label>Email</label>
+        <input id="email" type="email" autocomplete="email" placeholder="you@company.com" required>
+      </div>
+      <div class="field">
+        <label>Password</label>
+        <input id="password" type="password" autocomplete="current-password" placeholder="••••••••" required>
+      </div>
+      <button class="btn" id="btn" type="submit">Log in →</button>
+      <div class="msg" id="msg"></div>
+    </form>
+
+    <div class="demo">
+      demo &nbsp;·&nbsp; <span>demo@agentic.security</span> &nbsp;/&nbsp; <span>demo1234</span>
+    </div>
+
+    <p class="alt" id="toggleAuth"><a href="#" onclick="toggleMode();return false">Don't have an account? <b>Sign up</b></a></p>
+  </div>
+</div>
+
+<script>
+let isSignup=false;
+
+function toggleMode(){
+  isSignup=!isSignup;
+  document.getElementById('heading').textContent=isSignup?'Create account':'Welcome back';
+  document.getElementById('lead').textContent=isSignup?'Sign up for your Security LLM console.':'Log in to your Security LLM console.';
+  document.getElementById('nameField').style.display=isSignup?'block':'none';
+  document.getElementById('btn').textContent=isSignup?'Sign up →':'Log in →';
+  document.getElementById('toggleAuth').innerHTML=isSignup
+    ?'<a href="#" onclick="toggleMode();return false">Already have an account? <b>Log in</b></a>'
+    :'<a href="#" onclick="toggleMode();return false">Don\'t have an account? <b>Sign up</b></a>';
+  document.getElementById('msg').className='msg';
+}
+
+async function doSubmit(e){
+  e.preventDefault();
+  const btn=document.getElementById('btn'), msg=document.getElementById('msg');
+  const endpoint=isSignup?'/api/auth/signup':'/api/auth/login';
+  const label=isSignup?'Signing up…':'Logging in…';
+  msg.className='msg'; btn.disabled=true; btn.textContent=label;
+  try{
+    const body={email:document.getElementById('email').value,password:document.getElementById('password').value};
+    if(isSignup) body.name=document.getElementById('name').value||'Analyst';
+    const r=await fetch(endpoint,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+    const j=await r.json();
+    if(!r.ok) throw new Error(j.detail||'Failed');
+    window.location.href='/app';
+  }catch(err){
+    msg.textContent=err.message; msg.className='msg show';
+    btn.disabled=false; btn.textContent=isSignup?'Sign up →':'Log in →';
+  }
+  return false;
+}
+
+if(window.location.hash==='#signup') toggleMode();
+</script>
+</body>
+</html>

@@ -1,0 +1,48 @@
+"""Command-line entrypoint.
+
+    python -m agentic_security serve --port 8000
+"""
+
+from __future__ import annotations
+
+import argparse
+import sys
+
+# Windows consoles default to cp1252; force UTF-8 where supported.
+for _stream in (sys.stdout, sys.stderr):
+    try:
+        _stream.reconfigure(encoding="utf-8")  # type: ignore[union-attr]
+    except (AttributeError, ValueError):
+        pass
+
+
+def cmd_serve(args: argparse.Namespace) -> int:
+    import os
+    import uvicorn
+
+    port = int(os.environ.get("PORT", args.port))
+    host = os.environ.get("HOST", args.host)
+    uvicorn.run("agentic_security.api.server:app",
+                host=host, port=port, reload=args.reload)
+    return 0
+
+
+def main(argv: list[str] | None = None) -> int:
+    parser = argparse.ArgumentParser(
+        prog="agentic_security",
+        description="AI agent & API-key protection: prompt-injection firewall + key gateway",
+    )
+    sub = parser.add_subparsers(dest="cmd", required=True)
+
+    p_serve = sub.add_parser("serve", help="Run the HTTP API + protection UI")
+    p_serve.add_argument("--host", default="0.0.0.0")
+    p_serve.add_argument("--port", type=int, default=8000)
+    p_serve.add_argument("--reload", action="store_true")
+    p_serve.set_defaults(func=cmd_serve)
+
+    args = parser.parse_args(argv)
+    return args.func(args)
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

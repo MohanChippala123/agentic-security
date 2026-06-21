@@ -1,0 +1,15 @@
+services:
+  - type: web
+    name: agentic-security
+    runtime: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: python -m agentic_security serve
+    envVars:
+      - key: HOST
+        value: 0.0.0.0
+      - key: PYTHON_VERSION
+        value: "3.12"
+    disk:
+      name: data
+      mountPath: /opt/render/project/src/data
+      sizeGB: 1

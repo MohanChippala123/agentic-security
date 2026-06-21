@@ -1,0 +1,410 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>AgentShield — Security LLM for AI Agents (by Mohan)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@1,9..144,400;1,9..144,500&family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#000;--ink:#f0efe8;--muted:rgba(240,239,232,.42);
+  --lime:#c4f135;--mono:"JetBrains Mono",ui-monospace,monospace;
+  --rose:#f06a82;--amber:#f5a64a;--teal:#3ad0a4;--violet:#a99cff;
+}
+html,body{height:100%}
+body{background:var(--bg);color:var(--ink);font-family:"Inter",system-ui,sans-serif;-webkit-font-smoothing:antialiased;overflow-x:hidden;line-height:1.5}
+a{color:inherit;text-decoration:none}
+
+/* faint corner glow */
+body::after{content:'';position:fixed;width:600px;height:500px;bottom:-160px;right:-160px;
+  background:radial-gradient(ellipse,rgba(50,100,50,.25) 0%,transparent 68%);
+  filter:blur(90px);pointer-events:none;z-index:0}
+
+/* ── nav ── */
+.ham{position:fixed;top:22px;left:22px;z-index:100;width:36px;height:36px;
+  border:1px solid rgba(255,255,255,.12);background:rgba(8,8,8,.8);
+  display:grid;place-items:center;cursor:pointer}
+.ham span{display:block;width:14px;height:1px;background:rgba(255,255,255,.65);margin:2px auto}
+.nav-overlay{display:none;position:fixed;inset:0;background:#000;z-index:99;
+  flex-direction:column;align-items:center;justify-content:center;gap:24px}
+.nav-overlay.open{display:flex}
+.nav-overlay .close-btn{position:absolute;top:22px;left:22px;width:36px;height:36px;
+  border:1px solid rgba(255,255,255,.12);background:rgba(8,8,8,.8);
+  display:grid;place-items:center;font-size:16px;cursor:pointer;color:var(--ink)}
+.nav-overlay a{font-size:clamp(30px,5vw,52px);font-weight:800;color:rgba(255,255,255,.6);
+  letter-spacing:-.025em;transition:color .12s}
+.nav-overlay a:hover{color:#fff}
+.nav-overlay .nav-sub{margin-top:4px;display:flex;gap:20px;font-size:13px;
+  font-weight:500;color:rgba(255,255,255,.32)}
+.nav-overlay .nav-sub a:hover{color:rgba(255,255,255,.65)}
+.top-right{position:fixed;top:22px;right:22px;z-index:100;display:flex;gap:8px;align-items:center}
+.top-right a{font-family:var(--mono);font-size:11.5px;font-weight:500;
+  color:rgba(255,255,255,.45);text-transform:uppercase;letter-spacing:.06em;transition:color .12s}
+.top-right a:hover{color:#fff}
+.top-right .t-cta{background:var(--lime);color:#000;padding:7px 14px;font-weight:700;font-size:11px;letter-spacing:.08em;text-transform:uppercase}
+.top-right .t-cta:hover{opacity:.88}
+
+/* ── hero ── */
+.hero{position:relative;z-index:1;padding:120px 24px 0;text-align:center;display:flex;flex-direction:column;align-items:center}
+.eyebrow{display:inline-flex;align-items:center;gap:8px;font-family:var(--mono);
+  font-size:10.5px;letter-spacing:.22em;text-transform:uppercase;
+  color:rgba(255,255,255,.32);margin-bottom:28px}
+.eyebrow .dot{width:5px;height:5px;border-radius:50%;background:var(--lime);flex-shrink:0}
+h1{font-size:clamp(44px,7vw,96px);font-weight:800;line-height:.98;
+  letter-spacing:-.04em;max-width:800px}
+h1 em{font-family:"Fraunces",Georgia,serif;font-style:italic;font-weight:500;
+  color:var(--lime);letter-spacing:-.02em}
+.hero-sub{margin-top:20px;color:var(--muted);font-size:15.5px;max-width:400px;line-height:1.68}
+.hero-cta{display:flex;gap:10px;margin-top:36px;flex-wrap:wrap;justify-content:center}
+.btn-lime{background:var(--lime);color:#000;padding:12px 26px;font-weight:700;
+  font-size:13px;font-family:var(--mono);text-transform:uppercase;letter-spacing:.08em;transition:opacity .12s}
+.btn-lime:hover{opacity:.88}
+.btn-ghost{background:transparent;color:rgba(255,255,255,.55);
+  border:1px solid rgba(255,255,255,.14);padding:12px 24px;
+  font-size:13px;font-family:var(--mono);text-transform:uppercase;letter-spacing:.06em;
+  transition:all .12s}
+.btn-ghost:hover{color:#fff;border-color:rgba(255,255,255,.28)}
+.hero-hint{margin-top:14px;font-size:11.5px;color:rgba(255,255,255,.24);font-family:var(--mono)}
+.hero-hint a{color:rgba(255,255,255,.38);text-decoration:underline;text-underline-offset:3px}
+.hero-hint a:hover{color:var(--lime)}
+
+/* ── dashboard preview ── */
+.preview-wrap{
+  position:relative;z-index:1;
+  margin-top:60px;padding:0 24px 0;
+  width:100%;max-width:1100px;margin-left:auto;margin-right:auto
+}
+.browser{
+  border:1px solid rgba(255,255,255,.1);
+  background:#111;overflow:hidden;
+  box-shadow:0 40px 120px rgba(0,0,0,.8),0 0 0 1px rgba(255,255,255,.06)
+}
+.browser-bar{
+  background:#1a1a1a;border-bottom:1px solid rgba(255,255,255,.08);
+  padding:10px 14px;display:flex;align-items:center;gap:6px
+}
+.browser-bar .bdot{width:10px;height:10px;border-radius:50%}
+.b1{background:#ff5f57}.b2{background:#febc2e}.b3{background:#28c840}
+.browser-bar .burl{
+  margin-left:10px;flex:1;background:rgba(255,255,255,.06);
+  border:1px solid rgba(255,255,255,.08);
+  padding:4px 10px;font-family:var(--mono);
+  font-size:11px;color:rgba(255,255,255,.35);max-width:260px
+}
+
+/* dashboard mock inside browser */
+.db{display:flex;flex-direction:column;height:480px;overflow:hidden;background:#141414;font-size:12px}
+.db-nav{
+  display:flex;align-items:center;gap:0;
+  background:#111;border-bottom:1px solid rgba(255,255,255,.08);
+  padding:0 16px;height:44px;flex-shrink:0
+}
+.db-logo{display:flex;align-items:center;gap:7px;font-weight:700;font-size:13px;margin-right:28px;color:#f0efe8}
+.db-logo .mk{width:22px;height:22px;border:1.5px solid rgba(255,255,255,.4);display:grid;place-items:center;font-size:10px;color:#f0efe8}
+.db-tabs{display:flex;height:100%}
+.db-tab{padding:0 14px;display:flex;align-items:center;font-size:12px;
+  color:rgba(255,255,255,.4);border-bottom:2px solid transparent;cursor:pointer}
+.db-tab.active{color:#f0efe8;border-bottom-color:#f0efe8}
+.db-dots{margin-left:auto;width:28px;height:28px;border:1px solid rgba(255,255,255,.12);
+  display:grid;place-items:center;color:rgba(255,255,255,.4);font-size:14px}
+.db-subnav{
+  display:flex;align-items:center;gap:20px;
+  background:#111;border-bottom:1px solid rgba(255,255,255,.07);
+  padding:0 16px;height:36px;flex-shrink:0
+}
+.db-subnav span{font-size:11px;color:rgba(255,255,255,.38);cursor:pointer}
+.db-subnav span:first-child{color:rgba(255,255,255,.6)}
+.db-body{flex:1;overflow:hidden;padding:16px;display:flex;flex-direction:column;gap:12px}
+.db-header{display:flex;align-items:flex-start;justify-content:space-between}
+.db-title{font-size:18px;font-weight:700;color:#f0efe8}
+.db-desc{font-size:11px;color:rgba(255,255,255,.38);margin-top:3px;max-width:340px;line-height:1.5}
+.db-runbtn{display:flex;align-items:center;gap:6px;background:transparent;
+  border:1px solid rgba(255,255,255,.2);padding:7px 14px;
+  font-size:11px;color:rgba(255,255,255,.7);cursor:pointer;flex-shrink:0}
+/* KPI row */
+.kpi-row{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.kpi{background:#1c1c1c;border:1px solid rgba(255,255,255,.07);padding:12px}
+.kpi .klabel{font-family:var(--mono);font-size:9px;text-transform:uppercase;
+  letter-spacing:.14em;color:rgba(255,255,255,.3);margin-bottom:8px}
+.kpi .kval{font-size:22px;font-weight:700;color:#f0efe8;line-height:1}
+.kpi .ksub{font-size:10px;color:rgba(255,255,255,.3);margin-top:4px}
+.kpi .sev-row{display:flex;gap:10px;margin-top:4px}
+.kpi .sv{font-size:16px;font-weight:700}.sv.crit{color:var(--rose)}.sv.high{color:var(--amber)}.sv.med,.sv.low{color:rgba(255,255,255,.4)}
+.kpi .sv-label{font-size:9px;color:rgba(255,255,255,.28)}
+/* bottom panels */
+.db-panels{display:grid;grid-template-columns:1fr 1fr;gap:8px;flex:1;min-height:0}
+.panel{background:#1c1c1c;border:1px solid rgba(255,255,255,.07);padding:12px;overflow:hidden}
+.panel-title{font-family:var(--mono);font-size:9px;text-transform:uppercase;letter-spacing:.14em;
+  color:rgba(255,255,255,.35);margin-bottom:10px;display:flex;align-items:center;justify-content:space-between}
+.panel-empty{color:rgba(255,255,255,.22);font-size:11px;text-align:center;padding:20px 0}
+/* fake finding rows */
+.f-row{display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid rgba(255,255,255,.05)}
+.f-row:last-child{border-bottom:none}
+.f-badge{font-size:9px;font-weight:700;padding:2px 6px;font-family:var(--mono);flex-shrink:0}
+.fb-crit{background:rgba(240,106,130,.15);color:var(--rose)}
+.fb-high{background:rgba(245,166,74,.13);color:var(--amber)}
+.f-name{font-size:11px;color:rgba(255,255,255,.7);flex:1;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+.f-probe{font-size:9px;color:rgba(255,255,255,.28);font-family:var(--mono)}
+
+/* ── trust ── */
+.trust{position:relative;z-index:1;background:var(--bg);
+  border-top:1px solid rgba(255,255,255,.06);margin-top:60px;
+  padding:18px 36px;display:flex;justify-content:center;align-items:center;gap:28px;flex-wrap:wrap}
+.trust-item{font-size:10.5px;font-weight:600;color:rgba(255,255,255,.22);
+  font-family:var(--mono);text-transform:uppercase;letter-spacing:.12em}
+.trust-sep{width:1px;height:11px;background:rgba(255,255,255,.1)}
+
+/* ── sections ── */
+.section{position:relative;z-index:1;background:var(--bg);
+  border-top:1px solid rgba(255,255,255,.07);padding:80px 0}
+.wrap{max-width:1100px;margin:0 auto;padding:0 36px}
+.s-label{font-family:var(--mono);font-size:10.5px;letter-spacing:.2em;
+  text-transform:uppercase;color:rgba(255,255,255,.28);margin-bottom:14px}
+.h2{font-size:clamp(26px,3.2vw,42px);font-weight:800;letter-spacing:-.03em;line-height:1.08}
+.sub{color:var(--muted);font-size:15px;margin-top:12px;max-width:480px;line-height:1.68}
+.grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;margin-top:48px;
+  background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.07)}
+.feat{background:#000;padding:28px;transition:background .18s}
+.feat:hover{background:rgba(255,255,255,.03)}
+.feat .num{font-family:var(--mono);font-size:10.5px;color:rgba(255,255,255,.2);margin-bottom:20px}
+.feat .chip{width:40px;height:40px;display:grid;place-items:center;font-size:16px;font-weight:700;margin-bottom:16px}
+.chip-r{background:rgba(240,106,130,.13);color:var(--rose)}
+.chip-a{background:rgba(196,241,53,.11);color:var(--lime)}
+.chip-v{background:rgba(139,124,246,.13);color:var(--violet)}
+.chip-m{background:rgba(58,208,164,.11);color:var(--teal)}
+.feat h3{font-size:14px;font-weight:600;letter-spacing:-.01em}
+.feat p{color:var(--muted);font-size:13px;margin-top:7px;line-height:1.62}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:56px;align-items:center}
+.term{background:#040404;border:1px solid rgba(255,255,255,.08);padding:20px;
+  color:#ccc9e8;font-family:var(--mono);font-size:12.5px;line-height:1.95}
+.term .dots{display:flex;gap:6px;align-items:center;margin-bottom:14px}
+.term .dots i{width:10px;height:10px;border-radius:50%;display:inline-block}
+.c1{background:#ff5f57}.c2{background:#febc2e}.c3{background:#28c840}
+.term-title{margin-left:8px;font-size:10.5px;color:rgba(255,255,255,.26)}
+.term .k{color:#7ab8f5}.term .s{color:#7bd88f}.term .m{color:#4a4666}
+.warn{background:rgba(196,241,53,.06);color:rgba(196,241,53,.65);
+  border:1px solid rgba(196,241,53,.16);padding:10px 14px;font-size:11.5px;
+  margin-top:22px;display:inline-block;font-family:var(--mono)}
+.steps{display:grid;grid-template-columns:repeat(3,1fr);
+  border:1px solid rgba(255,255,255,.07);margin-top:48px}
+.step{padding:28px;border-right:1px solid rgba(255,255,255,.07)}
+.step:last-child{border-right:none}
+.step .no{font-family:var(--mono);font-size:10.5px;color:rgba(255,255,255,.25);margin-bottom:14px}
+.step h3{font-size:15px;font-weight:700;letter-spacing:-.01em}
+.step p{color:var(--muted);font-size:13px;margin-top:8px;line-height:1.62}
+
+/* ── final CTA ── */
+.final-cta{
+  position:relative;z-index:1;background:var(--bg);
+  border-top:1px solid rgba(255,255,255,.07);
+  padding:80px 36px;text-align:center
+}
+.final-cta .h2{max-width:600px;margin:0 auto}
+.final-cta .sub{margin:14px auto 32px;max-width:380px}
+.final-cta-btns{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+
+footer{position:relative;z-index:1;background:var(--bg);
+  border-top:1px solid rgba(255,255,255,.06);padding:20px 36px;
+  display:flex;align-items:center;justify-content:space-between;
+  font-size:11px;color:rgba(255,255,255,.2);font-family:var(--mono)}
+
+@media(max-width:860px){
+  .preview-wrap{padding:0 12px}
+  .db{height:320px}.kpi-row{grid-template-columns:repeat(2,1fr)}
+  .db-panels{grid-template-columns:1fr}
+  .grid4{grid-template-columns:repeat(2,1fr)}
+  .two{grid-template-columns:1fr;gap:28px}
+  .steps{grid-template-columns:1fr}
+  .step{border-right:none;border-bottom:1px solid rgba(255,255,255,.07)}
+  .step:last-child{border-bottom:none}
+  .trust{gap:14px;padding:16px 20px}
+  footer{flex-direction:column;gap:6px;text-align:center}
+}
+</style>
+</head>
+<body>
+
+<!-- hamburger -->
+<div class="ham" onclick="document.getElementById('nav-overlay').classList.toggle('open')">
+  <span></span><span></span><span></span>
+</div>
+<div class="nav-overlay" id="nav-overlay">
+  <div class="close-btn" onclick="document.getElementById('nav-overlay').classList.remove('open')">✕</div>
+  <a href="#features" onclick="document.getElementById('nav-overlay').classList.remove('open')">Protection</a>
+  <a href="#mcp" onclick="document.getElementById('nav-overlay').classList.remove('open')">Integration</a>
+  <a href="#how" onclick="document.getElementById('nav-overlay').classList.remove('open')">Quickstart</a>
+  <div class="nav-sub">
+    <a href="/login">Log in</a>
+  </div>
+</div>
+<div class="top-right">
+  <a href="/login">Log in</a>
+  <a class="t-cta" href="/login#signup">Sign up</a>
+</div>
+
+<!-- hero -->
+<section class="hero">
+  <h1>Protect your AI agent<br>and your <em>API key</em>.</h1>
+  <p class="hero-sub">A security gateway in front of your LLM. Blocks prompt injection and jailbreaks before they reach your model, keeps your real API key off the client, and caps spend so nobody runs up your bill.</p>
+  <div class="hero-cta">
+    <a class="btn-lime" href="/login#signup">Sign up →</a>
+    <a class="btn-ghost" href="/login">Try demo</a>
+  </div>
+  <div class="hero-hint">No API key needed to try &nbsp;·&nbsp; works offline &nbsp;·&nbsp; <a href="/login">demo@agentic.security / demo1234</a></div>
+</section>
+
+<!-- dashboard preview -->
+<div class="preview-wrap" style="margin-top:56px">
+  <div class="browser">
+    <div class="browser-bar">
+      <div class="bdot b1"></div><div class="bdot b2"></div><div class="bdot b3"></div>
+      <div class="burl">127.0.0.1:8000/app</div>
+    </div>
+    <div class="db">
+      <!-- nav -->
+      <div class="db-nav">
+        <div class="db-logo"><div class="mk">⛨</div> AgentShield</div>
+        <div class="db-tabs">
+          <div class="db-tab active">API Guard</div>
+          <div class="db-tab">Tool Guard</div>
+          <div class="db-tab">Scanners</div>
+          <div class="db-tab">Red Team</div>
+          <div class="db-tab">Security LLM</div>
+        </div>
+        <div class="db-dots">···</div>
+      </div>
+      <!-- body -->
+      <div class="db-body">
+        <div class="db-header">
+          <div>
+            <div class="db-title">API Guard</div>
+            <div class="db-desc">A protective gateway in front of your real API key. Injection is blocked before it costs money; per-key budgets stop cost runaway.</div>
+          </div>
+          <div class="db-runbtn">+ New virtual key</div>
+        </div>
+        <!-- KPI cards -->
+        <div class="kpi-row">
+          <div class="kpi">
+            <div class="klabel">Virtual Keys</div>
+            <div class="kval">3</div>
+            <div class="ksub">active</div>
+          </div>
+          <div class="kpi">
+            <div class="klabel">Requests</div>
+            <div class="kval">1,284</div>
+            <div class="ksub">routed</div>
+          </div>
+          <div class="kpi">
+            <div class="klabel">Attacks Blocked</div>
+            <div class="kval" style="color:var(--rose)">37</div>
+            <div class="ksub">before billing</div>
+          </div>
+          <div class="kpi">
+            <div class="klabel">$ Saved</div>
+            <div class="kval" style="color:var(--teal)">$2.14</div>
+            <div class="ksub">blocked spend</div>
+          </div>
+        </div>
+        <!-- panels -->
+        <div class="db-panels">
+          <div class="panel">
+            <div class="panel-title"><span>Virtual Keys</span><span style="background:rgba(255,255,255,.08);padding:2px 8px;font-size:9px">3 keys</span></div>
+            <div class="f-row"><span class="f-badge fb-low">ACTIVE</span><span class="f-name">prod-web · $1.20 / $5.00</span><span class="f-probe">30/min</span></div>
+            <div class="f-row"><span class="f-badge fb-low">ACTIVE</span><span class="f-name">mobile-app · $0.64 / $2.00</span><span class="f-probe">20/min</span></div>
+            <div class="f-row"><span class="f-badge fb-high">85%</span><span class="f-name">batch-job · $4.25 / $5.00</span><span class="f-probe">60/min</span></div>
+          </div>
+          <div class="panel">
+            <div class="panel-title">Test Console</div>
+            <div style="margin-top:4px">
+              <div style="font-size:11px;color:rgba(255,255,255,.6);margin-bottom:6px">"ignore all previous instructions…"</div>
+              <div style="font-family:var(--mono);font-size:10px;background:#111;padding:8px;color:rgba(255,255,255,.5);line-height:1.6">
+                <span style="color:var(--rose)">BLOCKED</span> · prompt_injection<br>
+                never reached the provider<br>
+                cost: $0.00 · saved: $0.0003
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- trust -->
+<div class="trust">
+  <div class="trust-item">OWASP LLM Top 10</div><div class="trust-sep"></div>
+  <div class="trust-item">MITRE ATLAS</div><div class="trust-sep"></div>
+  <div class="trust-item">NIST AI RMF</div><div class="trust-sep"></div>
+  <div class="trust-item">MCP-native</div><div class="trust-sep"></div>
+  <div class="trust-item">MIT License</div>
+</div>
+
+<!-- features -->
+<div class="section" id="features">
+  <div class="wrap">
+    <div class="s-label">How it protects you</div>
+    <div class="h2">Four layers. One gateway.</div>
+    <p class="sub">Every request to your model passes through the guard. Attacks are stopped before they reach (or bill) your provider.</p>
+    <div class="grid4">
+      <div class="feat"><div class="num">01</div><div class="chip chip-r">⛨</div><h3>Injection firewall</h3><p>Detects and blocks prompt injection, jailbreaks, and system-prompt extraction before they reach your model.</p></div>
+      <div class="feat"><div class="num">02</div><div class="chip chip-a">🔑</div><h3>API-key gateway</h3><p>Your real provider key stays server-side. Apps use revocable virtual keys that never expose it.</p></div>
+      <div class="feat"><div class="num">03</div><div class="chip chip-v">$</div><h3>Cost & rate caps</h3><p>Per-key USD budgets and rate limits stop runaway bills — blocked attacks cost you nothing.</p></div>
+      <div class="feat"><div class="num">04</div><div class="chip chip-m">◎</div><h3>PII & secret scrubbing</h3><p>Redacts API keys, SSNs, cards, and other secrets from model output before it reaches the client.</p></div>
+    </div>
+  </div>
+</div>
+
+<!-- mcp -->
+<div class="section" id="mcp">
+  <div class="wrap">
+    <div class="two">
+      <div>
+        <div class="s-label">Drop-in integration</div>
+        <div class="h2">One line in front of your model.</div>
+        <p class="sub">Point your app at the gateway and use a virtual key. Your real provider key stays server-side; injection and overspend are stopped automatically.</p>
+        <div class="warn">⛨ your real API key is never sent to the client or returned by any endpoint</div>
+      </div>
+      <div class="term">
+        <div class="dots"><i class="c1"></i><i class="c2"></i><i class="c3"></i><span class="term-title">agentic-security — gateway</span></div>
+        <div><span class="m">POST</span> /api/gateway/chat</div>
+        <div><span class="k">Authorization:</span> <span class="s">Bearer agk-…</span></div>
+        <div style="margin-top:8px"><span class="m">→ safe request:</span> forwarded · $0.0002</div>
+        <div><span class="m">→ injection:</span> blocked · cost $0.00</div>
+        <div><span class="m">→ over budget:</span> blocked · 402</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- steps -->
+<div class="section" id="how">
+  <div class="wrap">
+    <div class="s-label">Quickstart</div>
+    <div class="h2">Protected in three steps.</div>
+    <div class="steps">
+      <div class="step"><div class="no">01</div><h3>Connect your key</h3><p>Paste your provider key once — it's stored server-side and never exposed. Or try it in offline demo mode.</p></div>
+      <div class="step"><div class="no">02</div><h3>Issue virtual keys</h3><p>Create a revocable virtual key per app, each with its own USD budget and rate limit.</p></div>
+      <div class="step"><div class="no">03</div><h3>Route through the guard</h3><p>Send requests to the gateway. Injection and overspend are blocked automatically; safe traffic passes through.</p></div>
+    </div>
+  </div>
+</div>
+
+<!-- final CTA -->
+<div class="final-cta">
+  <div class="s-label" style="margin-bottom:14px">Get started</div>
+  <div class="h2">Protect your agent and your API key.</div>
+  <p class="sub">Free to try. No API key needed. Log in with the demo account and see injection blocked in under a minute.</p>
+  <div class="final-cta-btns">
+    <a class="btn-lime" href="/login">Log in →</a>
+  </div>
+</div>
+
+<footer>
+  <span>⛨ AgentShield · by Mohan</span>
+  <span>Built for defenders · MIT License</span>
+</footer>
+</body>
+</html>
