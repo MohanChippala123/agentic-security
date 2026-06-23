@@ -303,8 +303,9 @@ class JudgeRequest(BaseModel):
 
 
 @app.post("/api/gateway/judge")
-def gateway_judge(req: JudgeRequest) -> dict:
+def gateway_judge(req: JudgeRequest, request: Request) -> dict:
     """Ask the AgentShield Security LLM to judge a request without going through the gateway."""
+    _require_user(request)
     from ..llm.engine import judge_message
     return judge_message(req.text)
 
