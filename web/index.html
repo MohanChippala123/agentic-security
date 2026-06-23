@@ -207,17 +207,19 @@ a{color:inherit;text-decoration:none}
 .dmenu-item:hover{background:rgba(255,255,255,.07);color:#fff}
 
 /* spinner */
-.spin{display:inline-block;width:12px;height:12px;border:2px solid rgba(0,0,0,.25);border-top-color:#000;border-radius:50%;animation:sp .7s linear infinite;vertical-align:middle}
+.spin{display:inline-block;width:12px;height:12px;border:2px solid rgba(255,255,255,.12);border-top-color:var(--lime);border-radius:50%;animation:sp .7s linear infinite;vertical-align:middle}
 @keyframes sp{to{transform:rotate(360deg)}}
 @keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(1.3)}}
-@keyframes flashIn{from{background:rgba(58,208,164,.18);transform:translateX(-4px)}to{background:transparent;transform:none}}
-.event-row{display:flex;align-items:flex-start;gap:10px;padding:9px 10px;border-bottom:1px solid rgba(255,255,255,.05);font-size:11.5px;animation:flashIn .9s ease-out}
+@keyframes flashIn{from{background:rgba(58,208,164,.1);transform:translateX(-3px)}to{background:transparent;transform:none}}
+@keyframes tabIn{from{opacity:0;transform:translateY(7px)}to{opacity:1;transform:translateY(0)}}
+@keyframes modalIn{from{opacity:0;transform:translateY(14px) scale(.97)}to{opacity:1;transform:translateY(0) scale(1)}}
+.event-row{display:flex;align-items:flex-start;gap:10px;padding:9px 10px;border-bottom:1px solid rgba(255,255,255,.05);font-size:11.5px;animation:flashIn .8s ease-out}
 .event-row:last-child{border-bottom:none}
 .event-row .ev-time{font-family:var(--mono);font-size:9.5px;color:var(--muted);flex-shrink:0;margin-top:2px}
 .event-row .ev-body{flex:1;min-width:0}
 .event-row .ev-msg{color:rgba(255,255,255,.78);word-break:break-word;line-height:1.5}
 .event-row .ev-meta{display:flex;gap:6px;align-items:center;margin-top:4px;flex-wrap:wrap}
-.layer-tag{font-family:var(--mono);font-size:9px;text-transform:uppercase;padding:2px 6px;letter-spacing:.06em}
+.layer-tag{font-family:var(--mono);font-size:9px;text-transform:uppercase;padding:2px 6px;letter-spacing:.06em;border-radius:3px}
 .lt-l1{background:rgba(196,241,53,.1);color:var(--lime);border:1px solid rgba(196,241,53,.3)}
 .lt-l2{background:rgba(169,156,255,.12);color:var(--violet);border:1px solid rgba(169,156,255,.3)}
 .lt-fw{background:rgba(58,208,164,.1);color:var(--teal);border:1px solid rgba(58,208,164,.3)}
@@ -231,6 +233,78 @@ a{color:inherit;text-decoration:none}
   .topnav .nav-tabs{display:none}
   .body{padding:16px}
 }
+
+/* ── Polish Layer ─────────────────────────────────────────── */
+:root{ --radius:8px; --trans:.15s cubic-bezier(.25,0,.3,1); }
+
+/* ambient page glow */
+body::before{
+  content:'';position:fixed;width:900px;height:700px;top:-300px;right:-300px;
+  background:radial-gradient(ellipse,rgba(196,241,53,.04) 0%,transparent 65%);
+  pointer-events:none;z-index:0
+}
+
+/* custom scrollbars */
+*{scrollbar-width:thin;scrollbar-color:rgba(255,255,255,.09) transparent}
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:rgba(255,255,255,.1);border-radius:10px}
+::-webkit-scrollbar-thumb:hover{background:rgba(255,255,255,.18)}
+
+/* nav: lime active indicator */
+.nav-tabs a.on{color:var(--lime);border-bottom-color:var(--lime)}
+.nav-tabs a{border-bottom-width:2px}
+.nav-right .dots{border-radius:6px;transition:background var(--trans),color var(--trans)}
+.nav-right .dots:hover{background:rgba(255,255,255,.07);color:rgba(255,255,255,.85)}
+.nav-right .me-chip{border-radius:6px}
+.nav-right .me-chip .pic{border-radius:4px}
+
+/* dots menu */
+#dotsMenu{border-radius:10px !important;backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);box-shadow:0 16px 48px rgba(0,0,0,.5)}
+
+/* section card wrapper */
+.sec{border-radius:var(--radius);overflow:hidden}
+
+/* input / textarea / select focus glow */
+input:not([type=checkbox]):not([type=radio]):focus,
+textarea:focus,select:focus{
+  border-color:rgba(196,241,53,.45) !important;
+  box-shadow:0 0 0 3px rgba(196,241,53,.07);
+  outline:none
+}
+
+/* button active feedback */
+button:not(:disabled):active{transform:scale(.97)}
+.run-full{transition:opacity var(--trans),transform var(--trans)}
+.mm-try{transition:background var(--trans),border-color var(--trans),transform var(--trans);border-radius:7px}
+.mm-try:hover{border-color:rgba(196,241,53,.2)}
+.cpbtn{border-radius:4px;transition:background var(--trans),color var(--trans)}
+
+/* modal: backdrop blur + slide-up */
+.modal-overlay{backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
+.modal-card{animation:modalIn .22s cubic-bezier(.34,1.15,.64,1)}
+.modal-card{border-radius:14px}
+
+/* badges */
+.fbadge{border-radius:3px}
+.panel-badge{border-radius:4px}
+
+/* kpi top accent bar on hover */
+.kpi{transition:border-top-color .25s;border-top:2px solid rgba(255,255,255,.04)}
+.kpi:hover{border-top-color:rgba(196,241,53,.3)}
+
+/* gateway key rows */
+.gwrow{transition:border-color var(--trans),box-shadow var(--trans)}
+.gwrow:hover{border-color:rgba(255,255,255,.15);box-shadow:0 2px 14px rgba(0,0,0,.3)}
+
+/* finding rows */
+.frow{border-radius:4px;margin:0 -4px;padding-left:12px;padding-right:8px}
+
+/* chat bubbles */
+.mm-try{font-size:12px}
+
+/* empty state */
+.empty{color:var(--muted);font-size:12.5px;text-align:center;padding:28px 12px;border-radius:6px}
 /* ── My LLM chat ── */
 .mm-msg{display:flex;gap:10px;align-items:flex-start;max-width:88%}
 .mm-bot{align-self:flex-start}
@@ -283,7 +357,7 @@ a{color:inherit;text-decoration:none}
       <span class="nm" id="meName">Analyst</span>
     </div>
     <div class="dots" onclick="toggleDots(event)" id="dotsBtn" title="More options">···</div>
-    <div id="dotsMenu" style="display:none;position:absolute;top:44px;right:12px;background:#1a1a1a;border:1px solid var(--border2);min-width:160px;z-index:200">
+    <div id="dotsMenu" style="display:none;position:absolute;top:44px;right:12px;background:rgba(22,22,22,.96);border:1px solid var(--border2);min-width:160px;z-index:200">
       <div class="dmenu-item" onclick="showUsersModal()">👥 Users</div>
       <div class="dmenu-item" onclick="window.open('/docs','_blank')">⧉ API Docs</div>
       <div class="dmenu-item" style="border-top:1px solid var(--border);color:var(--rose)" onclick="logout()">↩ Log out</div>
@@ -302,7 +376,7 @@ a{color:inherit;text-decoration:none}
   </div>
 
   <!-- upstream status + connect key -->
-  <div style="border:1px solid var(--border);background:var(--panel);padding:14px 16px;margin-bottom:1px">
+  <div class="sec" style="border:1px solid var(--border);background:var(--panel);padding:14px 16px;margin-bottom:1px">
     <div id="gwStatus" style="font-size:12.5px;color:var(--muted);margin-bottom:10px">Loading…</div>
     <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
       <input id="gwUpstreamKey" type="password" autocomplete="off" placeholder="Paste your provider key (e.g. sk-...)" style="flex:1;min-width:200px;background:rgba(255,255,255,.04);border:1px solid var(--border);outline:none;padding:9px 11px;font-family:var(--mono);font-size:12px;color:var(--ink)">
@@ -314,7 +388,7 @@ a{color:inherit;text-decoration:none}
   </div>
 
   <!-- defense layers -->
-  <div style="border:1px solid var(--border);background:var(--panel);padding:14px 16px;margin-bottom:1px">
+  <div class="sec" style="border:1px solid var(--border);background:var(--panel);padding:14px 16px;margin-bottom:1px">
     <div class="panel-h" style="margin-bottom:10px"><b>Defense Pipeline</b><span class="panel-badge">Security LLM</span></div>
     <div style="display:flex;align-items:center;gap:10px;font-size:12px;flex-wrap:wrap">
       <span style="font-family:var(--mono);font-size:10px;color:var(--muted)">USER REQUEST</span>
@@ -327,14 +401,14 @@ a{color:inherit;text-decoration:none}
   </div>
 
   <!-- stats -->
-  <div class="kpis" style="border:1px solid var(--border)">
+  <div class="kpis sec" style="border:1px solid var(--border)">
     <div class="kpi"><div class="klabel">Virtual Keys</div><div class="kval" id="gwKeys">0</div></div>
     <div class="kpi"><div class="klabel">Requests</div><div class="kval" id="gwReqs">0</div></div>
     <div class="kpi"><div class="klabel">Attacks Blocked</div><div class="kval" id="gwBlocked" style="color:var(--rose)">0</div></div>
     <div class="kpi"><div class="klabel">$ Saved (blocked)</div><div class="kval" id="gwSaved" style="color:var(--teal)">$0</div></div>
   </div>
 
-  <div style="display:grid;grid-template-columns:1.3fr 1fr;gap:1px;background:var(--border);border:1px solid var(--border)">
+  <div class="sec" style="display:grid;grid-template-columns:1.3fr 1fr;gap:1px;background:var(--border);border:1px solid var(--border)">
     <!-- keys table -->
     <div style="background:var(--panel);padding:16px">
       <div class="panel-h" style="margin-bottom:14px"><b>Virtual Keys</b><span class="panel-badge" id="gwKeyCount">—</span></div>
@@ -363,7 +437,7 @@ a{color:inherit;text-decoration:none}
   </div>
 
   <!-- Live Activity Feed + Judge Inspector -->
-  <div style="display:grid;grid-template-columns:1.4fr 1fr;gap:1px;background:var(--border);border:1px solid var(--border);margin-top:1px">
+  <div class="sec" style="display:grid;grid-template-columns:1.4fr 1fr;gap:1px;background:var(--border);border:1px solid var(--border);margin-top:1px">
     <!-- LIVE FEED -->
     <div style="background:var(--panel);padding:16px">
       <div class="panel-h" style="margin-bottom:12px">
@@ -395,7 +469,7 @@ a{color:inherit;text-decoration:none}
   </div>
 
   <!-- integration -->
-  <div style="background:var(--panel);border:1px solid var(--border);padding:18px;margin-top:1px">
+  <div class="sec" style="background:var(--panel);border:1px solid var(--border);padding:18px;margin-top:1px">
     <div class="panel-h" style="margin-bottom:12px"><b>Integration</b><span class="panel-badge">drop-in</span></div>
     <p style="font-size:12.5px;color:var(--muted);margin-bottom:12px;line-height:1.6">Point your app at the gateway and use a virtual key. Your real provider key stays on the server.</p>
     <div class="code" style="font-size:11px;line-height:1.7">POST /api/gateway/chat
@@ -418,14 +492,14 @@ Content-Type: application/json
   </div>
 
   <!-- Score card -->
-  <div class="kpis" style="border:1px solid var(--border)">
+  <div class="kpis sec" style="border:1px solid var(--border)">
     <div class="kpi"><div class="klabel">Security Score</div><div class="kval" id="rtScore" style="color:var(--lime)">—</div><div class="ksub" id="rtScoreSub">run the suite to see results</div></div>
     <div class="kpi"><div class="klabel">Accuracy</div><div class="kval" id="rtAccuracy">—</div></div>
     <div class="kpi"><div class="klabel">Attack Recall</div><div class="kval" id="rtRecall" style="color:var(--teal)">—</div></div>
     <div class="kpi"><div class="klabel">False Positive Rate</div><div class="kval" id="rtFPR" style="color:var(--amber)">—</div></div>
   </div>
 
-  <div style="display:grid;grid-template-columns:1fr 1.6fr;gap:1px;background:var(--border);border:1px solid var(--border);margin-top:1px">
+  <div class="sec" style="display:grid;grid-template-columns:1fr 1.6fr;gap:1px;background:var(--border);border:1px solid var(--border);margin-top:1px">
     <!-- category breakdown -->
     <div style="background:var(--panel);padding:18px">
       <div class="panel-h" style="margin-bottom:12px"><b>Category breakdown</b></div>
@@ -477,7 +551,7 @@ Content-Type: application/json
     </div>
   </div>
 
-  <div style="display:grid;grid-template-columns:1.6fr 1fr;gap:1px;background:var(--border);border:1px solid var(--border)">
+  <div class="sec" style="display:grid;grid-template-columns:1.6fr 1fr;gap:1px;background:var(--border);border:1px solid var(--border)">
     <!-- security console chat -->
     <div style="background:var(--panel);display:flex;flex-direction:column;min-height:480px">
       <div class="panel-h" style="padding:14px 16px;border-bottom:1px solid var(--border)">
@@ -533,7 +607,12 @@ function showTab(name, el){
   ['gateway','redteam','mymodel'].forEach(t=>{
     const d=$('tab-'+t); if(d) d.style.display='none';
   });
-  const active=$('tab-'+name); if(active) active.style.display='';
+  const active=$('tab-'+name);
+  if(active){
+    active.style.display='';
+    active.style.animation='none';
+    requestAnimationFrame(()=>{ active.style.animation='tabIn .25s cubic-bezier(.25,0,.3,1)'; });
+  }
   document.querySelectorAll('.nav-tabs a').forEach(a=>a.classList.remove('on'));
   if(el) el.classList.add('on');
   if(name==='gateway') loadGatewayTab();
