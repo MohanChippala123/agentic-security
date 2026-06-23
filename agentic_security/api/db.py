@@ -67,6 +67,16 @@ def connect() -> sqlite3.Connection:
     conn = sqlite3.connect(str(_DB_PATH), check_same_thread=False)
     conn.row_factory = sqlite3.Row
     conn.executescript(_SCHEMA)
+    # Add new columns to existing tables (ALTER TABLE IF NOT EXISTS is not supported in SQLite)
+    for sql in [
+        "ALTER TABLE users ADD COLUMN last_login_at REAL",
+        "ALTER TABLE users ADD COLUMN login_count INTEGER NOT NULL DEFAULT 0",
+    ]:
+        try:
+            conn.execute(sql)
+        except sqlite3.OperationalError:
+            pass
+    conn.commit()
     return conn
 
 
@@ -92,6 +102,14 @@ def user_create(email: str, name: str, salt: str, hash_: str) -> None:
     get().execute(
         "INSERT INTO users (email, name, salt, hash, created_at) VALUES (?,?,?,?,?)",
         (email, name, salt, hash_, time.time()),
+    )
+    get().commit()
+
+
+def user_record_login(email: str) -> None:
+    get().execute(
+        "UPDATE users SET last_login_at=?, login_count=COALESCE(login_count,0)+1 WHERE email=?",
+        (time.time(), email),
     )
     get().commit()
 

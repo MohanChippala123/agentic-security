@@ -65,6 +65,7 @@ def verify_user(email: str, password: str) -> dict:
         raise ValueError("Invalid email or password.")
     if not hmac.compare_digest(user["hash"], _hash_pw(password, user["salt"])):
         raise ValueError("Invalid email or password.")
+    db.user_record_login(email)
     return {"email": email, "name": user["name"]}
 
 

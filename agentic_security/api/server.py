@@ -393,6 +393,25 @@ def agentshield_console(req: ConsoleRequest) -> dict:
     return answer(req.question)
 
 
+@app.get("/api/admin/users")
+def admin_users(request: Request) -> dict:
+    """List all registered users (sign-in history). Requires an active session."""
+    if not _current_user(request):
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    users = db.user_all()
+    safe = [
+        {
+            "email": u["email"],
+            "name": u["name"],
+            "created_at": u["created_at"],
+            "last_login_at": u.get("last_login_at"),
+            "login_count": u.get("login_count") or 0,
+        }
+        for u in users
+    ]
+    return {"users": safe, "total": len(safe)}
+
+
 @app.get("/api/agentshield/dashboard")
 def agentshield_dashboard() -> dict:
     """Top-level dashboard data: aggregate stats across the platform."""

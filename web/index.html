@@ -284,6 +284,7 @@ a{color:inherit;text-decoration:none}
     </div>
     <div class="dots" onclick="toggleDots(event)" id="dotsBtn" title="More options">···</div>
     <div id="dotsMenu" style="display:none;position:absolute;top:44px;right:12px;background:#1a1a1a;border:1px solid var(--border2);min-width:160px;z-index:200">
+      <div class="dmenu-item" onclick="showUsersModal()">👥 Users</div>
       <div class="dmenu-item" onclick="window.open('/docs','_blank')">⧉ API Docs</div>
       <div class="dmenu-item" style="border-top:1px solid var(--border);color:var(--rose)" onclick="logout()">↩ Log out</div>
     </div>
@@ -438,6 +439,13 @@ Content-Type: application/json
   </div>
 </div>
 
+<!-- demo-mode banner (shown when no real upstream key) -->
+<div id="demoBanner" style="display:none;background:rgba(245,166,74,.08);border:1px solid rgba(245,166,74,.25);margin:0 24px 0;padding:10px 16px;display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+  <span style="font-family:var(--mono);font-size:10px;text-transform:uppercase;letter-spacing:.1em;background:var(--amber-bg);color:var(--amber);padding:3px 8px">Demo Mode</span>
+  <span style="font-size:12.5px;color:rgba(255,255,255,.65)">Connect a real provider key to unlock virtual key creation and real upstream forwarding.</span>
+  <a onclick="$('gwUpstreamKey').focus()" style="font-size:11.5px;color:var(--amber);cursor:pointer;text-decoration:underline;margin-left:auto">Connect key ↑</a>
+</div>
+
 <!-- create-key modal -->
 <div id="gwModal" class="modal-overlay" style="display:none" onclick="if(event.target===this)closeCreateKey()">
   <div class="modal-card">
@@ -447,6 +455,16 @@ Content-Type: application/json
     <div class="field"><label>Rate limit (req/min)</label><input id="gwRate" type="number" value="30"></div>
     <button class="run-full" style="margin-top:6px" onclick="gwCreate()">Create key</button>
     <div id="gwNewKey" style="margin-top:12px"></div>
+  </div>
+</div>
+
+<!-- users modal -->
+<div id="usersModal" class="modal-overlay" style="display:none" onclick="if(event.target===this)closeUsersModal()">
+  <div class="modal-card" style="width:540px;max-height:80vh;display:flex;flex-direction:column">
+    <div class="modal-h"><b>Signed-in Users</b><span class="modal-x" onclick="closeUsersModal()">✕</span></div>
+    <div id="usersBody" style="overflow-y:auto;flex:1">
+      <div class="empty">Loading…</div>
+    </div>
   </div>
 </div>
 
@@ -686,12 +704,17 @@ async function runShieldChat(){
 }
 
 /* ── API Guard / Gateway ── */
+let _demoMode = true;
 async function loadGatewayTab(){
   try{
     const s=await (await fetch('/api/gateway/status')).json();
+    _demoMode = !s.real_key_configured;
     $('gwStatus').innerHTML = s.real_key_configured
       ? `<b style="color:var(--teal)">● Upstream: OpenAI</b> — ${esc(s.note)}`
       : `<b style="color:var(--amber)">● Demo mode: AgentShield Security LLM</b> — ${esc(s.note)}`;
+    // show / hide demo banner
+    const banner=$('demoBanner');
+    if(banner) banner.style.display=_demoMode?'flex':'none';
   }catch(e){}
   try{
     const st=await (await fetch('/api/gateway/stats')).json();
@@ -836,8 +859,31 @@ async function gwDisconnectKey(){
   }catch(e){ msg.innerHTML='<span style="color:var(--rose)">Error: '+esc(e.message)+'</span>'; }
 }
 
-function showCreateKey(){ $('gwModal').style.display='flex'; $('gwNewKey').innerHTML=''; }
-function closeCreateKey(){ $('gwModal').style.display='none'; }
+function showCreateKey(){
+  if(_demoMode){
+    // demo mode — block key creation
+    const el=$('gwNewKey')||{};
+    $('gwModal').style.display='flex';
+    $('gwNewKey').innerHTML=`<div style="background:var(--amber-bg);border:1px solid rgba(245,166,74,.35);padding:14px;border-radius:8px;text-align:center">
+      <div style="font-size:13px;font-weight:600;color:var(--amber);margin-bottom:6px">🔒 Demo Mode</div>
+      <div style="font-size:12px;color:rgba(255,255,255,.65);line-height:1.6">Connect a real provider key first to create virtual keys and protect real traffic.<br>Paste your key in the <b>Connect key</b> box above.</div>
+    </div>`;
+    // hide the form fields
+    ['gwName','gwBudget','gwRate'].forEach(id=>{ const e=$(id); if(e&&e.parentElement) e.parentElement.style.display='none'; });
+    const btn=$('gwModal').querySelector('.run-full'); if(btn) btn.style.display='none';
+    return;
+  }
+  // real mode — show form normally
+  ['gwName','gwBudget','gwRate'].forEach(id=>{ const e=$(id); if(e&&e.parentElement) e.parentElement.style.display=''; });
+  const btn=$('gwModal').querySelector('.run-full'); if(btn) btn.style.display='';
+  $('gwModal').style.display='flex'; $('gwNewKey').innerHTML='';
+}
+function closeCreateKey(){
+  // always restore form fields on close
+  ['gwName','gwBudget','gwRate'].forEach(id=>{ const e=$(id); if(e&&e.parentElement) e.parentElement.style.display=''; });
+  const btn=$('gwModal').querySelector('.run-full'); if(btn) btn.style.display='';
+  $('gwModal').style.display='none';
+}
 
 // Map masked key -> full key for keys created in this session (so the test
 // console can use them — the server only ever returns full keys at creation).
@@ -867,6 +913,13 @@ async function gwTest(){
   const key=_FULL_KEYS[maskedKey] || maskedKey;
   const msg=$('gwTestMsg').value.trim();
   if(!msg){ $('gwTestResult').innerHTML='<div class="empty">Type a message.</div>'; return; }
+  if(_demoMode){
+    $('gwTestResult').innerHTML=`<div style="background:var(--amber-bg);border:1px solid rgba(245,166,74,.35);padding:12px;border-radius:8px">
+      <span class="fbadge fb-high" style="margin-bottom:8px;display:inline-block">Demo Mode</span>
+      <div style="font-size:12px;color:rgba(255,255,255,.7);line-height:1.6">Connect a real provider key to test actual upstream forwarding. The Security LLM will still analyse the request — but responses will come from the local demo model.</div>
+    </div>`;
+    // Still send in demo mode but add the banner — let it proceed
+  }
   $('gwTestResult').innerHTML='<div class="empty"><span class="spin"></span> Sending…</div>';
   try{
     const r=await fetch('/api/gateway/chat',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+key},body:JSON.stringify({messages:[{role:'user',content:msg}]})});
@@ -1144,6 +1197,45 @@ async function runRedTeam(){
     }).join('');
   }catch(e){ $('rtResults').innerHTML=`<div class="empty">Error: ${esc(e.message)}</div>`; }
 }
+
+/* ── Users modal ── */
+async function showUsersModal(){
+  _dotsOpen=false; $('dotsMenu').style.display='none';
+  $('usersModal').style.display='flex';
+  $('usersBody').innerHTML='<div class="empty"><span class="spin"></span> Loading…</div>';
+  try{
+    const j=await (await fetch('/api/admin/users')).json();
+    const users=j.users||[];
+    if(!users.length){ $('usersBody').innerHTML='<div class="empty">No users registered yet.</div>'; return; }
+    const fmt=(ts)=>{
+      if(!ts) return '—';
+      const d=new Date(ts*1000);
+      return d.toLocaleDateString()+' '+d.toLocaleTimeString(undefined,{hour:'2-digit',minute:'2-digit'});
+    };
+    $('usersBody').innerHTML=`
+      <div style="padding:4px 0 8px;font-size:11px;color:var(--muted);border-bottom:1px solid var(--border);margin-bottom:4px">
+        ${users.length} user${users.length>1?'s':''} registered
+      </div>
+      ${users.map(u=>`
+        <div style="padding:10px 0;border-bottom:1px solid rgba(255,255,255,.05)">
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px">
+            <div style="width:28px;height:28px;background:var(--violet-bg);display:grid;place-items:center;font-size:10px;font-weight:700;color:var(--violet);flex-shrink:0">
+              ${esc((u.name||'?').split(' ').map(s=>s[0]).join('').slice(0,2).toUpperCase())}
+            </div>
+            <div style="flex:1;min-width:0">
+              <div style="font-size:13px;font-weight:600">${esc(u.name)}</div>
+              <div style="font-size:11px;color:var(--muted);font-family:var(--mono)">${esc(u.email)}</div>
+            </div>
+            <span style="font-family:var(--mono);font-size:9.5px;background:rgba(255,255,255,.05);padding:3px 8px;color:var(--muted)">${u.login_count} login${u.login_count!==1?'s':''}</span>
+          </div>
+          <div style="display:flex;gap:16px;font-size:10.5px;color:var(--muted);padding-left:38px">
+            <span>Registered: ${fmt(u.created_at)}</span>
+            <span>Last login: ${fmt(u.last_login_at)}</span>
+          </div>
+        </div>`).join('')}`;
+  }catch(e){ $('usersBody').innerHTML=`<div class="empty">Error: ${esc(e.message)}</div>`; }
+}
+function closeUsersModal(){ $('usersModal').style.display='none'; }
 
 /* ── auth ── */
 async function loadUser(){
