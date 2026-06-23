@@ -40,12 +40,12 @@ def _suggestions() -> list[str]:
     ]
 
 
-def answer(question: str) -> dict[str, Any]:
+def answer(question: str, user: str = "") -> dict[str, Any]:
     """Answer a question about API-key activity from real gateway data."""
     q = (question or "").lower().strip()
-    stats = gw.stats()
-    keys = gw.list_keys()
-    events = gw.recent_events(80)
+    stats = gw.stats(user)
+    keys = gw.list_keys(user)
+    events = gw.recent_events(user, 80)
 
     def resp(text: str, **extra: Any) -> dict:
         return {"answer": text, "suggestions": _suggestions(), **extra}

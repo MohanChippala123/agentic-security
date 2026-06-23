@@ -25,6 +25,7 @@ app = FastAPI(
 )
 
 auth.seed_demo_account()
+db.purge_fake_users()
 
 _WEB_DIR = Path(__file__).resolve().parents[2] / "web"
 _MAX_BODY_BYTES = 64 * 1024
@@ -50,6 +51,13 @@ def _set_session(resp: JSONResponse, email: str) -> None:
 
 def _current_user(request: Request) -> dict | None:
     return auth.read_token(request.cookies.get(auth.COOKIE))
+
+
+def _require_user(request: Request) -> dict:
+    user = _current_user(request)
+    if not user:
+        raise HTTPException(status_code=401, detail="Authentication required")
+    return user
 
 
 # ── auth endpoints ────────────────────────────────────────────────────────────
@@ -256,33 +264,38 @@ class UpstreamKeyRequest(BaseModel):
 
 
 @app.get("/api/gateway/status")
-def gateway_status() -> dict:
+def gateway_status(request: Request) -> dict:
     """Is a real upstream key configured? Which models are available?"""
-    return gw.upstream_status()
+    user = _require_user(request)
+    return gw.upstream_status(user["email"])
 
 
 @app.post("/api/gateway/upstream")
-def gateway_set_upstream(req: UpstreamKeyRequest) -> dict:
+def gateway_set_upstream(req: UpstreamKeyRequest, request: Request) -> dict:
     """Connect your real provider key. Held server-side; never exposed to clients."""
-    return gw.set_upstream_key(req.api_key)
+    user = _require_user(request)
+    return gw.set_upstream_key(user["email"], req.api_key)
 
 
 @app.delete("/api/gateway/upstream")
-def gateway_clear_upstream() -> dict:
+def gateway_clear_upstream(request: Request) -> dict:
     """Disconnect the real provider key (revert to local demo upstream)."""
-    return gw.clear_upstream_key()
+    user = _require_user(request)
+    return gw.clear_upstream_key(user["email"])
 
 
 @app.get("/api/gateway/stats")
-def gateway_stats() -> dict:
+def gateway_stats(request: Request) -> dict:
     """Aggregate spend / blocked / saved across all virtual keys."""
-    return gw.stats()
+    user = _require_user(request)
+    return gw.stats(user["email"])
 
 
 @app.get("/api/gateway/events")
-def gateway_events(limit: int = 50) -> dict:
+def gateway_events(request: Request, limit: int = 50) -> dict:
     """Recent gateway events — every request flowing through the defense pipeline."""
-    return {"events": gw.recent_events(limit)}
+    user = _require_user(request)
+    return {"events": gw.recent_events(user["email"], limit)}
 
 
 class JudgeRequest(BaseModel):
@@ -387,10 +400,11 @@ class ConsoleRequest(BaseModel):
 
 
 @app.post("/api/agentshield/console")
-def agentshield_console(req: ConsoleRequest) -> dict:
+def agentshield_console(req: ConsoleRequest, request: Request) -> dict:
     """Security Console - answers questions about live API-key activity (real data, not LLM)."""
+    user = _require_user(request)
     from ..agentshield.console import answer
-    return answer(req.question)
+    return answer(req.question, user=user["email"])
 
 
 @app.get("/api/admin/users")
@@ -413,11 +427,12 @@ def admin_users(request: Request) -> dict:
 
 
 @app.get("/api/agentshield/dashboard")
-def agentshield_dashboard() -> dict:
-    """Top-level dashboard data: aggregate stats across the platform."""
+def agentshield_dashboard(request: Request) -> dict:
+    """Top-level dashboard data: aggregate stats for the authenticated user."""
+    user = _require_user(request)
     return {
-        "gateway": gw.stats(),
-        "gateway_events_recent": gw.recent_events(20),
+        "gateway": gw.stats(user["email"]),
+        "gateway_events_recent": gw.recent_events(user["email"], 20),
         "agents": list_profiles(),
         "shield": shield_stats(),
         "security_llm": {
@@ -429,31 +444,35 @@ def agentshield_dashboard() -> dict:
 
 
 @app.get("/api/gateway/keys")
-def gateway_list_keys() -> dict:
+def gateway_list_keys(request: Request) -> dict:
     """List virtual keys (real key values are masked)."""
-    return {"keys": gw.list_keys()}
+    user = _require_user(request)
+    return {"keys": gw.list_keys(user["email"])}
 
 
 @app.post("/api/gateway/keys")
-def gateway_create_key(req: CreateKeyRequest) -> dict:
+def gateway_create_key(req: CreateKeyRequest, request: Request) -> dict:
     """Create a virtual key. The full key is returned ONCE, here."""
-    return gw.create_key(req.name, req.budget_usd, req.rate_limit_per_min)
+    user = _require_user(request)
+    return gw.create_key(user["email"], req.name, req.budget_usd, req.rate_limit_per_min)
 
 
 @app.post("/api/gateway/keys/revoke")
-def gateway_revoke_key(req: RevokeKeyRequest) -> dict:
+def gateway_revoke_key(req: RevokeKeyRequest, request: Request) -> dict:
     """Instantly disable a virtual key."""
-    return {"revoked": gw.revoke_key(req.key)}
+    user = _require_user(request)
+    return {"revoked": gw.revoke_key(user["email"], req.key)}
 
 
 @app.post("/api/gateway/chat")
-def gateway_chat_endpoint(req: GatewayChatRequest, authorization: str = Header(None)) -> dict:
+def gateway_chat_endpoint(req: GatewayChatRequest, request: Request, authorization: str = Header(None)) -> dict:
     """Protected chat. Clients authenticate with a virtual key:
        Authorization: Bearer agk-...   (the real provider key never leaves the server)."""
+    user = _require_user(request)
     api_key = ""
     if authorization and authorization.lower().startswith("bearer "):
         api_key = authorization[7:].strip()
-    return gw.gateway_chat(api_key, req.messages, model=req.model, max_tokens=req.max_tokens)
+    return gw.gateway_chat(user["email"], api_key, req.messages, model=req.model, max_tokens=req.max_tokens)
 
 
 # ── Agentic LLM (your own secured model) ──────────────────────────────────────

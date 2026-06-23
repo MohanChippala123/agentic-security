@@ -106,6 +106,32 @@ def user_create(email: str, name: str, salt: str, hash_: str) -> None:
     get().commit()
 
 
+def user_delete(email: str) -> None:
+    get().execute("DELETE FROM users WHERE email=?", (email,))
+    get().commit()
+
+
+def purge_fake_users() -> None:
+    """Remove any seeded / test / demo accounts that were never real users.
+    Also deletes the legacy users.json to prevent re-importing fake accounts."""
+    _FAKE = {
+        "olivia@acme.com",
+        "anonymous",
+    }
+    # Delete any account whose email looks like a generated test user
+    rows = get().execute("SELECT email FROM users").fetchall()
+    for row in rows:
+        email = row["email"]
+        if email in _FAKE or email.startswith("user-") and "@example.com" in email:
+            get().execute("DELETE FROM users WHERE email=?", (email,))
+    get().commit()
+
+    # Wipe the legacy JSON so it can never re-import fake accounts
+    legacy = Path(__file__).resolve().parents[2] / "data" / "users.json"
+    if legacy.exists():
+        legacy.unlink(missing_ok=True)
+
+
 def user_record_login(email: str) -> None:
     get().execute(
         "UPDATE users SET last_login_at=?, login_count=COALESCE(login_count,0)+1 WHERE email=?",

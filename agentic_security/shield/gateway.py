@@ -1,21 +1,7 @@
 """API Key Guard - an LLM gateway that protects your real API key.
 
-The problem this solves:
-  - You have ONE real provider key (OpenAI/Anthropic). If it leaks, or an app
-    gets prompt-injected, or traffic spikes, you get a huge bill.
-
-How the gateway protects you:
-  1. Your REAL key lives only on the server (env var). It is NEVER sent to
-     clients and NEVER returned by any endpoint.
-  2. You issue "virtual keys" (agk-...) to your apps. Each has its own budget
-     and rate limit and can be revoked instantly.
-  3. Every request is screened by the prompt-injection firewall BEFORE it is
-     forwarded - blocked attacks cost you $0.
-  4. Per-key USD budgets and rate limits stop cost runaway.
-  5. Output is scrubbed for PII/secrets.
-
-If no real key is configured, the gateway forwards to the local agentic-1
-model so the whole thing is demoable with zero real keys / zero spend.
+Per-user isolation: every user's virtual keys, events, spend, and upstream
+key are stored separately. One user can never see or touch another's data.
 """
 
 from __future__ import annotations
@@ -70,44 +56,60 @@ class VirtualKey:
         }
 
 
-_keys: dict[str, VirtualKey] = {}
+# ── Per-user state ────────────────────────────────────────────────────────────
+# All gateway data is scoped to the authenticated user's email. One user can
+# never access, spend from, or see another user's keys or events.
 
-# Recent gateway events so the UI can show Mohan's LLM in action live.
-_events: list[dict] = []
+_user_keys:   dict[str, dict[str, VirtualKey]] = {}  # email -> {key -> VirtualKey}
+_user_events: dict[str, list[dict]] = {}             # email -> event list
+_user_upstream: dict[str, str] = {}                  # email -> real provider key
 _MAX_EVENTS = 80
 
 
-def _log_event(**event: Any) -> None:
+def _keys(user: str) -> dict[str, VirtualKey]:
+    if user not in _user_keys:
+        _user_keys[user] = {}
+    return _user_keys[user]
+
+
+def _events(user: str) -> list[dict]:
+    if user not in _user_events:
+        _user_events[user] = []
+    return _user_events[user]
+
+
+def _log_event(user: str, **event: Any) -> None:
+    ev = _events(user)
     event["timestamp"] = time.time()
-    _events.append(event)
-    if len(_events) > _MAX_EVENTS:
-        _events.pop(0)
+    ev.append(event)
+    if len(ev) > _MAX_EVENTS:
+        ev.pop(0)
 
 
-def recent_events(limit: int = 50) -> list[dict]:
-    return list(reversed(_events[-limit:]))
+def recent_events(user: str, limit: int = 50) -> list[dict]:
+    return list(reversed(_events(user)[-limit:]))
 
 
-# ── Key management ──
-def create_key(name: str, budget_usd: float = 5.0, rate_limit_per_min: int = 30) -> dict:
+# ── Key management ────────────────────────────────────────────────────────────
+
+def create_key(user: str, name: str, budget_usd: float = 5.0, rate_limit_per_min: int = 30) -> dict:
     key = "agk-" + secrets.token_hex(16)
     vk = VirtualKey(key=key, name=name or "unnamed",
                     budget_usd=max(0.0, budget_usd),
                     rate_limit_per_min=max(1, rate_limit_per_min))
-    _keys[key] = vk
-    # reveal the full key exactly once, on creation
+    _keys(user)[key] = vk
     return vk.public(reveal=True)
 
 
-def list_keys() -> list[dict]:
-    return [vk.public() for vk in sorted(_keys.values(), key=lambda k: -k.created_at)]
+def list_keys(user: str) -> list[dict]:
+    return [vk.public() for vk in sorted(_keys(user).values(), key=lambda k: -k.created_at)]
 
 
-def revoke_key(key: str) -> bool:
-    vk = _keys.get(key)
+def revoke_key(user: str, key: str) -> bool:
+    ku = _keys(user)
+    vk = ku.get(key)
     if not vk:
-        # allow revoking by masked prefix from the UI
-        for k, v in _keys.items():
+        for k, v in ku.items():
             if k.startswith(key.split("...")[0]):
                 vk = v
                 break
@@ -117,17 +119,12 @@ def revoke_key(key: str) -> bool:
     return False
 
 
-def delete_key(key: str) -> bool:
-    return _keys.pop(key, None) is not None
-
-
-def upstream_status() -> dict:
-    real = os.environ.get("OPENAI_API_KEY", "")
+def upstream_status(user: str) -> dict:
+    real = _user_upstream.get(user, "") or os.environ.get("OPENAI_API_KEY", "")
     has_real = bool(real)
     return {
         "upstream": "openai" if has_real else "local",
         "real_key_configured": has_real,
-        # masked hint only - the real key is never returned in full
         "key_hint": (real[:3] + "..." + real[-4:]) if len(real) > 8 else ("set" if has_real else ""),
         "note": ("Forwarding to OpenAI. Your real key stays server-side and is never exposed."
                  if has_real else
@@ -137,22 +134,21 @@ def upstream_status() -> dict:
     }
 
 
-def set_upstream_key(key: str) -> dict:
-    """Store the real provider key server-side (in-process). Never returned in full."""
+def set_upstream_key(user: str, key: str) -> dict:
     key = (key or "").strip()
     if not key:
         return {"ok": False, "error": "empty key"}
-    os.environ["OPENAI_API_KEY"] = key
-    return {"ok": True, **upstream_status()}
+    _user_upstream[user] = key
+    return {"ok": True, **upstream_status(user)}
 
 
-def clear_upstream_key() -> dict:
-    os.environ.pop("OPENAI_API_KEY", None)
-    return {"ok": True, **upstream_status()}
+def clear_upstream_key(user: str) -> dict:
+    _user_upstream.pop(user, None)
+    return {"ok": True, **upstream_status(user)}
 
 
-def stats() -> dict:
-    keys = list(_keys.values())
+def stats(user: str) -> dict:
+    keys = list(_keys(user).values())
     return {
         "total_keys": len(keys),
         "active_keys": sum(1 for k in keys if k.enabled),
@@ -163,9 +159,10 @@ def stats() -> dict:
     }
 
 
-# ── Cost helpers ──
+# ── Cost helpers ──────────────────────────────────────────────────────────────
+
 def _est_tokens(text: str) -> int:
-    return max(1, len(text) // 4)  # ~4 chars per token
+    return max(1, len(text) // 4)
 
 
 def _cost(model: str, in_tok: int, out_tok: int) -> float:
@@ -182,15 +179,18 @@ def _rate_ok(vk: VirtualKey) -> bool:
     return True
 
 
-# ── The protected call ──
+# ── The protected call ────────────────────────────────────────────────────────
+
 def gateway_chat(
+    user: str,
     api_key: str | None,
     messages: list[dict],
     model: str = DEFAULT_MODEL,
     max_tokens: int = 512,
 ) -> dict:
-    """Screen, budget-check, and forward a chat request using the server's real key."""
-    vk = _keys.get(api_key or "")
+    """Screen, budget-check, and forward a chat request. Isolated to `user`."""
+    ku = _keys(user)
+    vk = ku.get(api_key or "")
     if not vk:
         return {"error": "Invalid API key.", "status": 401, "blocked": True}
     if not vk.enabled:
@@ -202,13 +202,8 @@ def gateway_chat(
 
     vk.request_count += 1
     user_text = " ".join(m.get("content", "") for m in messages if m.get("role") == "user")
-
     msg_preview = (user_text[:120] + "…") if len(user_text) > 120 else user_text
 
-    # ── AgentShield Security LLM: full threat analysis ──
-    # The Security LLM produces a rich threat report (risk score, severity,
-    # attack chain, reasoning) - not just SAFE/BLOCK. The gateway uses that
-    # verdict to decide whether to forward the request.
     from ..agentshield import analyze_threat, record_action
     report = analyze_threat(user_text, source="user")
 
@@ -219,6 +214,7 @@ def gateway_chat(
         vk.cost_saved_usd += saved
         record_action(vk.name, action="blocked", blocked=True)
         _log_event(
+            user,
             outcome="blocked",
             layer=report["signals"][0]["layer"] if report["signals"] else "security-llm",
             key_name=vk.name, message=msg_preview,
@@ -233,8 +229,7 @@ def gateway_chat(
             cost_saved_usd=round(saved, 6),
         )
         return {
-            "blocked": True,
-            "status": 200,
+            "blocked": True, "status": 200,
             "threat": report["attack_type"],
             "explanation": report["reason"],
             "risk_score": report["risk_score"],
@@ -250,13 +245,11 @@ def gateway_chat(
             "key": vk.public(),
         }
 
-    # ── Budget check ──
     if vk.spent_usd >= vk.budget_usd:
         return {"error": f"Budget exhausted (${vk.budget_usd:.2f}). Request blocked to prevent overspend.",
                 "status": 402, "blocked": True, "key": vk.public()}
 
-    # ── Forward using the REAL key (server-side only) or local model ──
-    real_key = os.environ.get("OPENAI_API_KEY")
+    real_key = _user_upstream.get(user, "") or os.environ.get("OPENAI_API_KEY", "")
     if real_key:
         try:
             from openai import OpenAI
@@ -270,7 +263,6 @@ def gateway_chat(
         except Exception as e:
             return {"error": f"upstream error: {e}", "status": 502, "blocked": False, "key": vk.public()}
     else:
-        # demo upstream: our local agentic-1
         from ..llm import engine
         r = engine.chat(messages[-1].get("content", "") if messages else "")
         output = r.get("response", "")
@@ -278,13 +270,13 @@ def gateway_chat(
         out_tok = _est_tokens(output)
         upstream = "local"
 
-    # ── Scrub output, account for cost ──
     output = redact_pii(output)
     cost = _cost(model, in_tok, out_tok)
     vk.spent_usd += cost
 
     record_action(vk.name, action="allowed", blocked=False, cost_usd=cost)
     _log_event(
+        user,
         outcome="forwarded", layer="security-llm-passed",
         key_name=vk.name, message=msg_preview,
         upstream=upstream, model=model,
@@ -296,8 +288,7 @@ def gateway_chat(
     )
 
     return {
-        "blocked": False,
-        "status": 200,
+        "blocked": False, "status": 200,
         "response": output,
         "upstream": upstream,
         "model": model,

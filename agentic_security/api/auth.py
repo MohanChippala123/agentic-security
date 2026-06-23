@@ -109,13 +109,9 @@ def read_token(token: str | None) -> dict | None:
 # ── bootstrap ────────────────────────────────────────────────────────────────
 
 def seed_demo_account() -> None:
-    """Migrate any legacy users.json, then ensure the demo account exists."""
+    """Migrate any legacy users.json on first run only.
+    Never creates fake or demo accounts — real users sign up themselves."""
     migrated = db.migrate_legacy_users()
     if migrated:
         import logging
         logging.getLogger("agentic_security").info("Migrated %d user(s) from users.json → SQLite", migrated)
-    if not db.user_get("demo@agentic.security"):
-        try:
-            create_user("demo@agentic.security", "demo1234", "Demo Analyst")
-        except ValueError:
-            pass
