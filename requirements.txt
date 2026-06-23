@@ -2,10 +2,19 @@
 fastapi>=0.110
 uvicorn[standard]>=0.27
 pydantic>=2.6
-torch>=2.2            # agentic-1: our from-scratch language model
+torch>=2.2            # AgentShield Security LLM (from-scratch transformer)
 numpy>=1.26           # tensor / data handling
 
-# Optional probe / target dependencies (the engine degrades gracefully without them)
+# ── Hybrid Firewall Layer ────────────────────────────────────────────────────
+# All-MiniLM-L6-v2 sentence embeddings + XGBoost classifier (Hybrid Layer)
+sentence-transformers>=2.7
+xgboost>=2.0
+scikit-learn>=1.3     # preprocessing pipeline for XGBoost
+
+# LangGraph orchestration (parallel fan-out firewall graph)
+langgraph>=0.1
+
+# Optional probe / target dependencies (engine degrades gracefully without them)
 Pillow>=10.0          # multimodal probe: render text-to-image payloads
 openai>=1.30          # openai-compatible targets
 anthropic>=0.40       # anthropic (Claude) targets

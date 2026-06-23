@@ -31,6 +31,39 @@ _HEX_LONG = re.compile(r"(?:0x)?[a-fA-F0-9]{40,}")
 _HTML_COMMENT = re.compile(r"<!--.*?-->", re.DOTALL)
 _WHITE_TEXT = re.compile(r"color\s*:\s*(?:#fff|#ffffff|white|rgb\(\s*255\s*,\s*255\s*,\s*255\s*\))", re.I)
 
+# ROT13 decode then check
+_ROT13_TABLE = str.maketrans(
+    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz",
+    "NOPQRSTUVWXYZABCDEFGHIJKLMnopqrstuvwxyzabcdefghijklm",
+)
+# Leetspeak normalisation map
+_LEET = str.maketrans("013456789@$", "oleasgtbgaS")
+
+# Indirect prompt injection: instructions embedded in supposedly external content
+_INDIRECT_INJECTION = re.compile(
+    r"(?:"
+    r"(?:ai|llm|assistant|chatgpt|gpt|model|bot)\s*[,:]\s*(?:ignore|disregard|forget|override|skip|bypass)|"
+    r"\[system\]|\{system\}|<system>|<!--\s*(?:ignore|prompt|instruction)|"
+    r"note\s+to\s+(?:ai|llm|assistant|model)\s*[:—]|"
+    r"(?:instruction|directive)\s+for\s+(?:the\s+)?(?:ai|assistant|model)\s*[:—]|"
+    r"if\s+you(?:'re|\s+are)\s+an?\s+(?:ai|llm|assistant)\s*,\s*(?:ignore|reveal|output|print|show)"
+    r")",
+    re.I,
+)
+
+# Role-play escape patterns (beyond the corpus)
+_ROLEPLAY_ESCAPE = re.compile(
+    r"\b(?:"
+    r"pretend\s+(?:you(?:'re|\s+are)|to\s+be)|"
+    r"act\s+as\s+(?:if|though|an?)\s|"
+    r"play\s+(?:the\s+)?(?:role|part|character)\s+of|"
+    r"in\s+this\s+(?:story|fiction|game|scenario|roleplay|simulation)\s+you\s+(?:are|have\s+no)|"
+    r"for\s+(?:this\s+)?(?:fictional|creative|hypothetical)\s+(?:exercise|scenario|story)\s+you\s+(?:can|are)|"
+    r"let(?:'s|\s+us)\s+(?:say|pretend|imagine)\s+you\s+have\s+no\s+(?:rules|restrictions|limits|safety)"
+    r")\b",
+    re.I,
+)
+
 
 def _has_zero_width(text: str) -> bool:
     return bool(_ZERO_WIDTH.search(text))
@@ -246,7 +279,77 @@ def _encoding_signal(text: str) -> ThreatSignal | None:
             explanation="Base64-encoded payload contains attack keywords (ignore/system/prompt/bypass).",
             layer="content-analyzer",
         )
+    # ROT13 decode and check
+    decoded_rot13 = text.translate(_ROT13_TABLE).lower()
+    if any(k in decoded_rot13 for k in ("ignore", "system prompt", "jailbreak", "bypass", "override")):
+        return ThreatSignal(
+            name="encoding_attack",
+            confidence=0.88,
+            weight=0.92,
+            explanation="ROT13-encoded payload contains attack keywords after decoding.",
+            layer="content-analyzer",
+        )
+    # Leetspeak normalisation
+    leet_decoded = text.translate(_LEET).lower()
+    if any(k in leet_decoded for k in ("ignore", "system", "jailbreak", "bypass", "override")):
+        return ThreatSignal(
+            name="encoding_attack",
+            confidence=0.75,
+            weight=0.80,
+            explanation="Leetspeak-encoded payload contains attack keywords after normalisation.",
+            layer="content-analyzer",
+        )
     return None
+
+
+def _indirect_injection_signal(text: str, source: str) -> ThreatSignal | None:
+    if _INDIRECT_INJECTION.search(text):
+        return ThreatSignal(
+            name="indirect_prompt_injection",
+            confidence=0.91,
+            weight=1.0,
+            explanation=(
+                "Indirect prompt injection detected: instructions embedded inside external/retrieved content "
+                "targeting the AI model."
+            ),
+            layer="content-analyzer",
+        )
+    return None
+
+
+def _roleplay_escape_signal(text: str) -> ThreatSignal | None:
+    if _ROLEPLAY_ESCAPE.search(text):
+        return ThreatSignal(
+            name="jailbreak",
+            confidence=0.84,
+            weight=0.90,
+            explanation="Role-play escape attempt: asking the model to pretend/act as an entity with no restrictions.",
+            layer="content-analyzer",
+        )
+    return None
+
+
+def _guard_graph_signal(text: str) -> ThreatSignal | None:
+    """Run the LangGraph hybrid firewall (XGBoost+MiniLM + Security LLM) as a unified signal."""
+    try:
+        from ..llm.guard_graph import run_firewall, is_available
+        if not is_available():
+            return None
+        state = run_firewall(text)
+        if state.get("verdict") != "attack":
+            return None
+        score = state.get("score", 0.0)
+        prob = state.get("keep_jailbreak", 0.0)
+        notes = state.get("notes", "")
+        return ThreatSignal(
+            name="prompt_injection",
+            confidence=round(min(1.0, score / 100), 3),
+            weight=1.05,  # hybrid layer is high-precision
+            explanation=f"LangGraph hybrid firewall verdict: ATTACK. {notes}",
+            layer="hybrid-layer",
+        )
+    except Exception:
+        return None
 
 
 # ── API-key-specific attack vectors ──
@@ -394,14 +497,24 @@ def analyze_threat(text: str, *, source: str = "user", context: dict | None = No
                 layer="regex-shield",
             ))
 
-    # Content-analyzer (hidden / homoglyph / base64 / key-exfil / cost-bomb)
+    # Content-analyzer — all 6 attack categories
     weight_bump = 1.0 if source == "user" else 1.15
-    for sig in (_safe(_hidden_signal, cleaned), _safe(_homoglyph_signal, cleaned),
-                _safe(_encoding_signal, text), _safe(_key_exfil_signal, cleaned),
-                _safe(_cost_bomb_signal, text, truncated)):
+    for sig in (
+        # 1. Prompt injection / hidden instructions
+        _safe(_hidden_signal, cleaned),
+        # 2. Jailbreak / role-play escapes
+        _safe(_roleplay_escape_signal, cleaned),
+        # 5. Obfuscation & encoding attacks (homoglyph, base64, ROT13, leet)
+        _safe(_homoglyph_signal, cleaned),
+        _safe(_encoding_signal, text),
+        # 3. System prompt extraction / 4. Indirect injection / key exfil
+        _safe(_key_exfil_signal, cleaned),
+        _safe(_indirect_injection_signal, cleaned, source),
+        # Cost bombing
+        _safe(_cost_bomb_signal, text, truncated),
+    ):
         if sig:
             sig.weight = min(1.0, sig.weight * weight_bump)
-            # External content with hidden instructions is "indirect prompt injection"
             if source != "user" and sig.name == "hidden_instructions":
                 sig.name = "indirect_prompt_injection"
             signals.append(sig)
@@ -411,15 +524,19 @@ def analyze_threat(text: str, *, source: str = "user", context: dict | None = No
     if sim:
         signals.append(sim)
 
-    # The LLM judge is a CONFIRMER, not an initiator. It only runs when there's
-    # already at least mild suspicion - otherwise we'd run a model that has
-    # learned to be cautious and over-trigger on benign queries that share
-    # incidental vocabulary with attack patterns.
+    # LLM judge + hybrid-layer graph — both run as CONFIRMERS (only when there
+    # is pre-existing suspicion, to avoid over-triggering on benign queries).
     pre_score = _compose_risk_score(signals)
     if 25 <= pre_score < 80:
         llm = _safe(_llm_refusal_signal, cleaned)
         if llm:
             signals.append(llm)
+
+    # Hybrid-layer (XGBoost+MiniLM via LangGraph) — runs in parallel with existing
+    # signals; only adds a signal if it also votes "attack".
+    graph_sig = _safe(_guard_graph_signal, cleaned)
+    if graph_sig:
+        signals.append(graph_sig)
 
     # Compose final report
     score = _compose_risk_score(signals)
