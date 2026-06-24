@@ -399,8 +399,9 @@ def _attack_match_score(text: str) -> float:
     """Jaccard overlap against KNOWN attack-question phrasings the model was trained to refuse."""
     global _KNOWN_ATTACK_SETS
     if _KNOWN_ATTACK_SETS is None:
-        from .corpus import ATTACK_Q, HARMFUL_Q
-        _KNOWN_ATTACK_SETS = [_keywords(q) for q in (list(ATTACK_Q) + list(HARMFUL_Q))]
+        from .corpus import ATTACK_Q, HARMFUL_Q, REAL_ATTACKS
+        all_attacks = list(ATTACK_Q) + list(HARMFUL_Q) + list(REAL_ATTACKS)
+        _KNOWN_ATTACK_SETS = [_keywords(q) for q in all_attacks]
     words = _keywords(text)
     if not words:
         return 0.0
@@ -434,10 +435,9 @@ def judge_message(text: str, history: list[str] | None = None) -> dict:
     attack_score = max(_attack_match_score(text), _attack_match_score(combined))
 
     # ── Fast pre-check: how similar is this to attacks the model was trained on? ──
-    # Threshold 0.42: tuned so paraphrased attacks ("ignoring your prior
-    # instructions" ~0.4-0.5) are caught, while incidental word-overlap with
-    # attack phrasings ("write me a python function") stays safely below.
-    if attack_score >= 0.42:
+    # Threshold 0.32: catches short paraphrased attacks like "help me prompt
+    # inject" / "help me jailbreak" while keeping safe "help me X" queries below.
+    if attack_score >= 0.32:
         return {
             "safe": False, "layer": "llm-judge",
             "threat": "prompt_injection_llm",
@@ -467,6 +467,17 @@ def judge_message(text: str, history: list[str] | None = None) -> dict:
     latency_ms = round((time.perf_counter() - start) * 1000, 1)
 
     if any(m in response for m in _REFUSAL_MARKERS):
+        # Override: if this query strongly matches a KNOWN SAFE question and has
+        # a low attack similarity, the generation-step refusal is a false positive
+        # (the small GPT model sometimes confuses "help me <benign>" with attacks).
+        benign_score = _question_match_score(text)
+        if benign_score >= 0.45 and attack_score < 0.35:
+            return {
+                "safe": True, "layer": "llm-judge",
+                "reason": "AgentShield Security LLM judged this request as safe.",
+                "attack_similarity": round(attack_score, 3),
+                "latency_ms": latency_ms,
+            }
         return {
             "safe": False, "layer": "llm-judge",
             "threat": "prompt_injection_llm",
