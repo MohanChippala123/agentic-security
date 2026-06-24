@@ -711,6 +711,17 @@ llm = ChatOpenAI(model=<span class="s">"gpt-4o-mini"</span>)
 </div>
 
 <script>
+// Replace all localhost:8000 placeholders with the actual server URL
+(function(){
+  const base = window.location.origin;
+  if(base === 'http://localhost:8000') return; // already correct for local dev
+  document.querySelectorAll('pre').forEach(pre=>{
+    pre.innerHTML = pre.innerHTML
+      .replace(/http:\/\/localhost:8000\/v1/g, base+'/v1')
+      .replace(/http:\/\/localhost:8000(?!\/v1)/g, base);
+  });
+})();
+
 function scrollTo(id){
   const el = document.getElementById(id);
   if(el){ el.scrollIntoView({behavior:'smooth',block:'start'}); }
