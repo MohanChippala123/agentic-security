@@ -261,6 +261,7 @@ class GatewayChatRequest(BaseModel):
 
 class UpstreamKeyRequest(BaseModel):
     api_key: str = Field(..., description="Your real provider key (stored server-side, never returned)")
+    provider: str | None = Field(None, description="Override auto-detected provider (openai/anthropic/groq/gemini/mistral/together/cohere)")
 
 
 @app.get("/api/gateway/status")
@@ -274,7 +275,7 @@ def gateway_status(request: Request) -> dict:
 def gateway_set_upstream(req: UpstreamKeyRequest, request: Request) -> dict:
     """Connect your real provider key. Held server-side; never exposed to clients."""
     user = _require_user(request)
-    return gw.set_upstream_key(user["email"], req.api_key)
+    return gw.set_upstream_key(user["email"], req.api_key, req.provider)
 
 
 @app.delete("/api/gateway/upstream")
@@ -308,6 +309,153 @@ def gateway_judge(req: JudgeRequest, request: Request) -> dict:
     _require_user(request)
     from ..llm.engine import judge_message
     return judge_message(req.text)
+
+
+# ── Drop-in proxy endpoints (OpenAI / Anthropic compatible) ──────────────────
+# Users point their SDK at this server instead of api.openai.com or api.anthropic.com.
+# Authorization: Bearer <agk-virtual-key>
+#
+# OpenAI SDK:   client = OpenAI(api_key="agk-...", base_url="http://localhost:8000/v1")
+# Anthropic SDK: client = Anthropic(api_key="agk-...", base_url="http://localhost:8000")
+
+class ProxyChatRequest(BaseModel):
+    model: str = Field("gpt-4o-mini")
+    messages: list[dict] = Field(...)
+    max_tokens: int = Field(512)
+    temperature: float = Field(0.7)
+    stream: bool = Field(False)
+
+
+@app.post("/v1/chat/completions")
+async def proxy_openai_chat(req: ProxyChatRequest, request: Request) -> JSONResponse:
+    """OpenAI-compatible drop-in proxy. Point your SDK here instead of api.openai.com."""
+    auth_header = request.headers.get("authorization", "")
+    api_key = auth_header.removeprefix("Bearer ").strip()
+    if not api_key:
+        return JSONResponse(status_code=401, content={"error": {"message": "No API key provided", "type": "auth_error"}})
+
+    # Resolve virtual key to user
+    user, vk = gw.resolve_virtual_key(api_key)
+    if not user or not vk:
+        return JSONResponse(status_code=401, content={"error": {"message": "Invalid AgentShield virtual key", "type": "auth_error"}})
+
+    result = gw.gateway_chat(
+        user=user, api_key=api_key,
+        messages=req.messages, model=req.model,
+        max_tokens=req.max_tokens,
+    )
+
+    if result.get("blocked"):
+        # Return OpenAI-format error so the SDK surfaces it cleanly
+        return JSONResponse(status_code=400, content={
+            "error": {
+                "message": result.get("explanation") or result.get("message") or "Request blocked by AgentShield",
+                "type": "content_policy_violation",
+                "threat": result.get("threat"),
+                "risk_score": result.get("risk_score"),
+                "severity": result.get("severity"),
+                "agentshield_blocked": True,
+            }
+        })
+
+    # Wrap in OpenAI response format
+    import time as _time
+    return JSONResponse(content={
+        "id": f"chatcmpl-{uuid.uuid4().hex[:24]}",
+        "object": "chat.completion",
+        "created": int(_time.time()),
+        "model": result.get("model", req.model),
+        "choices": [{
+            "index": 0,
+            "message": {"role": "assistant", "content": result["response"]},
+            "finish_reason": "stop",
+        }],
+        "usage": {
+            "prompt_tokens": result.get("tokens", {}).get("input", 0),
+            "completion_tokens": result.get("tokens", {}).get("output", 0),
+            "total_tokens": (result.get("tokens", {}).get("input", 0) +
+                             result.get("tokens", {}).get("output", 0)),
+        },
+        "agentshield": {
+            "risk_score": result.get("risk_score"),
+            "severity": result.get("severity"),
+            "passed": True,
+            "provider": result.get("provider"),
+        }
+    })
+
+
+@app.post("/v1/messages")
+async def proxy_anthropic_messages(request: Request) -> JSONResponse:
+    """Anthropic-compatible drop-in proxy. Point your Anthropic SDK here."""
+    auth_header = request.headers.get("x-api-key", "") or request.headers.get("authorization", "")
+    api_key = auth_header.removeprefix("Bearer ").strip()
+    if not api_key:
+        return JSONResponse(status_code=401, content={"error": {"type": "authentication_error", "message": "No API key"}})
+
+    try:
+        body = await request.json()
+    except Exception:
+        return JSONResponse(status_code=400, content={"error": {"type": "invalid_request", "message": "Invalid JSON"}})
+
+    user, vk = gw.resolve_virtual_key(api_key)
+    if not user or not vk:
+        return JSONResponse(status_code=401, content={"error": {"type": "authentication_error", "message": "Invalid AgentShield virtual key"}})
+
+    messages = body.get("messages", [])
+    model = body.get("model", "claude-haiku-4-5-20251001")
+    max_tokens = body.get("max_tokens", 512)
+    # Inject system prompt if present
+    if body.get("system"):
+        messages = [{"role": "system", "content": body["system"]}] + messages
+
+    result = gw.gateway_chat(
+        user=user, api_key=api_key,
+        messages=messages, model=model,
+        max_tokens=max_tokens,
+    )
+
+    if result.get("blocked"):
+        return JSONResponse(status_code=400, content={
+            "error": {
+                "type": "content_policy_violation",
+                "message": result.get("explanation") or "Request blocked by AgentShield",
+                "agentshield_blocked": True,
+                "threat": result.get("threat"),
+                "risk_score": result.get("risk_score"),
+            }
+        })
+
+    import time as _time
+    return JSONResponse(content={
+        "id": f"msg_{uuid.uuid4().hex[:24]}",
+        "type": "message",
+        "role": "assistant",
+        "content": [{"type": "text", "text": result["response"]}],
+        "model": result.get("model", model),
+        "stop_reason": "end_turn",
+        "usage": {
+            "input_tokens": result.get("tokens", {}).get("input", 0),
+            "output_tokens": result.get("tokens", {}).get("output", 0),
+        },
+        "agentshield": {
+            "risk_score": result.get("risk_score"),
+            "severity": result.get("severity"),
+            "passed": True,
+        }
+    })
+
+
+@app.get("/v1/models")
+def proxy_list_models(request: Request) -> JSONResponse:
+    """List available models (OpenAI-compatible)."""
+    from ..shield.providers import PROVIDER_PRICING
+    import time as _time
+    models = []
+    for provider, pmodels in PROVIDER_PRICING.items():
+        for model_id in pmodels:
+            models.append({"id": model_id, "object": "model", "created": int(_time.time()), "owned_by": provider})
+    return JSONResponse(content={"object": "list", "data": models})
 
 
 # ── AgentShield: Security LLM analyst endpoints ───────────────────────────────

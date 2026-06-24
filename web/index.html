@@ -172,11 +172,18 @@ a{color:inherit;text-decoration:none}
 .pchk .pd{font-size:10.5px;color:var(--muted)}
 .run-full{
   width:100%;background:var(--lime);color:#000;border:none;
-  padding:12px;font-family:var(--mono);font-size:11px;font-weight:700;
-  text-transform:uppercase;letter-spacing:.1em;cursor:pointer;transition:opacity .12s
+  padding:10px 18px;border-radius:8px;
+  font-family:var(--mono);font-size:10.5px;font-weight:700;
+  text-transform:uppercase;letter-spacing:.08em;cursor:pointer;
+  box-shadow:0 2px 12px rgba(196,241,53,.25),0 1px 3px rgba(0,0,0,.3);
+  transition:opacity var(--trans),transform var(--trans),box-shadow var(--trans)
 }
-.run-full:hover{opacity:.88}
-.run-full:disabled{opacity:.45;cursor:default}
+.run-full:hover{
+  opacity:.93;
+  box-shadow:0 4px 20px rgba(196,241,53,.38),0 1px 4px rgba(0,0,0,.3)
+}
+.run-full:not(:disabled):active{transform:scale(.96);box-shadow:0 1px 6px rgba(196,241,53,.2)}
+.run-full:disabled{opacity:.38;cursor:default;box-shadow:none}
 .hint{font-size:11px;color:var(--muted);margin-top:10px;line-height:1.55}
 
 /* history */
@@ -379,12 +386,37 @@ button:not(:disabled):active{transform:scale(.97)}
   <div class="sec" style="border:1px solid var(--border);background:var(--panel);padding:14px 16px;margin-bottom:1px">
     <div id="gwStatus" style="font-size:12.5px;color:var(--muted);margin-bottom:10px">Loading…</div>
     <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-      <input id="gwUpstreamKey" type="password" autocomplete="off" placeholder="Paste your provider key (e.g. sk-...)" style="flex:1;min-width:200px;background:rgba(255,255,255,.04);border:1px solid var(--border);outline:none;padding:9px 11px;font-family:var(--mono);font-size:12px;color:var(--ink)">
-      <button class="run-full" style="width:auto;padding:0 16px" onclick="gwConnectKey()">Connect key</button>
+      <input id="gwUpstreamKey" type="password" autocomplete="off" placeholder="Paste your provider key (sk-…  sk-ant-…  gsk_…  AIzaSy…)" style="flex:1;min-width:200px;background:rgba(255,255,255,.04);border:1px solid var(--border);outline:none;border-radius:6px;padding:9px 11px;font-family:var(--mono);font-size:12px;color:var(--ink)" oninput="gwDetectProvider(this.value)">
+      <select id="gwProviderSel" style="background:rgba(255,255,255,.06);border:1px solid var(--border);border-radius:6px;color:var(--ink);padding:9px 10px;font-size:11.5px;font-family:var(--mono);cursor:pointer">
+        <option value="">Auto-detect</option>
+        <option value="openai">OpenAI</option>
+        <option value="anthropic">Anthropic (Claude)</option>
+        <option value="groq">Groq</option>
+        <option value="gemini">Google Gemini</option>
+        <option value="mistral">Mistral</option>
+        <option value="together">Together AI</option>
+        <option value="cohere">Cohere</option>
+      </select>
+      <button class="run-full" style="width:auto;padding:0 16px;border-radius:8px" onclick="gwConnectKey()">Connect key</button>
       <button class="mm-try" style="width:auto;padding:8px 12px" onclick="gwDisconnectKey()">Disconnect</button>
     </div>
-    <div style="font-size:10.5px;color:rgba(255,255,255,.3);margin-top:7px">Stored server-side in memory, never returned to any client. For permanent setup add <code style="font-family:var(--mono)">OPENAI_API_KEY</code> to the server's .env.</div>
+    <div style="font-size:10.5px;color:rgba(255,255,255,.3);margin-top:8px">Key stored server-side, never returned to any client. Provider auto-detected from key prefix.</div>
+    <div id="gwProviderHint" style="margin-top:6px;font-size:11px;color:var(--teal);font-family:var(--mono)"></div>
     <div id="gwUpstreamMsg" style="font-size:11px;margin-top:6px"></div>
+  </div>
+
+  <!-- integration / SDK snippet -->
+  <div class="sec" style="border:1px solid var(--border);background:var(--panel);padding:14px 16px;margin-bottom:1px" id="gwIntegration" style="display:none">
+    <div class="panel-h" style="margin-bottom:10px"><b>Connect your app</b><span class="panel-badge">Drop-in proxy</span></div>
+    <p style="font-size:11.5px;color:var(--muted);margin-bottom:12px;line-height:1.65">Point your existing SDK at AgentShield instead of the provider. Every request flows through the security firewall automatically — no code changes beyond the base URL.</p>
+    <div style="display:flex;gap:6px;margin-bottom:10px">
+      <button class="mm-try" onclick="showSnippet('openai')" id="snip-openai" style="font-size:10px">OpenAI SDK</button>
+      <button class="mm-try" onclick="showSnippet('anthropic')" id="snip-anthropic" style="font-size:10px">Anthropic SDK</button>
+      <button class="mm-try" onclick="showSnippet('curl')" id="snip-curl" style="font-size:10px">cURL</button>
+      <button class="mm-try" onclick="showSnippet('groq')" id="snip-groq" style="font-size:10px">Groq SDK</button>
+    </div>
+    <div id="gwSnippet" style="background:rgba(0,0,0,.35);border:1px solid var(--border);border-radius:6px;padding:14px 16px;font-family:var(--mono);font-size:11px;color:rgba(255,255,255,.75);white-space:pre;overflow-x:auto;line-height:1.7"></div>
+    <div style="font-size:10.5px;color:rgba(255,255,255,.3);margin-top:8px">Your virtual key goes where the SDK expects an API key. AgentShield intercepts every request before it reaches the provider.</div>
   </div>
 
   <!-- defense layers -->
@@ -788,12 +820,18 @@ async function loadGatewayTab(){
   try{
     const s=await (await fetch('/api/gateway/status')).json();
     _demoMode = !s.real_key_configured;
+    const provLabel=_PROVIDER_LABELS[s.provider]||s.provider||'';
+    const provColor=_PROVIDER_COLORS[s.provider]||'var(--teal)';
     $('gwStatus').innerHTML = s.real_key_configured
-      ? `<b style="color:var(--teal)">● Upstream: OpenAI</b> — ${esc(s.note)}`
+      ? `<b style="color:${provColor}">● Upstream: ${esc(provLabel||'Provider')}</b> — ${esc(s.note)}`
       : `<b style="color:var(--amber)">● Demo mode: AgentShield Security LLM</b> — ${esc(s.note)}`;
     // show / hide demo banner
     const banner=$('demoBanner');
     if(banner) banner.style.display=_demoMode?'flex':'none';
+    // show / hide integration section
+    const integ=$('gwIntegration');
+    if(integ) integ.style.display=_demoMode?'none':'';
+    if(!_demoMode && !$('gwSnippet').textContent) showSnippet('openai');
   }catch(e){}
   try{
     const st=await (await fetch('/api/gateway/stats')).json();
@@ -915,18 +953,125 @@ async function loadGwKeys(){
   }catch(e){}
 }
 
+const _PROVIDER_PREFIXES = {
+  'sk-ant-':'anthropic','gsk_':'groq','AIzaSy':'gemini','together_':'together',
+};
+const _PROVIDER_LABELS = {
+  openai:'OpenAI',anthropic:'Anthropic (Claude)',groq:'Groq',
+  gemini:'Google Gemini',mistral:'Mistral',together:'Together AI',cohere:'Cohere'
+};
+const _PROVIDER_COLORS = {
+  openai:'#10a37f',anthropic:'#d97706',groq:'#f55036',
+  gemini:'#4285f4',mistral:'#7c3aed',together:'#0ea5e9',cohere:'#39d353'
+};
+
+function gwDetectProvider(key){
+  const hint=$('gwProviderHint');
+  const sel=$('gwProviderSel');
+  if(!key){ hint.textContent=''; return; }
+  let detected='';
+  for(const [prefix,prov] of Object.entries(_PROVIDER_PREFIXES)){
+    if(key.startsWith(prefix)){ detected=prov; break; }
+  }
+  if(!detected && key.startsWith('sk-')) detected='openai';
+  if(!detected && /^[0-9a-f]{32}$/.test(key)) detected='mistral';
+  if(detected){
+    sel.value=detected;
+    hint.innerHTML=`Detected: <b style="color:${_PROVIDER_COLORS[detected]||'var(--teal)'}">${_PROVIDER_LABELS[detected]||detected}</b>`;
+  } else {
+    hint.innerHTML='<span style="color:var(--muted)">Unknown prefix — select provider manually</span>';
+  }
+}
+
 async function gwConnectKey(){
   const key=$('gwUpstreamKey').value.trim();
+  const provider=$('gwProviderSel').value||null;
   const msg=$('gwUpstreamMsg');
   if(!key){ msg.innerHTML='<span style="color:var(--rose)">Paste a key first.</span>'; return; }
   msg.innerHTML='Connecting…';
   try{
-    const r=await fetch('/api/gateway/upstream',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({api_key:key})});
+    const body={api_key:key};
+    if(provider) body.provider=provider;
+    const r=await fetch('/api/gateway/upstream',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
     const v=await r.json();
     $('gwUpstreamKey').value='';
-    msg.innerHTML=v.ok?'<span style="color:var(--teal)">Connected. Requests now forward to your provider; the key stays server-side.</span>':'<span style="color:var(--rose)">'+esc(v.error||'failed')+'</span>';
+    $('gwProviderHint').textContent='';
+    const pLabel=_PROVIDER_LABELS[v.provider]||v.provider||'provider';
+    msg.innerHTML=v.ok
+      ?`<span style="color:var(--teal)">Connected to <b>${esc(pLabel)}</b>. Requests forward securely; your key stays server-side.</span>`
+      :'<span style="color:var(--rose)">'+esc(v.error||'failed')+'</span>';
     loadGatewayTab();
   }catch(e){ msg.innerHTML='<span style="color:var(--rose)">Error: '+esc(e.message)+'</span>'; }
+}
+
+/* Integration / SDK snippet */
+let _virtualKey='';
+function showSnippet(type){
+  const el=$('gwSnippet');
+  const base=window.location.origin;
+  const vk=_virtualKey||'agk-your-virtual-key';
+  const snippets={
+    openai:`# OpenAI SDK — just change base_url + api_key
+from openai import OpenAI
+
+client = OpenAI(
+    api_key="${vk}",          # your AgentShield virtual key
+    base_url="${base}/v1",    # points to AgentShield instead of OpenAI
+)
+
+response = client.chat.completions.create(
+    model="gpt-4o-mini",
+    messages=[{"role": "user", "content": "Hello!"}],
+)
+print(response.choices[0].message.content)
+# Every request is screened by the Security LLM before forwarding.`,
+
+    anthropic:`# Anthropic SDK — just change base_url + api_key
+import anthropic
+
+client = anthropic.Anthropic(
+    api_key="${vk}",           # your AgentShield virtual key
+    base_url="${base}",        # points to AgentShield
+)
+
+message = client.messages.create(
+    model="claude-haiku-4-5-20251001",
+    max_tokens=512,
+    messages=[{"role": "user", "content": "Hello!"}],
+)
+print(message.content[0].text)`,
+
+    groq:`# Groq SDK — just change base_url + api_key
+from groq import Groq
+
+client = Groq(
+    api_key="${vk}",           # your AgentShield virtual key
+    base_url="${base}/v1",     # points to AgentShield
+)
+
+response = client.chat.completions.create(
+    model="llama-3.3-70b-versatile",
+    messages=[{"role": "user", "content": "Hello!"}],
+)
+print(response.choices[0].message.content)`,
+
+    curl:`# cURL — works with any HTTP client
+curl ${base}/v1/chat/completions \\
+  -H "Authorization: Bearer ${vk}" \\
+  -H "Content-Type: application/json" \\
+  -d '{
+    "model": "gpt-4o-mini",
+    "messages": [{"role": "user", "content": "Hello!"}]
+  }'
+
+# Blocked requests return HTTP 400 with agentshield_blocked: true`,
+  };
+  el.textContent=snippets[type]||'';
+  // highlight active button
+  ['openai','anthropic','groq','curl'].forEach(t=>{
+    const b=$('snip-'+t);
+    if(b) b.style.borderColor=t===type?'var(--lime)':'';
+  });
 }
 
 async function gwDisconnectKey(){
@@ -974,8 +1119,12 @@ async function gwCreate(){
   try{
     const k=await (await fetch('/api/gateway/keys',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)})).json();
     _FULL_KEYS[_mask(k.key)] = k.key;
+    _virtualKey = k.key;  // store for snippet
+    // refresh snippet with the real key
+    const snipEl=$('gwSnippet');
+    if(snipEl && snipEl.textContent) showSnippet('openai');
     $('gwNewKey').innerHTML=`<div style="background:var(--teal-bg);border:1px solid rgba(58,208,164,.3);padding:12px;border-radius:8px">
-      <div style="font-size:11px;color:var(--muted);margin-bottom:6px">Save this key now — it won't be shown again:</div>
+      <div style="font-size:11px;color:var(--muted);margin-bottom:6px">Save this key — it won't be shown again. Use it as your API key with the integration snippet below.</div>
       <code style="font-family:var(--mono);font-size:11px;color:var(--teal);word-break:break-all">${esc(k.key)}</code></div>`;
     loadGatewayTab();
   }catch(e){ $('gwNewKey').innerHTML='<div class="empty">Error creating key.</div>'; }

@@ -14,10 +14,17 @@ scikit-learn>=1.3     # preprocessing pipeline for XGBoost
 # LangGraph orchestration (parallel fan-out firewall graph)
 langgraph>=0.1
 
-# Optional probe / target dependencies (engine degrades gracefully without them)
+# ── Provider SDKs (all optional — gateway degrades gracefully if not installed) ──
+openai>=1.30          # OpenAI + Groq (Groq uses OpenAI-compatible SDK)
+anthropic>=0.40       # Anthropic Claude
+groq>=0.9             # Groq (native SDK)
+google-generativeai>=0.8  # Google Gemini
+mistralai>=1.0        # Mistral AI
+together>=1.2         # Together AI
+cohere>=5.0           # Cohere
+
+# Other optional dependencies
 Pillow>=10.0          # multimodal probe: render text-to-image payloads
-openai>=1.30          # openai-compatible targets
-anthropic>=0.40       # anthropic (Claude) targets
 mcp>=1.2              # Model Context Protocol server
 
 # Dev / test
