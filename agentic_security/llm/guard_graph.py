@@ -99,11 +99,13 @@ def decision_layer_node(state: GuardState) -> dict:
     combined = 0.62 * h_prob + 0.38 * m_prob
     score = round(combined * 100, 1)
 
-    # Block if either layer is highly confident OR combined exceeds threshold
+    # Block if either layer is confident OR combined exceeds threshold.
+    # Tuned for maximum recall: we would rather block a safe request
+    # than let a single attack through.
     is_attack = (
-        h_prob >= 0.70     # hybrid layer confident
-        or m_prob >= 0.78  # ML layer confident
-        or combined >= 0.50  # combined threshold
+        h_prob >= 0.40     # hybrid layer: lowered for higher recall
+        or m_prob >= 0.55  # ML layer: lowered for higher recall
+        or combined >= 0.35  # combined: aggressive threshold
     )
     verdict = "attack" if is_attack else "safe"
 

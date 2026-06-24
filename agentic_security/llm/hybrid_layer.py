@@ -77,12 +77,23 @@ def train(force: bool = False) -> None:
     y = np.array(labels)
     print(f"[HybridLayer] Embedded in {time.time()-t0:.1f}s. Training XGBoost…")
 
+    n_attack = sum(labels)
+    n_safe = len(labels) - n_attack
+    # Weight attacks 3x to maximise recall — we accept slightly more false
+    # positives in exchange for near-zero missed attacks.
+    spw = max(1.0, (n_safe / n_attack) * 3.0) if n_attack else 3.0
+
     clf = XGBClassifier(
-        n_estimators=300,
-        max_depth=5,
-        learning_rate=0.08,
-        subsample=0.9,
-        colsample_bytree=0.9,
+        n_estimators=500,
+        max_depth=6,
+        learning_rate=0.05,
+        subsample=0.85,
+        colsample_bytree=0.85,
+        min_child_weight=1,
+        gamma=0.1,
+        reg_alpha=0.1,
+        reg_lambda=1.0,
+        scale_pos_weight=spw,
         eval_metric="logloss",
         random_state=42,
         n_jobs=-1,
@@ -118,7 +129,7 @@ def predict(text: str) -> dict:
         clf = _load_clf()
         proba = clf.predict_proba(X)[0]
         attack_prob = float(proba[1])
-        verdict = "attack" if attack_prob >= 0.50 else "safe"
+        verdict = "attack" if attack_prob >= 0.38 else "safe"
         return {
             "verdict": verdict,
             "attack_probability": round(attack_prob, 4),
