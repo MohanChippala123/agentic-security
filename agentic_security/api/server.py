@@ -41,8 +41,13 @@ def _warmup_models():
 
 @asynccontextmanager
 async def lifespan(app):
-    # Start model warmup in background — doesn't block server startup
-    threading.Thread(target=_warmup_models, daemon=True).start()
+    # Eager model warmup loads torch + the MiniLM embedder (~2-3GB RAM). On small
+    # hosting plans that memory spike during the first 60s can OOM-kill the
+    # container before the health check passes. Default to OFF in deployment;
+    # models still lazy-load on the first real request. Set AGSEC_WARMUP=1 to
+    # pre-load when you have the RAM headroom.
+    if os.environ.get("AGSEC_WARMUP", "0") == "1":
+        threading.Thread(target=_warmup_models, daemon=True).start()
     yield
 
 app = FastAPI(
