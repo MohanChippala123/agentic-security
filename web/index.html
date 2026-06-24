@@ -353,7 +353,7 @@ button:not(:disabled):active{transform:scale(.97)}
 
 <!-- top nav -->
 <nav class="topnav">
-  <div class="logo" onclick="window.location.href='/'" style="cursor:pointer"><span class="mk">⛨</span> AgentShield <span style="font-weight:400;font-size:11px;color:var(--muted);margin-left:8px">by Mohan</span></div>
+  <div class="logo" onclick="window.location.href='/'" style="cursor:pointer"><span class="mk">⛨</span> AgentShield</div>
   <div class="nav-tabs">
     <a class="on" onclick="showTab('gateway',this)">Protect</a>
     <a onclick="showTab('mymodel',this)">Console</a>
@@ -1006,7 +1006,7 @@ function judgePreset(text){ $('judgeInput').value=text; runJudge(); }
 async function runJudge(){
   const text=$('judgeInput').value.trim();
   if(!text){ $('judgeResult').innerHTML='<div class="empty">Type something first.</div>'; return; }
-  $('judgeResult').innerHTML='<div class="empty"><span class="spin"></span> Mohan\'s LLM is thinking…</div>';
+  $('judgeResult').innerHTML='<div class="empty"><span class="spin"></span> AgentShield LLM is thinking…</div>';
   try{
     const v=await (await fetch('/api/gateway/judge',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text})})).json();
     const safe=v.safe;

@@ -44,7 +44,7 @@ async def lifespan(app):
 
 app = FastAPI(
     title="AgentShield",
-    description="The Security LLM platform for AI agents. Built by Mohan.",
+    description="The Security LLM platform for AI agents.",
     version="1.0.0",
     lifespan=lifespan,
 )
@@ -788,7 +788,7 @@ def agentshield_dashboard(request: Request) -> dict:
         "security_llm": {
             "name": "AgentShield Security LLM",
             "version": "1.0.0",
-            "built_by": "Mohan",
+            "built_by": "AgentShield",
         },
     }
 

@@ -19,10 +19,10 @@ from ..shield.detector import full_scan
 from ..shield.sanitizer import sanitize_input, redact_pii
 
 # ── Model identity ──
-MODEL_NAME = "mohan-llm"
+MODEL_NAME = "agentshield-llm"
 MODEL_VERSION = "1.0.0"
 MODEL_DESCRIPTION = (
-    "A local LLM built by Mohan. From-scratch GPT-style transformer with a built-in "
+    "AgentShield Security LLM. From-scratch GPT-style transformer with a built-in "
     "security firewall — no external APIs, no pretrained weights, hardened against "
     "prompt injection, jailbreaks, and data exfiltration."
 )
@@ -386,7 +386,7 @@ def chat(
     # instead of returning a confidently-wrong canned answer.
     if _question_match_score(cleaned) < _MATCH_THRESHOLD or not raw:
         output = (
-            "I'm Mohan's LLM, focused on security and coding help. I don't know that "
+            "I'm AgentShield LLM, focused on security and coding help. I don't know that "
             "one - try asking about prompt injection, securing your AI app, PII, "
             "encryption, or a small coding question."
         )
@@ -406,7 +406,7 @@ def chat(
     }
 
 
-# ── LLM judge: Mohan's LLM as the active firewall ──
+# ── LLM judge: AgentShield LLM as the active firewall ──
 # Markers that mean "the model refused this request" -> treat as attack signal.
 _REFUSAL_MARKERS = (
     "can't help with that", "can't do that", "i won't", "won't comply",
@@ -455,9 +455,9 @@ def _attack_match_score(text: str) -> float:
 
 
 def judge_message(text: str, history: list[str] | None = None) -> dict:
-    """Use Mohan's LLM as the Security LLM judge.
+    """Use AgentShield LLM as the Security LLM judge.
 
-    Strategy: compare input against the attack patterns Mohan's LLM was trained
+    Strategy: compare input against the attack patterns AgentShield LLM was trained
     to refuse. If similarity is high, the model would refuse it -> block.
     Then run the raw model (bypassing the relevance gate) and check its
     generated text for refusal markers as a second signal.
