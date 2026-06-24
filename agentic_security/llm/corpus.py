@@ -18,9 +18,44 @@ single string. Format per example:
 
 from __future__ import annotations
 
+import json
 import random
+from pathlib import Path
 
 SEP = "###"
+
+# ── Real-world attack corpus (loaded at import time) ──
+# Sourced from: AdvBench (Zou et al.), verazuo/jailbreak_llms forbidden questions,
+# Princeton MaliciousInstruct — 1,033 real attack examples used in research.
+_REAL_ATTACKS_PATH = Path(__file__).resolve().parents[2] / "data" / "real_attacks.json"
+
+def _load_real_attacks() -> list[str]:
+    if _REAL_ATTACKS_PATH.exists():
+        try:
+            with open(_REAL_ATTACKS_PATH, encoding="utf-8") as f:
+                raw = json.load(f)
+            # Filter to clean attacks only (same logic as build_corpus_ext.py)
+            SAFE_SIGNALS = [
+                "immigration laws", "adult dating apps", "sex education",
+                "political campaign messaging", "what are some tips for successfully",
+                "<|im_end|>", "<|im_start|>", "remember this number",
+                "can you help me understand the immigration",
+                "can you explain the role of adult content in the context of sex",
+            ]
+            kept = []
+            for item in raw:
+                low = item.lower()
+                if any(s in low for s in SAFE_SIGNALS):
+                    continue
+                if len(item.strip()) < 12:
+                    continue
+                kept.append(item)
+            return kept
+        except Exception:
+            pass
+    return []
+
+REAL_ATTACKS: list[str] = _load_real_attacks()
 
 # ── Identity ──
 IDENTITY_Q = [
@@ -643,6 +678,14 @@ GEN_QA = [
     ("how do i use git", "Initialize with git init, stage files with git add, save changes with git commit, and share with git push."),
     ("what is a git commit", "A git commit is a saved snapshot of your changes with a message describing what you did."),
     ("how do i git clone a repo", "Run git clone <url> to copy a remote repository to your local machine."),
+    ("how do i use git branches", "Create a branch with git checkout -b name, switch with git checkout name, and merge with git merge name."),
+    ("what is a git branch", "A git branch is an independent line of development. Use branches to work on features without affecting main."),
+    ("how do i merge branches in git", "Switch to the target branch, then run git merge <source-branch> to combine the changes."),
+    ("what is git rebase", "Git rebase moves or replays commits from one branch onto another, creating a cleaner linear history."),
+    ("what is the civil war", "The American Civil War (1861-1865) was fought between the Union and Confederate states, primarily over slavery."),
+    ("tell me about the civil war", "The Civil War was a defining conflict in American history fought from 1861 to 1865, resulting in the abolition of slavery."),
+    ("what caused the civil war", "The Civil War was caused by deep divisions over slavery, states rights, and economic differences between North and South."),
+    ("who won the civil war", "The Union (North) won the Civil War in 1865, preserving the United States and ending slavery."),
     ("what is docker", "Docker packages an app and its dependencies into a container that runs the same anywhere."),
     ("what is a function", "A function is a reusable block of code that takes inputs, does work, and returns a result."),
     ("what is typescript", "TypeScript is JavaScript with static types, catching errors at compile time instead of at runtime."),
@@ -743,6 +786,10 @@ def build_corpus(repeat: int = 25, seed: int = 1234) -> str:
         for q in ATTACK_Q:
             examples.append(_example(q, rng.choice(ATTACK_A)))
         for q in HARMFUL_Q:
+            examples.append(_example(q, rng.choice(HARMFUL_A)))
+        # Real-world attacks from research datasets (sampled each pass for variety)
+        sample_size = min(len(REAL_ATTACKS), 200)
+        for q in rng.sample(REAL_ATTACKS, sample_size) if REAL_ATTACKS else []:
             examples.append(_example(q, rng.choice(HARMFUL_A)))
 
         # All factual Q&A every pass
