@@ -1,9 +1,14 @@
+# Use the PyTorch CPU wheel index. The default torch wheel bundles ~2GB of CUDA
+# libraries, which overflows Railway's build disk and breaks the deploy. The CPU
+# build (+cpu) is ~200MB and is all this app needs.
+--extra-index-url https://download.pytorch.org/whl/cpu
+
 # Core runtime
 cryptography>=42.0    # Fernet AES-128-GCM for upstream key encryption
 fastapi>=0.110
 uvicorn[standard]>=0.27
 pydantic>=2.6
-torch>=2.2            # AgentShield Security LLM (from-scratch transformer)
+torch==2.2.2+cpu      # AgentShield Security LLM — CPU-only build (see index above)
 numpy>=1.26           # tensor / data handling
 
 # ── Hybrid Firewall Layer ────────────────────────────────────────────────────
