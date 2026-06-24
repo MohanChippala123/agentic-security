@@ -100,6 +100,26 @@ def _require_user(request: Request) -> dict:
     return user
 
 
+# ── demo account lockdown ─────────────────────────────────────────────────────
+# The public demo account is shared by everyone. It must stay usable for trying
+# the product, but must NOT allow actions that would harm other users, lock the
+# account, leak credentials, or mutate global/server-side state.
+DEMO_EMAIL = os.environ.get("AGSEC_DEMO_EMAIL", "demo@agentic.security").strip().lower()
+
+
+def _is_demo(user: dict) -> bool:
+    return (user.get("email") or "").strip().lower() == DEMO_EMAIL
+
+
+def _block_demo(user: dict, action: str = "do that") -> None:
+    """Raise 403 if the current user is the shared demo account."""
+    if _is_demo(user):
+        raise HTTPException(
+            status_code=403,
+            detail=f"The demo account is read-only — you can't {action}. Sign up for a free account to use this feature.",
+        )
+
+
 # ── auth endpoints ────────────────────────────────────────────────────────────
 
 @app.get("/api/health")
@@ -174,6 +194,7 @@ class TwoFARequest(BaseModel):
 def set_twofa(req: TwoFARequest, request: Request) -> JSONResponse:
     """Enable or disable 2FA for the authenticated user."""
     user = _require_user(request)
+    _block_demo(user, "change 2FA settings")
     db.user_set_twofa(user["email"], req.enable)
     return JSONResponse({"ok": True, "twofa_enabled": req.enable})
 
@@ -188,6 +209,7 @@ def twofa_status(request: Request) -> dict:
         "twofa_enabled": bool(row and row.get("twofa_enabled")),
         "email_configured": is_configured(),
         "email": user["email"],
+        "is_demo": _is_demo(user),
     }
 
 
@@ -212,6 +234,7 @@ def list_webhooks(request: Request) -> dict:
 @app.post("/api/gateway/webhooks")
 def create_webhook(req: WebhookCreateRequest, request: Request) -> dict:
     user = _require_user(request)
+    _block_demo(user, "create webhooks")
     if not req.url.startswith(("http://", "https://")):
         raise HTTPException(status_code=400, detail="URL must start with http:// or https://")
     import secrets as _sec
@@ -225,6 +248,7 @@ def create_webhook(req: WebhookCreateRequest, request: Request) -> dict:
 @app.delete("/api/gateway/webhooks/{wh_id}")
 def delete_webhook(wh_id: str, request: Request) -> dict:
     user = _require_user(request)
+    _block_demo(user, "delete webhooks")
     if not db.webhook_delete(user["email"], wh_id):
         raise HTTPException(status_code=404, detail="Webhook not found")
     return {"ok": True}
@@ -240,6 +264,7 @@ class PasswordChangeRequest(BaseModel):
 @app.post("/api/auth/change-password")
 def change_password(req: PasswordChangeRequest, request: Request) -> JSONResponse:
     user = _require_user(request)
+    _block_demo(user, "change the password")
     import hmac as _hmac
     row = db.user_get(user["email"])
     if not row:
@@ -260,7 +285,7 @@ def change_password(req: PasswordChangeRequest, request: Request) -> JSONRespons
 @app.post("/api/auth/gmail-config")
 def save_gmail_config(req: GmailConfigRequest, request: Request) -> JSONResponse:
     """Save Gmail credentials for 2FA OTP sending."""
-    _require_user(request)
+    _block_demo(_require_user(request), "change Gmail / email settings")
     if not req.gmail_user.strip() or "@" not in req.gmail_user:
         raise HTTPException(status_code=400, detail="Enter a valid Gmail address.")
     if len(req.app_password.replace(" ", "")) < 16:
@@ -279,7 +304,7 @@ def save_gmail_config(req: GmailConfigRequest, request: Request) -> JSONResponse
 
 @app.delete("/api/auth/gmail-config")
 def delete_gmail_config(request: Request) -> JSONResponse:
-    _require_user(request)
+    _block_demo(_require_user(request), "change Gmail / email settings")
     from .otp import clear_gmail_config
     clear_gmail_config()
     return JSONResponse({"ok": True})
@@ -289,6 +314,7 @@ def delete_gmail_config(request: Request) -> JSONResponse:
 def test_twofa(request: Request) -> JSONResponse:
     """Send a test OTP to confirm Gmail is working."""
     user = _require_user(request)
+    _block_demo(user, "send test emails")
     from .otp import generate, send_otp
     _, otp = generate(user["email"])
     result = send_otp(user["email"], otp)
@@ -484,6 +510,7 @@ def gateway_status(request: Request) -> dict:
 def gateway_set_upstream(req: UpstreamKeyRequest, request: Request) -> dict:
     """Connect your real provider key. Held server-side; never exposed to clients."""
     user = _require_user(request)
+    _block_demo(user, "connect a provider key")
     return gw.set_upstream_key(user["email"], req.api_key, req.provider)
 
 
@@ -491,6 +518,7 @@ def gateway_set_upstream(req: UpstreamKeyRequest, request: Request) -> dict:
 def gateway_clear_upstream(request: Request) -> dict:
     """Disconnect the real provider key (revert to local demo upstream)."""
     user = _require_user(request)
+    _block_demo(user, "disconnect the provider key")
     return gw.clear_upstream_key(user["email"])
 
 

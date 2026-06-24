@@ -1104,7 +1104,7 @@ async function gwConnectKey(){
     const pLabel=_PROVIDER_LABELS[v.provider]||v.provider||'provider';
     msg.innerHTML=v.ok
       ?`<span style="color:var(--teal)">Connected to <b>${esc(pLabel)}</b>. Requests forward securely; your key stays server-side.</span>`
-      :'<span style="color:var(--rose)">'+esc(v.error||'failed')+'</span>';
+      :'<span style="color:var(--rose)">'+esc(v.detail||v.error||'failed')+'</span>';
     loadGatewayTab();
   }catch(e){ msg.innerHTML='<span style="color:var(--rose)">Error: '+esc(e.message)+'</span>'; }
 }
@@ -1584,6 +1584,16 @@ async function showSecModal(){
     const s=await (await fetch('/api/auth/2fa/status')).json();
     const enabled=s.twofa_enabled;
     const configured=s.email_configured;
+    if(s.is_demo){
+      $('secBody').innerHTML=`
+        <div style="padding:20px 4px">
+          <div style="background:rgba(245,166,74,.08);border:1px solid rgba(245,166,74,.25);border-radius:8px;padding:16px 18px;line-height:1.7">
+            <div style="font-size:13px;font-weight:700;margin-bottom:6px;color:var(--amber)">Read-only demo account</div>
+            <div style="font-size:12px;color:rgba(255,255,255,.7)">This is a shared public demo, so account settings — password, 2FA, email, provider keys and webhooks — are locked. <a href="/login#signup" style="color:var(--lime)">Sign up for a free account</a> to unlock everything.</div>
+          </div>
+        </div>`;
+      return;
+    }
     $('secBody').innerHTML=`
       <div style="padding:6px 0 18px">
         <div style="font-size:12.5px;color:var(--muted);line-height:1.7;margin-bottom:18px">
