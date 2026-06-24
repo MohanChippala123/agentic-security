@@ -354,6 +354,23 @@ def me(request: Request) -> dict:
     return user
 
 
+_DEMO_PASSWORD = os.environ.get("AGSEC_DEMO_PASSWORD", "demo1234")
+
+
+@app.get("/demo")
+def demo_login() -> RedirectResponse:
+    """One-click demo: ensure the shared demo account exists, sign in, and land
+    straight on the dashboard — no login form."""
+    if not db.user_get(DEMO_EMAIL):
+        try:
+            auth.create_user(DEMO_EMAIL, _DEMO_PASSWORD, "Demo Analyst")
+        except ValueError:
+            pass  # race / already exists
+    resp = RedirectResponse("/app", status_code=302)
+    _set_session(resp, DEMO_EMAIL)
+    return resp
+
+
 # ── shield / AI firewall endpoints ───────────────────────────────────────────
 
 from ..shield.detector import full_scan as shield_detect, ThreatType
