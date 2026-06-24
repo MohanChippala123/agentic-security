@@ -327,6 +327,19 @@ def _fernet() -> "Fernet":
     return Fernet(key)
 
 
+def encrypt_value(plaintext: str) -> str:
+    """Encrypt an arbitrary secret string for at-rest storage (Fernet/AES)."""
+    return _fernet().encrypt(plaintext.encode()).decode()
+
+
+def decrypt_value(ciphertext: str) -> str:
+    """Decrypt a value produced by encrypt_value(). Returns '' on failure."""
+    try:
+        return _fernet().decrypt(ciphertext.encode()).decode()
+    except Exception:
+        return ""
+
+
 def upstream_save(user_email: str, api_key: str, provider: str) -> None:
     enc = _fernet().encrypt(api_key.encode()).decode()
     get().execute(

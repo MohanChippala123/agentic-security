@@ -1797,8 +1797,9 @@ async function toggle2FA(enable){
   try{
     const r=await fetch('/api/auth/2fa',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({enable})});
     const v=await r.json();
-    if(v.ok) showSecModal();
-  }catch(e){}
+    if(r.ok && v.ok){ showSecModal(); return; }
+    alert(v.detail||'Could not update 2FA settings.');
+  }catch(e){ alert('Could not update 2FA settings.'); }
 }
 
 async function testOTP(){

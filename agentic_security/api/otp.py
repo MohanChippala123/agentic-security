@@ -24,8 +24,9 @@ from email.mime.text import MIMEText
 from typing import Optional
 
 # ── In-memory OTP store ───────────────────────────────────────────────────────
-# Structure: temp_token → {email, otp, expires}
+# Structure: temp_token → {email, otp, expires, attempts}
 _OTP_TTL = 10 * 60  # 10 minutes
+_MAX_ATTEMPTS = 5   # invalidate the code after this many wrong guesses (anti-brute-force)
 _store: dict[str, dict] = {}
 
 
@@ -45,12 +46,16 @@ def generate(email: str) -> tuple[str, str]:
         "email": email.lower().strip(),
         "otp": otp,
         "expires": time.time() + _OTP_TTL,
+        "attempts": 0,
     }
     return temp_token, otp
 
 
 def verify(temp_token: str, otp: str) -> Optional[str]:
-    """Verify OTP. Returns email on success, None on failure. Consumes the token."""
+    """Verify OTP. Returns email on success, None on failure. Consumes the token.
+
+    The code is invalidated after _MAX_ATTEMPTS wrong guesses to stop brute-forcing
+    the 6-digit space — the attacker must re-authenticate (password) for a new code."""
     _purge_expired()
     entry = _store.get(temp_token)
     if not entry:
@@ -61,6 +66,9 @@ def verify(temp_token: str, otp: str) -> Optional[str]:
     # Constant-time comparison to prevent timing attacks
     import hmac
     if not hmac.compare_digest(entry["otp"], otp.strip()):
+        entry["attempts"] += 1
+        if entry["attempts"] >= _MAX_ATTEMPTS:
+            del _store[temp_token]  # burn the code after too many wrong guesses
         return None
     email = entry["email"]
     del _store[temp_token]  # one-time use
@@ -86,8 +94,7 @@ def _gmail_password() -> str:
         from . import db
         enc = db.config_get("gmail_password_enc")
         if enc:
-            from .db import _xor_decrypt, _db_secret
-            return _xor_decrypt(enc, _db_secret())
+            return db.decrypt_value(enc)
     except Exception:
         pass
     return os.environ.get("GMAIL_APP_PASSWORD", "")
@@ -162,9 +169,8 @@ def is_configured() -> bool:
 def save_gmail_config(gmail_user: str, app_password: str) -> None:
     """Save Gmail credentials to DB (encrypted at rest)."""
     from . import db
-    from .db import _xor_key, _db_secret
     db.config_set("gmail_user", gmail_user.strip())
-    db.config_set("gmail_password_enc", _xor_key(app_password.strip(), _db_secret()))
+    db.config_set("gmail_password_enc", db.encrypt_value(app_password.strip()))
 
 
 def clear_gmail_config() -> None:

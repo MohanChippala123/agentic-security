@@ -195,6 +195,16 @@ def set_twofa(req: TwoFARequest, request: Request) -> JSONResponse:
     """Enable or disable 2FA for the authenticated user."""
     user = _require_user(request)
     _block_demo(user, "change 2FA settings")
+    # Don't let a user turn on 2FA when email delivery isn't configured — they'd
+    # never receive the login code and would lock themselves out.
+    if req.enable:
+        from .otp import is_configured
+        if not is_configured():
+            raise HTTPException(
+                status_code=400,
+                detail="Connect a Gmail account first so verification codes can be delivered. "
+                       "Otherwise enabling 2FA would lock you out of your account.",
+            )
     db.user_set_twofa(user["email"], req.enable)
     return JSONResponse({"ok": True, "twofa_enabled": req.enable})
 
