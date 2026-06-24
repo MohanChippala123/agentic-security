@@ -84,9 +84,84 @@ def login(creds: Credentials) -> JSONResponse:
         user = auth.verify_user(creds.email, creds.password)
     except ValueError as exc:
         raise HTTPException(status_code=401, detail=str(exc))
+
+    # If 2FA is enabled, send OTP and return a temp token instead of a session
+    if user.get("requires_2fa"):
+        from .otp import generate, send_otp
+        temp_token, otp = generate(user["email"])
+        result = send_otp(user["email"], otp)
+        if not result.get("ok"):
+            raise HTTPException(status_code=500, detail=f"Failed to send verification code: {result.get('error')}")
+        return JSONResponse({
+            "ok": True,
+            "requires_2fa": True,
+            "temp_token": temp_token,
+            "dev_mode": result.get("dev_mode", False),
+            "message": "Verification code sent to your email.",
+        })
+
     resp = JSONResponse({"ok": True, "name": user["name"]})
     _set_session(resp, user["email"])
     return resp
+
+
+class OTPVerifyRequest(BaseModel):
+    temp_token: str = Field(..., description="Temporary token returned by /login when 2FA is required")
+    otp: str = Field(..., description="6-digit code from email")
+
+
+@app.post("/api/auth/verify-otp")
+def verify_otp(req: OTPVerifyRequest) -> JSONResponse:
+    """Verify 2FA OTP code and issue a full session."""
+    from .otp import verify as verify_otp_code
+    email = verify_otp_code(req.temp_token, req.otp)
+    if not email:
+        raise HTTPException(status_code=401, detail="Invalid or expired verification code.")
+    user = db.user_get(email)
+    if not user:
+        raise HTTPException(status_code=401, detail="User not found.")
+    db.user_record_login(email)
+    resp = JSONResponse({"ok": True, "name": user["name"]})
+    _set_session(resp, email)
+    return resp
+
+
+class TwoFARequest(BaseModel):
+    enable: bool = Field(..., description="True to enable 2FA, False to disable")
+
+
+@app.post("/api/auth/2fa")
+def set_twofa(req: TwoFARequest, request: Request) -> JSONResponse:
+    """Enable or disable 2FA for the authenticated user."""
+    user = _require_user(request)
+    db.user_set_twofa(user["email"], req.enable)
+    return JSONResponse({"ok": True, "twofa_enabled": req.enable})
+
+
+@app.get("/api/auth/2fa/status")
+def twofa_status(request: Request) -> dict:
+    """Check if 2FA is enabled for the current user."""
+    user = _require_user(request)
+    row = db.user_get(user["email"])
+    from .otp import is_configured
+    return {
+        "twofa_enabled": bool(row and row.get("twofa_enabled")),
+        "email_configured": is_configured(),
+        "email": user["email"],
+    }
+
+
+@app.post("/api/auth/2fa/test")
+def test_twofa(request: Request) -> JSONResponse:
+    """Send a test OTP to confirm Gmail is working."""
+    user = _require_user(request)
+    from .otp import generate, send_otp
+    _, otp = generate(user["email"])
+    result = send_otp(user["email"], otp)
+    if not result.get("ok"):
+        raise HTTPException(status_code=500, detail=result.get("error", "Failed to send test email"))
+    return JSONResponse({"ok": True, "dev_mode": result.get("dev_mode", False),
+                         "message": f"Test code sent to {user['email']}"})
 
 
 @app.post("/api/auth/logout")

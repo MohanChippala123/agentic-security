@@ -71,6 +71,9 @@ def connect() -> sqlite3.Connection:
     for sql in [
         "ALTER TABLE users ADD COLUMN last_login_at REAL",
         "ALTER TABLE users ADD COLUMN login_count INTEGER NOT NULL DEFAULT 0",
+        "ALTER TABLE users ADD COLUMN twofa_enabled INTEGER NOT NULL DEFAULT 0",
+        "ALTER TABLE users ADD COLUMN failed_attempts INTEGER NOT NULL DEFAULT 0",
+        "ALTER TABLE users ADD COLUMN locked_until REAL",
     ]:
         try:
             conn.execute(sql)
@@ -136,6 +139,38 @@ def user_record_login(email: str) -> None:
     get().execute(
         "UPDATE users SET last_login_at=?, login_count=COALESCE(login_count,0)+1 WHERE email=?",
         (time.time(), email),
+    )
+    get().commit()
+
+
+def user_record_failed_login(email: str) -> int:
+    """Increment failed attempt count. Returns new count."""
+    get().execute(
+        "UPDATE users SET failed_attempts=COALESCE(failed_attempts,0)+1 WHERE email=?",
+        (email,)
+    )
+    get().commit()
+    row = get().execute("SELECT failed_attempts FROM users WHERE email=?", (email,)).fetchone()
+    return row["failed_attempts"] if row else 1
+
+
+def user_lock(email: str, until: float) -> None:
+    get().execute(
+        "UPDATE users SET locked_until=? WHERE email=?", (until, email)
+    )
+    get().commit()
+
+
+def user_reset_failed(email: str) -> None:
+    get().execute(
+        "UPDATE users SET failed_attempts=0, locked_until=NULL WHERE email=?", (email,)
+    )
+    get().commit()
+
+
+def user_set_twofa(email: str, enabled: bool) -> None:
+    get().execute(
+        "UPDATE users SET twofa_enabled=? WHERE email=?", (1 if enabled else 0, email)
     )
     get().commit()
 

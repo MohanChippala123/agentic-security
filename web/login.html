@@ -130,7 +130,7 @@ body::after{
     <h1 id="heading">Welcome back</h1>
     <p class="lead" id="lead">Log in to your Security LLM console.</p>
 
-    <form id="form" onsubmit="return doSubmit(event)">
+    <form id="loginForm" onsubmit="return doSubmit(event)">
       <div class="field" id="nameField">
         <label>Name</label>
         <input id="name" type="text" autocomplete="name" placeholder="Your name">
@@ -144,7 +144,6 @@ body::after{
         <input id="password" type="password" autocomplete="current-password" placeholder="••••••••" required>
       </div>
       <button class="btn" id="btn" type="submit">Log in →</button>
-      <div class="msg" id="msg"></div>
     </form>
 
     <div class="demo">
@@ -152,11 +151,28 @@ body::after{
     </div>
 
     <p class="alt" id="toggleAuth"><a href="#" onclick="toggleMode();return false">Don't have an account? <b>Sign up</b></a></p>
+
+    <!-- OTP step (hidden until 2FA is triggered) -->
+    <form id="otpForm" onsubmit="return doOTPSubmit(event)" style="display:none">
+      <div class="field">
+        <label>Verification code</label>
+        <input id="otpInput" type="text" inputmode="numeric" pattern="[0-9]{6}"
+               maxlength="6" placeholder="000000" autocomplete="one-time-code"
+               style="font-size:22px;letter-spacing:.25em;text-align:center">
+      </div>
+      <button class="btn" id="otpBtn" type="submit">Verify →</button>
+      <p class="alt" style="margin-top:14px">
+        <a href="#" onclick="backToLogin();return false">Use a different account</a>
+      </p>
+    </form>
+
+    <div class="msg" id="msg"></div>
   </div>
 </div>
 
 <script>
 let isSignup=false;
+let _tempToken=null;
 
 function toggleMode(){
   isSignup=!isSignup;
@@ -182,12 +198,59 @@ async function doSubmit(e){
     const r=await fetch(endpoint,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
     const j=await r.json();
     if(!r.ok) throw new Error(j.detail||'Failed');
-    window.location.href='/app';
+    if(j.requires_2fa){
+      _tempToken=j.temp_token;
+      showOTPStep(j.dev_mode);
+    } else {
+      window.location.href='/app';
+    }
   }catch(err){
     msg.textContent=err.message; msg.className='msg show';
     btn.disabled=false; btn.textContent=isSignup?'Sign up →':'Log in →';
   }
   return false;
+}
+
+function showOTPStep(devMode){
+  document.getElementById('loginForm').style.display='none';
+  document.getElementById('otpForm').style.display='block';
+  document.getElementById('heading').textContent='Check your email';
+  document.getElementById('lead').textContent=devMode
+    ?'2FA is in dev mode — check your server console for the code.'
+    :'We sent a 6-digit code to your email. It expires in 10 minutes.';
+  setTimeout(()=>document.getElementById('otpInput').focus(),100);
+}
+
+async function doOTPSubmit(e){
+  e.preventDefault();
+  const btn=document.getElementById('otpBtn'), msg=document.getElementById('msg');
+  const otp=document.getElementById('otpInput').value.trim();
+  if(otp.length!==6||!/^\d+$/.test(otp)){
+    msg.textContent='Enter the 6-digit code from your email.'; msg.className='msg show'; return;
+  }
+  msg.className='msg'; btn.disabled=true; btn.textContent='Verifying…';
+  try{
+    const r=await fetch('/api/auth/verify-otp',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({temp_token:_tempToken,otp})});
+    const j=await r.json();
+    if(!r.ok) throw new Error(j.detail||'Invalid code');
+    window.location.href='/app';
+  }catch(err){
+    msg.textContent=err.message; msg.className='msg show';
+    btn.disabled=false; btn.textContent='Verify →';
+    document.getElementById('otpInput').value='';
+    document.getElementById('otpInput').focus();
+  }
+  return false;
+}
+
+function backToLogin(){
+  _tempToken=null;
+  document.getElementById('loginForm').style.display='block';
+  document.getElementById('otpForm').style.display='none';
+  document.getElementById('heading').textContent=isSignup?'Create account':'Welcome back';
+  document.getElementById('lead').textContent=isSignup?'Sign up for your Security LLM console.':'Log in to your Security LLM console.';
+  document.getElementById('msg').className='msg';
 }
 
 if(window.location.hash==='#signup') toggleMode();

@@ -58,15 +58,45 @@ def create_user(email: str, password: str, name: str) -> dict:
     return {"email": email, "name": name.strip() or email.split("@")[0]}
 
 
+_MAX_ATTEMPTS = 5          # lock after this many consecutive failures
+_LOCKOUT_SECONDS = 15 * 60  # 15-minute lockout
+
+
 def verify_user(email: str, password: str) -> dict:
+    """Verify credentials. Raises ValueError on failure (generic message to prevent enumeration).
+    Returns user dict on success. If 2FA is enabled, also returns requires_2fa=True."""
     email = email.strip().lower()
     user = db.user_get(email)
+
+    # Always run the hash to prevent timing-based user enumeration
+    _dummy_salt = "0" * 32
+    _dummy_hash = _hash_pw(password, _dummy_salt)
+
     if not user:
         raise ValueError("Invalid email or password.")
+
+    # Check lockout
+    locked_until = user.get("locked_until") or 0
+    if locked_until and locked_until > time.time():
+        remaining = int((locked_until - time.time()) / 60) + 1
+        raise ValueError(f"Account temporarily locked. Try again in {remaining} minute(s).")
+
     if not hmac.compare_digest(user["hash"], _hash_pw(password, user["salt"])):
-        raise ValueError("Invalid email or password.")
+        attempts = db.user_record_failed_login(email)
+        if attempts >= _MAX_ATTEMPTS:
+            db.user_lock(email, time.time() + _LOCKOUT_SECONDS)
+            raise ValueError(f"Too many failed attempts. Account locked for {_LOCKOUT_SECONDS // 60} minutes.")
+        remaining = _MAX_ATTEMPTS - attempts
+        raise ValueError(f"Invalid email or password. {remaining} attempt(s) remaining.")
+
+    # Success — reset lockout counter
+    db.user_reset_failed(email)
     db.user_record_login(email)
-    return {"email": email, "name": user["name"]}
+
+    result = {"email": email, "name": user["name"]}
+    if user.get("twofa_enabled"):
+        result["requires_2fa"] = True
+    return result
 
 
 # ── session tokens ───────────────────────────────────────────────────────────

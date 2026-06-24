@@ -366,6 +366,7 @@ button:not(:disabled):active{transform:scale(.97)}
     <div class="dots" onclick="toggleDots(event)" id="dotsBtn" title="More options">···</div>
     <div id="dotsMenu" style="display:none;position:absolute;top:44px;right:12px;background:rgba(22,22,22,.96);border:1px solid var(--border2);min-width:160px;z-index:200">
       <div class="dmenu-item" onclick="showUsersModal()">Users</div>
+      <div class="dmenu-item" onclick="showSecModal()">Security Settings</div>
       <div class="dmenu-item" onclick="window.location.href='/guide'">Integration Guide</div>
       <div class="dmenu-item" style="border-top:1px solid var(--border);color:var(--rose)" onclick="logout()">Log out</div>
     </div>
@@ -561,6 +562,16 @@ Content-Type: application/json
     <div class="field"><label>Rate limit (req/min)</label><input id="gwRate" type="number" value="30"></div>
     <button class="run-full" style="margin-top:6px" onclick="gwCreate()">Create key</button>
     <div id="gwNewKey" style="margin-top:12px"></div>
+  </div>
+</div>
+
+<!-- 2FA / security settings modal -->
+<div id="secModal" class="modal-overlay" style="display:none" onclick="if(event.target===this)closeSecModal()">
+  <div class="modal-card" style="width:480px">
+    <div class="modal-h"><b>Security Settings</b><span class="modal-x" onclick="closeSecModal()">&#x2715;</span></div>
+    <div id="secBody" style="padding:4px 0">
+      <div class="empty">Loading…</div>
+    </div>
   </div>
 </div>
 
@@ -1464,6 +1475,80 @@ async function showUsersModal(){
   }catch(e){ $('usersBody').innerHTML=`<div class="empty">Error: ${esc(e.message)}</div>`; }
 }
 function closeUsersModal(){ $('usersModal').style.display='none'; }
+
+/* ── Security Settings (2FA) ── */
+async function showSecModal(){
+  $('dotsMenu').style.display='none'; _dotsOpen=false;
+  $('secModal').style.display='flex';
+  $('secBody').innerHTML='<div class="empty">Loading…</div>';
+  try{
+    const s=await (await fetch('/api/auth/2fa/status')).json();
+    const enabled=s.twofa_enabled;
+    const configured=s.email_configured;
+    $('secBody').innerHTML=`
+      <div style="padding:6px 0 18px">
+        <div style="font-size:12.5px;color:var(--muted);line-height:1.7;margin-bottom:18px">
+          Two-factor authentication sends a 6-digit code to your email on every login.
+          ${!configured?`<div style="margin-top:10px;background:rgba(245,166,74,.08);border:1px solid rgba(245,166,74,.2);border-radius:6px;padding:10px 13px;color:var(--amber);font-size:11.5px">Gmail not configured on this server. Add <code style="font-family:var(--mono);font-size:10px">GMAIL_USER</code> and <code style="font-family:var(--mono);font-size:10px">GMAIL_APP_PASSWORD</code> to the server environment. In dev mode, codes print to the server console.</div>`:''}
+        </div>
+
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 16px;background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:8px;margin-bottom:10px">
+          <div>
+            <div style="font-size:13px;font-weight:600;margin-bottom:3px">Two-factor authentication</div>
+            <div style="font-size:11.5px;color:var(--muted)">Protect your account with email verification</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:10px">
+            <span style="font-family:var(--mono);font-size:10px;padding:3px 8px;border-radius:4px;${enabled?'background:rgba(58,208,164,.1);color:var(--teal);border:1px solid rgba(58,208,164,.2)':'background:rgba(255,255,255,.05);color:var(--muted);border:1px solid var(--border)'}">${enabled?'ENABLED':'DISABLED'}</span>
+            <button class="run-full" style="width:auto;padding:0 14px;font-size:10px;border-radius:6px" onclick="toggle2FA(${!enabled})">${enabled?'Disable':'Enable'}</button>
+          </div>
+        </div>
+
+        ${enabled?`
+        <div style="padding:12px 16px;background:rgba(255,255,255,.02);border:1px solid var(--border);border-radius:8px;margin-bottom:10px">
+          <div style="font-size:12.5px;font-weight:500;margin-bottom:8px">Send a test code</div>
+          <div style="font-size:11.5px;color:var(--muted);margin-bottom:10px">Confirm your email is receiving codes before your next login.</div>
+          <button class="mm-try" onclick="testOTP()" id="testOTPBtn">Send test code to ${esc(s.email)}</button>
+          <div id="testOTPMsg" style="margin-top:8px;font-size:11.5px"></div>
+        </div>`:''}
+
+        <div style="padding:12px 16px;background:rgba(255,255,255,.02);border:1px solid var(--border);border-radius:8px">
+          <div style="font-size:12px;font-weight:600;margin-bottom:10px;color:rgba(255,255,255,.8)">Account security info</div>
+          <div style="font-size:11.5px;color:var(--muted);line-height:1.75">
+            <div>Account locked after 5 failed login attempts (15 min lockout)</div>
+            <div>Session expires after 7 days</div>
+            <div>Passwords hashed with PBKDF2-SHA256 (200,000 rounds)</div>
+          </div>
+        </div>
+      </div>
+    `;
+  }catch(e){ $('secBody').innerHTML=`<div class="empty">Error: ${esc(e.message)}</div>`; }
+}
+function closeSecModal(){ $('secModal').style.display='none'; }
+
+async function toggle2FA(enable){
+  try{
+    const r=await fetch('/api/auth/2fa',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({enable})});
+    const v=await r.json();
+    if(v.ok) showSecModal();
+  }catch(e){}
+}
+
+async function testOTP(){
+  const btn=$('testOTPBtn'), msg=$('testOTPMsg');
+  btn.disabled=true; btn.textContent='Sending…';
+  try{
+    const r=await fetch('/api/auth/2fa/test',{method:'POST'});
+    const v=await r.json();
+    if(v.ok){
+      msg.innerHTML=v.dev_mode
+        ?'<span style="color:var(--amber)">Dev mode — check server console for the code.</span>'
+        :'<span style="color:var(--teal)">Test code sent. Check your inbox.</span>';
+    } else {
+      msg.innerHTML=`<span style="color:var(--rose)">${esc(v.detail||'Failed')}</span>`;
+    }
+  }catch(e){ msg.innerHTML=`<span style="color:var(--rose)">${esc(e.message)}</span>`; }
+  btn.disabled=false; btn.textContent='Send test code';
+}
 
 /* ── auth ── */
 async function loadUser(){
