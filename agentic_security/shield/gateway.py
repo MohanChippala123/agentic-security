@@ -213,6 +213,23 @@ def revoke_key(user: str, key: str) -> bool:
     return False
 
 
+def enable_key(user: str, key: str) -> bool:
+    """Re-enable a suspended or revoked virtual key and clear its block history."""
+    ku = _keys(user)
+    vk = ku.get(key)
+    if not vk:
+        for k, v in ku.items():
+            if k.startswith(key.split("...")[0]):
+                vk = v
+                break
+    if vk:
+        vk.enabled = True
+        vk.recent_blocks = []
+        _persist_key(user, vk)
+        return True
+    return False
+
+
 def upstream_status(user: str) -> dict:
     real = _user_upstream.get(user, "") or os.environ.get("OPENAI_API_KEY", "")
     has_real = bool(real)

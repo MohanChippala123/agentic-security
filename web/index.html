@@ -1042,7 +1042,7 @@ async function loadGwKeys(){
       return `<div class="gwrow${k.enabled?'':' off'}">
         <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
           <b style="font-size:13px">${esc(k.name)}</b>
-          ${k.enabled?'':'<span class="fbadge fb-crit">revoked</span>'}
+          ${k.enabled?'':'<span class="fbadge fb-crit">'+(k.recent_blocks&&k.recent_blocks.length?'suspended':'revoked')+'</span>'}
           <code style="font-family:var(--mono);font-size:10px;color:var(--muted);margin-left:auto">${esc(k.key)}</code>
         </div>
         <div style="display:flex;justify-content:space-between;font-size:10.5px;color:var(--muted)">
@@ -1050,7 +1050,9 @@ async function loadGwKeys(){
           <span>${k.request_count} req · ${k.blocked_count} blocked · ${k.rate_limit_per_min}/min</span>
         </div>
         <div class="gwbar"><div style="width:${Math.min(100,k.pct_used)}%;background:${col}"></div></div>
-        ${k.enabled?`<button class="mm-try" style="margin-top:8px" onclick="gwRevoke('${esc(k.key)}')">Revoke key</button>`:''}
+        <div style="display:flex;gap:8px;margin-top:8px">
+          ${k.enabled?`<button class="mm-try" onclick="gwRevoke('${esc(k.key)}')">Revoke key</button>`:`<button class="mm-try" style="background:var(--teal);color:#000" onclick="gwEnable('${esc(k.key)}')">Re-enable key</button>`}
+        </div>
       </div>`;
     }).join('');
   }catch(e){}
@@ -1235,6 +1237,11 @@ async function gwCreate(){
 
 async function gwRevoke(key){
   await fetch('/api/gateway/keys/revoke',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({key})});
+  loadGatewayTab();
+}
+
+async function gwEnable(key){
+  await fetch('/api/gateway/keys/enable',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({key})});
   loadGatewayTab();
 }
 

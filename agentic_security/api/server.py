@@ -814,6 +814,13 @@ def gateway_revoke_key(req: RevokeKeyRequest, request: Request) -> dict:
     return {"revoked": gw.revoke_key(user["email"], req.key)}
 
 
+@app.post("/api/gateway/keys/enable")
+def gateway_enable_key(req: RevokeKeyRequest, request: Request) -> dict:
+    """Re-enable a suspended or revoked virtual key and clear its block history."""
+    user = _require_user(request)
+    return {"enabled": gw.enable_key(user["email"], req.key)}
+
+
 @app.post("/api/gateway/chat")
 def gateway_chat_endpoint(req: GatewayChatRequest, request: Request, authorization: str = Header(None)) -> dict:
     """Protected chat. Clients authenticate with a virtual key:
