@@ -70,10 +70,26 @@ def verify(temp_token: str, otp: str) -> Optional[str]:
 # ── Gmail sender ──────────────────────────────────────────────────────────────
 
 def _gmail_user() -> str:
+    # DB takes priority over env var
+    try:
+        from . import db
+        val = db.config_get("gmail_user")
+        if val:
+            return val
+    except Exception:
+        pass
     return os.environ.get("GMAIL_USER", "")
 
 
 def _gmail_password() -> str:
+    try:
+        from . import db
+        enc = db.config_get("gmail_password_enc")
+        if enc:
+            from .db import _xor_decrypt, _db_secret
+            return _xor_decrypt(enc, _db_secret())
+    except Exception:
+        pass
     return os.environ.get("GMAIL_APP_PASSWORD", "")
 
 
@@ -141,3 +157,17 @@ If you did not request this code, you can safely ignore this email.
 
 def is_configured() -> bool:
     return bool(_gmail_user() and _gmail_password())
+
+
+def save_gmail_config(gmail_user: str, app_password: str) -> None:
+    """Save Gmail credentials to DB (encrypted at rest)."""
+    from . import db
+    from .db import _xor_key, _db_secret
+    db.config_set("gmail_user", gmail_user.strip())
+    db.config_set("gmail_password_enc", _xor_key(app_password.strip(), _db_secret()))
+
+
+def clear_gmail_config() -> None:
+    from . import db
+    db.config_set("gmail_user", "")
+    db.config_set("gmail_password_enc", "")

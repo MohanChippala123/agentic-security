@@ -176,6 +176,39 @@ def twofa_status(request: Request) -> dict:
     }
 
 
+class GmailConfigRequest(BaseModel):
+    gmail_user: str = Field(..., description="Your Gmail address")
+    app_password: str = Field(..., description="Gmail App Password (16 chars from myaccount.google.com/apppasswords)")
+
+
+@app.post("/api/auth/gmail-config")
+def save_gmail_config(req: GmailConfigRequest, request: Request) -> JSONResponse:
+    """Save Gmail credentials for 2FA OTP sending."""
+    _require_user(request)
+    if not req.gmail_user.strip() or "@" not in req.gmail_user:
+        raise HTTPException(status_code=400, detail="Enter a valid Gmail address.")
+    if len(req.app_password.replace(" ", "")) < 16:
+        raise HTTPException(status_code=400, detail="App password must be 16 characters (from myaccount.google.com/apppasswords).")
+    from .otp import save_gmail_config, send_otp, generate
+    save_gmail_config(req.gmail_user.strip(), req.app_password.strip())
+    # Send a test OTP immediately to confirm it works
+    _, otp = generate(req.gmail_user.strip())
+    result = send_otp(req.gmail_user.strip(), otp)
+    if not result.get("ok"):
+        from .otp import clear_gmail_config
+        clear_gmail_config()
+        raise HTTPException(status_code=400, detail=f"Gmail test failed: {result.get('error')}. Check your credentials.")
+    return JSONResponse({"ok": True, "message": f"Gmail configured. Test code sent to {req.gmail_user.strip()}."})
+
+
+@app.delete("/api/auth/gmail-config")
+def delete_gmail_config(request: Request) -> JSONResponse:
+    _require_user(request)
+    from .otp import clear_gmail_config
+    clear_gmail_config()
+    return JSONResponse({"ok": True})
+
+
 @app.post("/api/auth/2fa/test")
 def test_twofa(request: Request) -> JSONResponse:
     """Send a test OTP to confirm Gmail is working."""

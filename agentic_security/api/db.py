@@ -92,6 +92,11 @@ CREATE TABLE IF NOT EXISTS upstream_keys (
     updated_at   REAL NOT NULL
 );
 
+CREATE TABLE IF NOT EXISTS server_config (
+    key   TEXT PRIMARY KEY,
+    value TEXT NOT NULL
+);
+
 CREATE INDEX IF NOT EXISTS idx_vk_user   ON virtual_keys(user_email, created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_evt_user  ON gateway_events(user_email, timestamp DESC);
 """
@@ -342,6 +347,21 @@ def upstream_load(user_email: str) -> tuple[str, str] | None:
 def upstream_delete(user_email: str) -> None:
     get().execute("DELETE FROM upstream_keys WHERE user_email=?", (user_email,))
     get().commit()
+
+
+# ── server config (global key-value store) ────────────────────────────────────
+
+def config_set(key: str, value: str) -> None:
+    get().execute(
+        "INSERT INTO server_config (key, value) VALUES (?,?) ON CONFLICT(key) DO UPDATE SET value=excluded.value",
+        (key, value),
+    )
+    get().commit()
+
+
+def config_get(key: str) -> str | None:
+    row = get().execute("SELECT value FROM server_config WHERE key=?", (key,)).fetchone()
+    return row["value"] if row else None
 
 
 # ── scans ────────────────────────────────────────────────────────────────────

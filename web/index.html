@@ -1488,8 +1488,27 @@ async function showSecModal(){
     $('secBody').innerHTML=`
       <div style="padding:6px 0 18px">
         <div style="font-size:12.5px;color:var(--muted);line-height:1.7;margin-bottom:18px">
-          Two-factor authentication sends a 6-digit code to your email on every login.
-          ${!configured?`<div style="margin-top:10px;background:rgba(245,166,74,.08);border:1px solid rgba(245,166,74,.2);border-radius:6px;padding:10px 13px;color:var(--amber);font-size:11.5px">Gmail not configured on this server. Add <code style="font-family:var(--mono);font-size:10px">GMAIL_USER</code> and <code style="font-family:var(--mono);font-size:10px">GMAIL_APP_PASSWORD</code> to the server environment. In dev mode, codes print to the server console.</div>`:''}
+          Two-factor authentication sends a 6-digit code to your Gmail on every login.
+        </div>
+
+        <!-- Gmail setup -->
+        <div style="background:rgba(255,255,255,.02);border:1px solid ${configured?'rgba(58,208,164,.2)':'rgba(245,166,74,.25)'};border-radius:8px;padding:14px 16px;margin-bottom:12px">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+            <div style="font-size:13px;font-weight:600">Gmail <span style="font-family:var(--mono);font-size:10px;padding:2px 7px;border-radius:4px;margin-left:6px;${configured?'background:rgba(58,208,164,.1);color:var(--teal);border:1px solid rgba(58,208,164,.2)':'background:rgba(245,166,74,.1);color:var(--amber);border:1px solid rgba(245,166,74,.2)'}">${configured?'CONNECTED':'NOT SET'}</span></div>
+            ${configured?`<button class="mm-try" style="font-size:10px;color:var(--rose);border-color:rgba(240,106,130,.3)" onclick="disconnectGmail()">Remove</button>`:''}
+          </div>
+          ${configured
+            ? `<div style="font-size:11.5px;color:var(--muted)">Gmail is connected. Codes are sent automatically on login when 2FA is enabled.</div>`
+            : `<div style="font-size:11.5px;color:var(--muted);margin-bottom:12px;line-height:1.65">Connect your Gmail to send verification codes. You need a Gmail App Password — <a href="https://myaccount.google.com/apppasswords" target="_blank" style="color:var(--lime)">get one here</a>.</div>
+               <div class="field" style="margin-bottom:8px"><label style="display:block;font-family:var(--mono);font-size:9.5px;text-transform:uppercase;letter-spacing:.12em;color:var(--muted);margin-bottom:6px">Gmail address</label>
+                 <input id="gmailUser" type="email" placeholder="your@gmail.com" style="width:100%;background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:6px;outline:none;padding:9px 12px;font-size:13px;color:var(--ink)">
+               </div>
+               <div class="field" style="margin-bottom:12px"><label style="display:block;font-family:var(--mono);font-size:9.5px;text-transform:uppercase;letter-spacing:.12em;color:var(--muted);margin-bottom:6px">App password <span style="color:rgba(255,255,255,.25);text-transform:none;letter-spacing:0">(from myaccount.google.com/apppasswords)</span></label>
+                 <input id="gmailPass" type="password" placeholder="xxxx xxxx xxxx xxxx" style="width:100%;background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:6px;outline:none;padding:9px 12px;font-family:var(--mono);font-size:13px;color:var(--ink)">
+               </div>
+               <button class="run-full" style="width:auto;padding:0 16px;font-size:11px;border-radius:7px" onclick="connectGmail()" id="gmailConnectBtn">Connect Gmail</button>
+               <div id="gmailMsg" style="margin-top:8px;font-size:11.5px"></div>`
+          }
         </div>
 
         <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 16px;background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:8px;margin-bottom:10px">
@@ -1524,6 +1543,30 @@ async function showSecModal(){
   }catch(e){ $('secBody').innerHTML=`<div class="empty">Error: ${esc(e.message)}</div>`; }
 }
 function closeSecModal(){ $('secModal').style.display='none'; }
+
+async function connectGmail(){
+  const user=document.getElementById('gmailUser')?.value.trim();
+  const pass=document.getElementById('gmailPass')?.value.trim();
+  const msg=document.getElementById('gmailMsg');
+  const btn=document.getElementById('gmailConnectBtn');
+  if(!user||!pass){ msg.innerHTML='<span style="color:var(--rose)">Enter your Gmail address and app password.</span>'; return; }
+  btn.disabled=true; btn.textContent='Connecting…'; msg.innerHTML='';
+  try{
+    const r=await fetch('/api/auth/gmail-config',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({gmail_user:user,app_password:pass})});
+    const v=await r.json();
+    if(!r.ok) throw new Error(v.detail||'Failed');
+    showSecModal(); // refresh the modal to show connected state
+  }catch(e){
+    msg.innerHTML=`<span style="color:var(--rose)">${esc(e.message)}</span>`;
+    btn.disabled=false; btn.textContent='Connect Gmail';
+  }
+}
+
+async function disconnectGmail(){
+  await fetch('/api/auth/gmail-config',{method:'DELETE'});
+  showSecModal();
+}
 
 async function toggle2FA(enable){
   try{
