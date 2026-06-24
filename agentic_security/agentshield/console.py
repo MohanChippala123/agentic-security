@@ -98,9 +98,9 @@ def answer(question: str, user: str = "") -> dict[str, Any]:
         lines = ["Recent gateway activity:"]
         for e in events[:5]:
             if e.get("outcome") == "blocked":
-                lines.append(f"  🛑 BLOCKED \"{e.get('message','')}\" — {e.get('threat','')} (risk {e.get('risk_score','?')})")
+                lines.append(f"  [BLOCKED] \"{e.get('message','')}\" — {e.get('threat','')} (risk {e.get('risk_score','?')})")
             else:
-                lines.append(f"  ✅ forwarded \"{e.get('message','')}\" — {_fmt_usd(e.get('cost_usd',0))}")
+                lines.append(f"  [PASSED]  \"{e.get('message','')}\" — {_fmt_usd(e.get('cost_usd',0))}")
         return resp("\n".join(lines))
 
     # ── Keys ──

@@ -33,7 +33,7 @@ SEP = "###"
 # If the user's question doesn't lexically resemble anything the model was
 # trained on (best keyword overlap below this), decline gracefully instead of
 # returning a confidently-wrong canned answer.
-_MATCH_THRESHOLD = 0.34
+_MATCH_THRESHOLD = 0.28
 
 
 def _refusal_for(threat: str) -> str:
@@ -91,6 +91,35 @@ _STEMS = {
     "secrets": "secret",
     "tokens": "token",
     "settings": "setting",
+    # Extended attack vocab
+    "jailbreaker": "jailbreak", "jailbroke": "jailbreak",
+    "injection": "inject", "injecting": "inject", "injected": "inject",
+    "extraction": "extract", "extracting": "extract", "extracted": "extract",
+    "exfiltration": "exfil", "exfiltrate": "exfil", "exfiltrating": "exfil",
+    "manipulation": "manipulate", "manipulating": "manipulate",
+    "unrestricted": "restrict", "unfiltered": "filter",
+    "uncensored": "censor", "censored": "censor",
+    "roleplay": "role", "roleplaying": "role", "roleplayed": "role",
+    "persona": "person", "personas": "person",
+    "fictional": "fiction", "hypothetical": "hypothet",
+    "encoding": "encode", "encoded": "encode", "decoding": "decode",
+    "obfuscation": "obfuscat", "obfuscated": "obfuscat",
+    "malware": "malwar", "ransomware": "ransomwar",
+    "phishing": "phish", "phished": "phish",
+    "credential": "cred", "credentials": "cred",
+    "exfil": "exfil", "leaking": "leak", "leaked": "leak",
+    "revealing": "reveal", "revealed": "reveal",
+    "hacker": "hack", "hackers": "hack",
+    "attacker": "attack", "attackers": "attack",
+    "harmful": "harm", "harming": "harm",
+    "dangerous": "danger", "endangering": "danger",
+    "malicious": "malice",
+    "unauthorized": "auth", "unauthenticated": "auth",
+    "privilege": "priv", "privileges": "priv", "privileged": "priv",
+    "escalate": "escal", "escalation": "escal", "escalating": "escal",
+    "weaponize": "weapon", "weaponized": "weapon",
+    "synthesize": "synth", "synthesis": "synth",
+    "explosives": "explos", "explosive": "explos",
 }
 
 
@@ -387,6 +416,16 @@ _REFUSAL_MARKERS = (
     "could cause real harm", "designed to cause harm",
     "i don't follow instructions",
     "don't change my rules", "claims of authority",
+    "that's a prompt-injection", "that looks like an attempt",
+    "won't ignore my safety", "won't reveal", "won't leak",
+    "won't roleplay as", "won't act as", "won't pretend",
+    "politely decline", "i have to decline", "won't comply",
+    "can't assist with", "won't assist with", "won't help with",
+    "that request", "that's a jailbreak", "known jailbreak",
+    "i refuse", "i must refuse", "i'll refuse",
+    "safely below", "not something i'll", "off limits",
+    "blocked by", "won't produce", "won't generate",
+    "i notice a", "noticed an attempt", "security threat",
 )
 # Substring that means "off-topic, not attack" -> NOT a refusal.
 _GRACEFUL_FALLBACK = "i don't know that one"
