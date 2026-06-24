@@ -6,7 +6,10 @@ import json
 import uuid
 from pathlib import Path
 
+import os
+
 from fastapi import FastAPI, HTTPException, Request
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import (
     HTMLResponse,
     JSONResponse,
@@ -49,6 +52,18 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
+# Allowed origins: the env var AGSEC_ORIGIN overrides the default (localhost dev).
+# In production set e.g. AGSEC_ORIGIN=https://agentshield.yourdomain.com
+_ALLOWED_ORIGINS = [o.strip() for o in os.environ.get("AGSEC_ORIGIN", "http://localhost:8000,http://127.0.0.1:8000").split(",") if o.strip()]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=_ALLOWED_ORIGINS,
+    allow_credentials=True,
+    allow_methods=["GET", "POST", "DELETE"],
+    allow_headers=["Content-Type", "Authorization"],
+)
+
 auth.seed_demo_account()
 db.purge_fake_users()
 
@@ -71,7 +86,7 @@ class Credentials(BaseModel):
 
 
 def _set_session(resp: JSONResponse, email: str) -> None:
-    resp.set_cookie(auth.COOKIE, auth.issue_token(email), httponly=True, samesite="lax", max_age=7 * 24 * 3600, path="/")
+    resp.set_cookie(auth.COOKIE, auth.issue_token(email), httponly=True, samesite="strict", max_age=7 * 24 * 3600, path="/")
 
 
 def _current_user(request: Request) -> dict | None:

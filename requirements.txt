@@ -1,4 +1,5 @@
 # Core runtime
+cryptography>=42.0    # Fernet AES-128-GCM for upstream key encryption
 fastapi>=0.110
 uvicorn[standard]>=0.27
 pydantic>=2.6

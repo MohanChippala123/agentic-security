@@ -310,31 +310,25 @@ def evt_list(user_email: str, limit: int = 50) -> list[dict]:
 
 # ── upstream keys (encrypted at rest) ────────────────────────────────────────
 
-def _xor_key(plaintext: str, secret: bytes) -> str:
-    """Simple XOR cipher with repeating secret. Good enough for at-rest protection."""
-    import base64
-    enc = bytes(b ^ secret[i % len(secret)] for i, b in enumerate(plaintext.encode()))
-    return base64.urlsafe_b64encode(enc).decode()
+def _fernet() -> "Fernet":
+    """Return a Fernet instance keyed from AGSEC_SECRET env var or the on-disk session secret.
+    Fernet uses AES-128-CBC + HMAC-SHA256 — far stronger than the old XOR cipher."""
+    import os, hashlib, base64
+    from cryptography.fernet import Fernet
 
+    raw = os.environ.get("AGSEC_SECRET", "")
+    if not raw:
+        from pathlib import Path
+        sf = Path(__file__).resolve().parents[2] / "data" / ".session_secret"
+        raw = sf.read_text(encoding="utf-8").strip() if sf.exists() else "agentshield-default-secret"
 
-def _xor_decrypt(ciphertext: str, secret: bytes) -> str:
-    import base64
-    enc = base64.urlsafe_b64decode(ciphertext)
-    return bytes(b ^ secret[i % len(secret)] for i, b in enumerate(enc)).decode()
-
-
-def _db_secret() -> bytes:
-    import os
-    s = os.environ.get("AGSEC_SECRET", "")
-    if s:
-        return s.encode()
-    from pathlib import Path
-    sf = Path(__file__).resolve().parents[2] / "data" / ".session_secret"
-    return sf.read_text(encoding="utf-8").strip().encode() if sf.exists() else b"agentshield-default-secret"
+    # Derive a 32-byte key and base64url-encode it — Fernet requires exactly this format
+    key = base64.urlsafe_b64encode(hashlib.sha256(raw.encode()).digest())
+    return Fernet(key)
 
 
 def upstream_save(user_email: str, api_key: str, provider: str) -> None:
-    enc = _xor_key(api_key, _db_secret())
+    enc = _fernet().encrypt(api_key.encode()).decode()
     get().execute(
         """INSERT INTO upstream_keys (user_email, enc_key, provider, updated_at)
            VALUES (?,?,?,?)
@@ -353,7 +347,7 @@ def upstream_load(user_email: str) -> tuple[str, str] | None:
     if not row:
         return None
     try:
-        return _xor_decrypt(row["enc_key"], _db_secret()), row["provider"]
+        return _fernet().decrypt(row["enc_key"].encode()).decode(), row["provider"]
     except Exception:
         return None
 
