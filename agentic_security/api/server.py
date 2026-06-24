@@ -687,4 +687,10 @@ if _WEB_DIR.exists():
             return RedirectResponse("/login", status_code=302)
         return HTMLResponse(_page("index.html"))
 
+    @app.get("/guide", response_class=HTMLResponse)
+    def docs_page(request: Request):
+        if not _current_user(request):
+            return RedirectResponse("/login", status_code=302)
+        return HTMLResponse(_page("docs.html"))
+
     app.mount("/static", StaticFiles(directory=str(_WEB_DIR)), name="static")
