@@ -181,6 +181,67 @@ class GmailConfigRequest(BaseModel):
     app_password: str = Field(..., description="Gmail App Password (16 chars from myaccount.google.com/apppasswords)")
 
 
+# ── Webhooks ─────────────────────────────────────────────────────────────────
+
+class WebhookCreateRequest(BaseModel):
+    name: str = Field(..., description="Label for this webhook")
+    url: str = Field(..., description="HTTPS URL to POST to when attacks are blocked")
+
+
+@app.get("/api/gateway/webhooks")
+def list_webhooks(request: Request) -> dict:
+    user = _require_user(request)
+    return {"webhooks": db.webhook_list(user["email"])}
+
+
+@app.post("/api/gateway/webhooks")
+def create_webhook(req: WebhookCreateRequest, request: Request) -> dict:
+    user = _require_user(request)
+    if not req.url.startswith(("http://", "https://")):
+        raise HTTPException(status_code=400, detail="URL must start with http:// or https://")
+    import secrets as _sec
+    wh_id = _sec.token_hex(12)
+    secret = _sec.token_hex(24)
+    db.webhook_create(user["email"], wh_id, req.name, req.url, secret)
+    wh = db.webhook_list(user["email"])
+    return next(w for w in wh if w["id"] == wh_id)
+
+
+@app.delete("/api/gateway/webhooks/{wh_id}")
+def delete_webhook(wh_id: str, request: Request) -> dict:
+    user = _require_user(request)
+    if not db.webhook_delete(user["email"], wh_id):
+        raise HTTPException(status_code=404, detail="Webhook not found")
+    return {"ok": True}
+
+
+# ── Password change ───────────────────────────────────────────────────────────
+
+class PasswordChangeRequest(BaseModel):
+    current_password: str
+    new_password: str
+
+
+@app.post("/api/auth/change-password")
+def change_password(req: PasswordChangeRequest, request: Request) -> JSONResponse:
+    user = _require_user(request)
+    import hmac as _hmac
+    row = db.user_get(user["email"])
+    if not row:
+        raise HTTPException(status_code=404, detail="User not found")
+    # Verify current password
+    current_hash = auth._hash_pw(req.current_password, row["salt"])
+    if not _hmac.compare_digest(row["hash"], current_hash):
+        raise HTTPException(status_code=401, detail="Current password is incorrect")
+    if len(req.new_password) < 8:
+        raise HTTPException(status_code=400, detail="New password must be at least 8 characters")
+    import secrets as _sec
+    new_salt = _sec.token_hex(16)
+    new_hash = auth._hash_pw(req.new_password, new_salt)
+    db.user_update_password(user["email"], new_salt, new_hash)
+    return JSONResponse({"ok": True})
+
+
 @app.post("/api/auth/gmail-config")
 def save_gmail_config(req: GmailConfigRequest, request: Request) -> JSONResponse:
     """Save Gmail credentials for 2FA OTP sending."""
@@ -423,6 +484,13 @@ def gateway_stats(request: Request) -> dict:
     """Aggregate spend / blocked / saved across all virtual keys."""
     user = _require_user(request)
     return gw.stats(user["email"])
+
+
+@app.get("/api/gateway/chart")
+def gateway_chart(request: Request, days: int = 7) -> dict:
+    """Per-day attack/request/spend data for charts."""
+    user = _require_user(request)
+    return db.chart_data(user["email"], min(max(days, 1), 30))
 
 
 @app.get("/api/gateway/events")

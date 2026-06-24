@@ -97,6 +97,20 @@ CREATE TABLE IF NOT EXISTS server_config (
     value TEXT NOT NULL
 );
 
+CREATE TABLE IF NOT EXISTS webhooks (
+    id         TEXT PRIMARY KEY,
+    user_email TEXT NOT NULL,
+    name       TEXT NOT NULL,
+    url        TEXT NOT NULL,
+    secret     TEXT NOT NULL,
+    enabled    INTEGER NOT NULL DEFAULT 1,
+    created_at REAL NOT NULL,
+    last_fired REAL,
+    fire_count INTEGER NOT NULL DEFAULT 0
+);
+
+CREATE INDEX IF NOT EXISTS idx_webhooks_user ON webhooks(user_email);
+
 CREATE INDEX IF NOT EXISTS idx_vk_user   ON virtual_keys(user_email, created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_evt_user  ON gateway_events(user_email, timestamp DESC);
 """
@@ -362,6 +376,87 @@ def config_set(key: str, value: str) -> None:
 def config_get(key: str) -> str | None:
     row = get().execute("SELECT value FROM server_config WHERE key=?", (key,)).fetchone()
     return row["value"] if row else None
+
+
+# ── webhooks ──────────────────────────────────────────────────────────────────
+
+def webhook_create(user_email: str, wh_id: str, name: str, url: str, secret: str) -> None:
+    get().execute(
+        "INSERT INTO webhooks (id, user_email, name, url, secret, enabled, created_at) VALUES (?,?,?,?,?,1,?)",
+        (wh_id, user_email, name, url, secret, time.time()),
+    )
+    get().commit()
+
+
+def webhook_list(user_email: str) -> list[dict]:
+    rows = get().execute(
+        "SELECT * FROM webhooks WHERE user_email=? ORDER BY created_at DESC", (user_email,)
+    ).fetchall()
+    return [dict(r) for r in rows]
+
+
+def webhook_delete(user_email: str, wh_id: str) -> bool:
+    cur = get().execute("DELETE FROM webhooks WHERE id=? AND user_email=?", (wh_id, user_email))
+    get().commit()
+    return cur.rowcount > 0
+
+
+def webhook_record_fire(wh_id: str) -> None:
+    get().execute(
+        "UPDATE webhooks SET last_fired=?, fire_count=fire_count+1 WHERE id=?",
+        (time.time(), wh_id),
+    )
+    get().commit()
+
+
+# ── chart data ────────────────────────────────────────────────────────────────
+
+def chart_data(user_email: str, days: int = 7) -> dict:
+    """Return per-day attack/request/spend counts for the last N days."""
+    since = time.time() - days * 86400
+    rows = get().execute(
+        "SELECT data FROM gateway_events WHERE user_email=? AND timestamp>? ORDER BY timestamp ASC",
+        (user_email, since),
+    ).fetchall()
+
+    import datetime
+    buckets: dict[str, dict] = {}
+    for i in range(days):
+        d = (datetime.date.today() - datetime.timedelta(days=days - 1 - i)).isoformat()
+        buckets[d] = {"attacks": 0, "passed": 0, "spend": 0.0, "saved": 0.0}
+
+    for row in rows:
+        try:
+            ev = json.loads(row["data"])
+            day = datetime.datetime.fromtimestamp(ev["timestamp"]).date().isoformat()
+            if day not in buckets:
+                continue
+            if ev.get("outcome") == "blocked":
+                buckets[day]["attacks"] += 1
+                buckets[day]["saved"] += ev.get("cost_saved_usd", 0.0)
+            else:
+                buckets[day]["passed"] += 1
+                buckets[day]["spend"] += ev.get("cost_usd", 0.0)
+        except Exception:
+            pass
+
+    labels = list(buckets.keys())
+    return {
+        "labels": [l[5:] for l in labels],  # MM-DD format
+        "attacks": [buckets[l]["attacks"] for l in labels],
+        "passed":  [buckets[l]["passed"]  for l in labels],
+        "spend":   [round(buckets[l]["spend"], 5)  for l in labels],
+        "saved":   [round(buckets[l]["saved"], 5)  for l in labels],
+    }
+
+
+# ── password change ───────────────────────────────────────────────────────────
+
+def user_update_password(email: str, new_salt: str, new_hash: str) -> None:
+    get().execute(
+        "UPDATE users SET salt=?, hash=? WHERE email=?", (new_salt, new_hash, email)
+    )
+    get().commit()
 
 
 # ── scans ────────────────────────────────────────────────────────────────────

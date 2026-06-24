@@ -7,6 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 :root{
@@ -469,6 +470,18 @@ button:not(:disabled):active{transform:scale(.97)}
     </div>
   </div>
 
+  <!-- Activity Chart -->
+  <div class="sec" style="border:1px solid var(--border);background:var(--panel);padding:16px 18px;margin-bottom:1px">
+    <div class="panel-h" style="margin-bottom:14px">
+      <b>Activity — last 7 days</b>
+      <div style="margin-left:auto;display:flex;gap:14px;align-items:center;font-family:var(--mono);font-size:9.5px;color:var(--muted)">
+        <span style="display:flex;align-items:center;gap:5px"><span style="width:10px;height:2px;background:var(--rose);display:inline-block;border-radius:1px"></span>Attacks</span>
+        <span style="display:flex;align-items:center;gap:5px"><span style="width:10px;height:2px;background:var(--teal);display:inline-block;border-radius:1px"></span>Passed</span>
+      </div>
+    </div>
+    <div style="position:relative;height:140px"><canvas id="gwChart"></canvas></div>
+  </div>
+
   <!-- Live Activity Feed + Judge Inspector -->
   <div class="sec" style="display:grid;grid-template-columns:1.4fr 1fr;gap:1px;background:var(--border);border:1px solid var(--border);margin-top:1px">
     <!-- LIVE FEED -->
@@ -825,6 +838,84 @@ async function runShieldChat(){
   }catch(e){ $('shieldChatResult').innerHTML=`<div class="empty">Error: ${esc(e.message)}</div>`; }
 }
 
+/* ── Activity Chart ── */
+let _gwChartInst = null;
+async function loadGwChart(){
+  try{
+    const d = await (await fetch('/api/gateway/chart?days=7')).json();
+    const canvas = $('gwChart');
+    if(!canvas) return;
+    if(_gwChartInst){ _gwChartInst.destroy(); _gwChartInst = null; }
+    const hasData = d.attacks.some(v=>v>0) || d.passed.some(v=>v>0);
+    if(!hasData){
+      canvas.parentElement.innerHTML = '<div class="empty" style="height:140px;display:flex;align-items:center;justify-content:center">No requests yet — send some through the gateway to see activity here.</div>';
+      return;
+    }
+    _gwChartInst = new Chart(canvas, {
+      type: 'line',
+      data: {
+        labels: d.labels,
+        datasets: [
+          {
+            label: 'Attacks',
+            data: d.attacks,
+            borderColor: 'rgba(240,106,130,0.9)',
+            backgroundColor: 'rgba(240,106,130,0.08)',
+            borderWidth: 2,
+            pointRadius: 3,
+            pointBackgroundColor: 'rgba(240,106,130,1)',
+            tension: 0.35,
+            fill: true,
+          },
+          {
+            label: 'Passed',
+            data: d.passed,
+            borderColor: 'rgba(58,208,164,0.9)',
+            backgroundColor: 'rgba(58,208,164,0.06)',
+            borderWidth: 2,
+            pointRadius: 3,
+            pointBackgroundColor: 'rgba(58,208,164,1)',
+            tension: 0.35,
+            fill: true,
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        animation: { duration: 400 },
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            backgroundColor: 'rgba(17,17,17,0.95)',
+            borderColor: 'rgba(255,255,255,0.1)',
+            borderWidth: 1,
+            titleColor: 'rgba(232,230,223,0.6)',
+            bodyColor: '#e8e6df',
+            padding: 10,
+            callbacks: {
+              label: ctx => ` ${ctx.dataset.label}: ${ctx.parsed.y} request${ctx.parsed.y!==1?'s':''}`,
+            }
+          }
+        },
+        scales: {
+          x: {
+            grid: { color: 'rgba(255,255,255,0.04)' },
+            ticks: { color: 'rgba(232,230,223,0.35)', font: { family: 'JetBrains Mono', size: 9 } },
+            border: { color: 'rgba(255,255,255,0.06)' },
+          },
+          y: {
+            beginAtZero: true,
+            grid: { color: 'rgba(255,255,255,0.04)' },
+            ticks: { color: 'rgba(232,230,223,0.35)', font: { family: 'JetBrains Mono', size: 9 }, precision: 0 },
+            border: { color: 'rgba(255,255,255,0.06)' },
+          }
+        }
+      }
+    });
+  } catch(e){}
+}
+
 /* ── API Guard / Gateway ── */
 let _demoMode = true;
 async function loadGatewayTab(){
@@ -853,6 +944,7 @@ async function loadGatewayTab(){
   }catch(e){}
   loadGwKeys();
   loadGatewayEvents();
+  loadGwChart();
 }
 
 /* live activity feed */
@@ -1530,7 +1622,7 @@ async function showSecModal(){
           <div id="testOTPMsg" style="margin-top:8px;font-size:11.5px"></div>
         </div>`:''}
 
-        <div style="padding:12px 16px;background:rgba(255,255,255,.02);border:1px solid var(--border);border-radius:8px">
+        <div style="padding:12px 16px;background:rgba(255,255,255,.02);border:1px solid var(--border);border-radius:8px;margin-bottom:12px">
           <div style="font-size:12px;font-weight:600;margin-bottom:10px;color:rgba(255,255,255,.8)">Account security info</div>
           <div style="font-size:11.5px;color:var(--muted);line-height:1.75">
             <div>Account locked after 5 failed login attempts (15 min lockout)</div>
@@ -1538,11 +1630,127 @@ async function showSecModal(){
             <div>Passwords hashed with PBKDF2-SHA256 (200,000 rounds)</div>
           </div>
         </div>
+
+        <!-- Change password -->
+        <div style="padding:14px 16px;background:rgba(255,255,255,.02);border:1px solid var(--border);border-radius:8px;margin-bottom:12px">
+          <div style="font-size:13px;font-weight:600;margin-bottom:12px">Change password</div>
+          <div class="field" style="margin-bottom:8px">
+            <label style="display:block;font-family:var(--mono);font-size:9px;text-transform:uppercase;letter-spacing:.12em;color:var(--muted);margin-bottom:5px">Current password</label>
+            <input id="pwCurrent" type="password" placeholder="••••••••" style="width:100%;background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:6px;outline:none;padding:8px 12px;font-size:13px;color:var(--ink)">
+          </div>
+          <div class="field" style="margin-bottom:10px">
+            <label style="display:block;font-family:var(--mono);font-size:9px;text-transform:uppercase;letter-spacing:.12em;color:var(--muted);margin-bottom:5px">New password</label>
+            <input id="pwNew" type="password" placeholder="Min 8 characters" style="width:100%;background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:6px;outline:none;padding:8px 12px;font-size:13px;color:var(--ink)">
+          </div>
+          <button class="mm-try" onclick="changePassword()" id="pwBtn">Update password</button>
+          <div id="pwMsg" style="margin-top:8px;font-size:11.5px"></div>
+        </div>
+
+        <!-- Webhooks -->
+        <div style="padding:14px 16px;background:rgba(255,255,255,.02);border:1px solid var(--border);border-radius:8px">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+            <div style="font-size:13px;font-weight:600">Webhooks</div>
+            <button class="mm-try" style="font-size:10px" onclick="showAddWebhook()">+ Add</button>
+          </div>
+          <div style="font-size:11.5px;color:var(--muted);margin-bottom:12px;line-height:1.6">POST to your URL on every blocked attack. Payload is HMAC-signed with your webhook secret.</div>
+          <div id="webhookList"><div class="empty" style="font-size:11.5px">No webhooks yet.</div></div>
+          <div id="webhookForm" style="display:none;margin-top:12px;border-top:1px solid var(--border);padding-top:12px">
+            <div class="field" style="margin-bottom:8px">
+              <label style="display:block;font-family:var(--mono);font-size:9px;text-transform:uppercase;letter-spacing:.12em;color:var(--muted);margin-bottom:5px">Name</label>
+              <input id="whName" type="text" placeholder="My server" style="width:100%;background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:6px;outline:none;padding:8px 12px;font-size:12px;color:var(--ink)">
+            </div>
+            <div class="field" style="margin-bottom:10px">
+              <label style="display:block;font-family:var(--mono);font-size:9px;text-transform:uppercase;letter-spacing:.12em;color:var(--muted);margin-bottom:5px">URL</label>
+              <input id="whUrl" type="url" placeholder="https://yourserver.com/webhook" style="width:100%;background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:6px;outline:none;padding:8px 12px;font-size:12px;color:var(--ink)">
+            </div>
+            <div style="display:flex;gap:8px">
+              <button class="run-full" style="width:auto;padding:0 14px;font-size:10px;border-radius:6px" onclick="createWebhook()" id="whBtn">Create webhook</button>
+              <button class="mm-try" onclick="$('webhookForm').style.display='none'">Cancel</button>
+            </div>
+            <div id="whMsg" style="margin-top:8px;font-size:11.5px"></div>
+          </div>
+        </div>
       </div>
     `;
+    loadWebhooks();
   }catch(e){ $('secBody').innerHTML=`<div class="empty">Error: ${esc(e.message)}</div>`; }
 }
 function closeSecModal(){ $('secModal').style.display='none'; }
+
+async function changePassword(){
+  const cur=document.getElementById('pwCurrent')?.value;
+  const nw=document.getElementById('pwNew')?.value;
+  const msg=document.getElementById('pwMsg');
+  const btn=document.getElementById('pwBtn');
+  if(!cur||!nw){msg.innerHTML='<span style="color:var(--rose)">Fill in both fields.</span>';return;}
+  btn.disabled=true;btn.textContent='Updating…';msg.innerHTML='';
+  try{
+    const r=await fetch('/api/auth/change-password',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({current_password:cur,new_password:nw})});
+    const v=await r.json();
+    if(!r.ok) throw new Error(v.detail||'Failed');
+    msg.innerHTML='<span style="color:var(--teal)">Password updated successfully.</span>';
+    document.getElementById('pwCurrent').value='';
+    document.getElementById('pwNew').value='';
+  }catch(e){msg.innerHTML=`<span style="color:var(--rose)">${esc(e.message)}</span>`;}
+  btn.disabled=false;btn.textContent='Update password';
+}
+
+async function loadWebhooks(){
+  try{
+    const r=await fetch('/api/gateway/webhooks');
+    const v=await r.json();
+    const whs=v.webhooks||[];
+    const el=document.getElementById('webhookList');
+    if(!el) return;
+    if(!whs.length){el.innerHTML='<div class="empty" style="font-size:11.5px">No webhooks yet.</div>';return;}
+    el.innerHTML=whs.map(w=>`
+      <div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.04)">
+        <div style="flex:1;min-width:0">
+          <div style="font-size:12.5px;font-weight:500;margin-bottom:2px">${esc(w.name)}</div>
+          <div style="font-family:var(--mono);font-size:10px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(w.url)}</div>
+          <div style="font-family:var(--mono);font-size:9.5px;color:rgba(255,255,255,.25);margin-top:2px">fired ${w.fire_count} time${w.fire_count!==1?'s':''}</div>
+        </div>
+        <button class="mm-try" style="font-size:9.5px;color:var(--rose);border-color:rgba(240,106,130,.25);flex-shrink:0" onclick="deleteWebhook('${esc(w.id)}')">Remove</button>
+      </div>`).join('');
+  }catch(e){}
+}
+
+function showAddWebhook(){
+  const f=document.getElementById('webhookForm');
+  if(f){f.style.display='';document.getElementById('whName')?.focus();}
+}
+
+async function createWebhook(){
+  const name=document.getElementById('whName')?.value.trim();
+  const url=document.getElementById('whUrl')?.value.trim();
+  const msg=document.getElementById('whMsg');
+  const btn=document.getElementById('whBtn');
+  if(!name||!url){msg.innerHTML='<span style="color:var(--rose)">Enter a name and URL.</span>';return;}
+  btn.disabled=true;btn.textContent='Creating…';msg.innerHTML='';
+  try{
+    const r=await fetch('/api/gateway/webhooks',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({name,url})});
+    const v=await r.json();
+    if(!r.ok) throw new Error(v.detail||'Failed');
+    document.getElementById('webhookForm').style.display='none';
+    document.getElementById('whName').value='';
+    document.getElementById('whUrl').value='';
+    msg.innerHTML='';
+    loadWebhooks();
+    // Show the secret once
+    const secBanner=document.createElement('div');
+    secBanner.style.cssText='margin-top:10px;padding:10px 13px;background:rgba(196,241,53,.07);border:1px solid rgba(196,241,53,.2);border-radius:6px;font-size:11px;line-height:1.7';
+    secBanner.innerHTML=`<b style="color:var(--lime)">Webhook secret (save this — shown once):</b><br><code style="font-family:var(--mono);font-size:10px;color:var(--ink);word-break:break-all">${esc(v.secret)}</code><br><span style="color:var(--muted)">Use to verify the <code style="font-family:var(--mono);font-size:9.5px">X-AgentShield-Signature</code> header on incoming requests.</span>`;
+    document.getElementById('webhookList').after(secBanner);
+  }catch(e){msg.innerHTML=`<span style="color:var(--rose)">${esc(e.message)}</span>`;}
+  btn.disabled=false;btn.textContent='Create webhook';
+}
+
+async function deleteWebhook(id){
+  await fetch(`/api/gateway/webhooks/${id}`,{method:'DELETE'});
+  loadWebhooks();
+}
 
 async function connectGmail(){
   const user=document.getElementById('gmailUser')?.value.trim();

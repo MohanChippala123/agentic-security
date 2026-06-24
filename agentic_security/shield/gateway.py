@@ -293,6 +293,26 @@ def _rate_ok(vk: VirtualKey) -> bool:
 
 # ── Persistent attacker detection ─────────────────────────────────────────────
 
+def _trigger_notifications(user: str, vk: VirtualKey, event: dict) -> None:
+    """Fire webhooks and send email alerts for block events. Always background."""
+    try:
+        from ..api.notifications import fire_webhooks, notify_critical_attack, notify_budget_warning
+        fire_webhooks(user, event)
+        # Critical attack alert
+        if event.get("severity") in ("critical", "high") and event.get("risk_score", 0) >= 80:
+            notify_critical_attack(
+                user, vk.name, event.get("threat", ""), event.get("message", ""),
+                event.get("risk_score", 0),
+            )
+        # Budget warning at 80%
+        if vk.budget_usd > 0:
+            pct = vk.spent_usd / vk.budget_usd * 100
+            if 79 <= pct <= 82:  # narrow band so we don't spam on every request
+                notify_budget_warning(user, vk.name, pct, vk.spent_usd, vk.budget_usd)
+    except Exception:
+        pass
+
+
 def _record_block(vk: VirtualKey) -> bool:
     """Record a block hit. Returns True if key should be auto-suspended."""
     now = time.time()
@@ -417,6 +437,15 @@ def gateway_chat(
         auto_suspended = _record_block(vk)
         record_action(vk.name, action="blocked", blocked=True)
         _persist_key(user, vk)
+
+        # Fire webhooks + send alerts in background
+        _trigger_notifications(user, vk, {
+            "outcome": "blocked", "key_name": vk.name,
+            "threat": report["attack_type"], "risk_score": report["risk_score"],
+            "severity": report["severity"], "message": msg_preview,
+            "cost_saved_usd": round(saved, 6),
+            "timestamp": time.time(),
+        })
 
         suspension_note = (
             f" Key auto-suspended after {_ATTACK_THRESHOLD} attacks in {_ATTACK_WINDOW_SEC//60} minutes."
