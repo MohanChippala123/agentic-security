@@ -18,10 +18,35 @@ from pydantic import BaseModel, Field
 
 from . import auth, db
 
+from contextlib import asynccontextmanager
+import threading
+
+def _warmup_models():
+    """Pre-load all ML models in a background thread so the first real request is fast."""
+    try:
+        # Warm up hybrid layer (MiniLM + XGBoost)
+        from ..llm.hybrid_layer import predict
+        predict("warmup ping")
+    except Exception:
+        pass
+    try:
+        # Warm up the LLM judge
+        from ..llm.engine import _ensure_loaded
+        _ensure_loaded()
+    except Exception:
+        pass
+
+@asynccontextmanager
+async def lifespan(app):
+    # Start model warmup in background — doesn't block server startup
+    threading.Thread(target=_warmup_models, daemon=True).start()
+    yield
+
 app = FastAPI(
     title="AgentShield",
     description="The Security LLM platform for AI agents. Built by Mohan.",
     version="1.0.0",
+    lifespan=lifespan,
 )
 
 auth.seed_demo_account()
