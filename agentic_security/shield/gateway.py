@@ -91,12 +91,14 @@ class VirtualKey:
         }
 
 
-# ── Per-user state ─────────────────────────────────────────────────────────────
+# ── Per-user state (write-through cache → SQLite) ─────────────────────────────
+# In-memory layer for hot-path reads; every mutation is also written to DB.
 _user_keys:     dict[str, dict[str, VirtualKey]] = {}
 _user_events:   dict[str, list[dict]] = {}
 _user_upstream: dict[str, str] = {}          # email -> real provider key
 _user_provider: dict[str, str] = {}          # email -> provider name
 _MAX_EVENTS = 120
+_user_loaded:   set[str] = set()             # emails whose data has been loaded from DB
 
 # Persistent attacker escalation: track blocks per virtual key
 # If a key blocks ≥ 3 times within 5 minutes → auto-suspend that key
@@ -104,24 +106,76 @@ _ATTACK_WINDOW_SEC = 300   # 5 minutes
 _ATTACK_THRESHOLD  = 3     # blocks before auto-suspend
 
 
+def _ensure_loaded(user: str) -> None:
+    """Load a user's gateway data from DB into memory on first access."""
+    if user in _user_loaded:
+        return
+    from ..api import db
+    # Load virtual keys
+    if user not in _user_keys:
+        _user_keys[user] = {}
+    for row in db.vk_list(user):
+        vk = VirtualKey(
+            key=row["key"], name=row["name"],
+            budget_usd=row["budget_usd"], spent_usd=row["spent_usd"],
+            rate_limit_per_min=row["rate_limit_per_min"], enabled=row["enabled"],
+            request_count=row["request_count"], blocked_count=row["blocked_count"],
+            cost_saved_usd=row["cost_saved_usd"], created_at=row["created_at"],
+            recent_blocks=row.get("recent_blocks", []),
+        )
+        _user_keys[user][vk.key] = vk
+    # Load upstream key
+    result = db.upstream_load(user)
+    if result and user not in _user_upstream:
+        _user_upstream[user], _user_provider[user] = result
+    # Load recent events into memory cache
+    if user not in _user_events:
+        _user_events[user] = list(reversed(db.evt_list(user, 120)))
+    _user_loaded.add(user)
+
+
 def _keys(user: str) -> dict[str, VirtualKey]:
+    _ensure_loaded(user)
     if user not in _user_keys:
         _user_keys[user] = {}
     return _user_keys[user]
 
 
 def _events(user: str) -> list[dict]:
+    _ensure_loaded(user)
     if user not in _user_events:
         _user_events[user] = []
     return _user_events[user]
 
 
+def _persist_key(user: str, vk: VirtualKey) -> None:
+    """Write a virtual key to the DB."""
+    try:
+        from ..api import db
+        db.vk_upsert(user, {
+            "key": vk.key, "name": vk.name, "budget_usd": vk.budget_usd,
+            "spent_usd": vk.spent_usd, "rate_limit_per_min": vk.rate_limit_per_min,
+            "enabled": vk.enabled, "request_count": vk.request_count,
+            "blocked_count": vk.blocked_count, "cost_saved_usd": vk.cost_saved_usd,
+            "created_at": vk.created_at, "recent_blocks": vk.recent_blocks,
+        })
+    except Exception:
+        pass  # never let DB errors break a request
+
+
 def _log_event(user: str, **event: Any) -> None:
-    ev = _events(user)
     event["timestamp"] = time.time()
+    # In-memory cache
+    ev = _events(user)
     ev.append(event)
     if len(ev) > _MAX_EVENTS:
         ev.pop(0)
+    # Persist to DB
+    try:
+        from ..api import db
+        db.evt_append(user, event)
+    except Exception:
+        pass
 
 
 def recent_events(user: str, limit: int = 50) -> list[dict]:
@@ -136,6 +190,7 @@ def create_key(user: str, name: str, budget_usd: float = 5.0, rate_limit_per_min
                     budget_usd=max(0.0, budget_usd),
                     rate_limit_per_min=max(1, rate_limit_per_min))
     _keys(user)[key] = vk
+    _persist_key(user, vk)
     return vk.public(reveal=True)
 
 
@@ -153,6 +208,7 @@ def revoke_key(user: str, key: str) -> bool:
                 break
     if vk:
         vk.enabled = False
+        _persist_key(user, vk)
         return True
     return False
 
@@ -188,15 +244,27 @@ def set_upstream_key(user: str, key: str, provider: str | None = None) -> dict:
     key = (key or "").strip()
     if not key:
         return {"ok": False, "error": "empty key"}
+    _ensure_loaded(user)
     _user_upstream[user] = key
     detected = provider or detect_provider(key)
     _user_provider[user] = detected
+    try:
+        from ..api import db
+        db.upstream_save(user, key, detected)
+    except Exception:
+        pass
     return {"ok": True, **upstream_status(user)}
 
 
 def clear_upstream_key(user: str) -> dict:
+    _ensure_loaded(user)
     _user_upstream.pop(user, None)
     _user_provider.pop(user, None)
+    try:
+        from ..api import db
+        db.upstream_delete(user)
+    except Exception:
+        pass
     return {"ok": True, **upstream_status(user)}
 
 
@@ -348,6 +416,7 @@ def gateway_chat(
         vk.cost_saved_usd += saved
         auto_suspended = _record_block(vk)
         record_action(vk.name, action="blocked", blocked=True)
+        _persist_key(user, vk)
 
         suspension_note = (
             f" Key auto-suspended after {_ATTACK_THRESHOLD} attacks in {_ATTACK_WINDOW_SEC//60} minutes."
@@ -430,6 +499,7 @@ def gateway_chat(
     vk.spent_usd += cost
 
     record_action(vk.name, action="allowed", blocked=False, cost_usd=cost)
+    _persist_key(user, vk)
     _log_event(
         user,
         outcome="forwarded", layer="security-llm-passed",

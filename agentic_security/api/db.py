@@ -1,9 +1,12 @@
 """SQLite persistence layer.
 
-Single file database at data/agentic.db. Three tables:
-  users    — email, hashed password, salt
-  scans    — one row per completed scan, linked to a user
-  findings — one row per de-duplicated finding, linked to a scan
+Single file database at data/agentic.db. Tables:
+  users         — email, hashed password, salt, 2FA, lockout
+  scans         — one row per completed scan, linked to a user
+  findings      — one row per de-duplicated finding, linked to a scan
+  virtual_keys  — gateway virtual keys with live spend/blocked counters
+  gateway_events— full activity log per user (capped at 200/user)
+  upstream_keys — encrypted provider API key + provider name per user
 """
 
 from __future__ import annotations
@@ -59,6 +62,38 @@ CREATE TABLE IF NOT EXISTS findings (
 
 CREATE INDEX IF NOT EXISTS idx_scans_user   ON scans(user_email, started_at DESC);
 CREATE INDEX IF NOT EXISTS idx_findings_scan ON findings(scan_id);
+
+CREATE TABLE IF NOT EXISTS virtual_keys (
+    key                TEXT PRIMARY KEY,
+    user_email         TEXT NOT NULL,
+    name               TEXT NOT NULL,
+    budget_usd         REAL NOT NULL,
+    spent_usd          REAL NOT NULL DEFAULT 0,
+    rate_limit_per_min INTEGER NOT NULL DEFAULT 30,
+    enabled            INTEGER NOT NULL DEFAULT 1,
+    request_count      INTEGER NOT NULL DEFAULT 0,
+    blocked_count      INTEGER NOT NULL DEFAULT 0,
+    cost_saved_usd     REAL NOT NULL DEFAULT 0,
+    created_at         REAL NOT NULL,
+    recent_blocks      TEXT NOT NULL DEFAULT '[]'
+);
+
+CREATE TABLE IF NOT EXISTS gateway_events (
+    id         INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_email TEXT NOT NULL,
+    timestamp  REAL NOT NULL,
+    data       TEXT NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS upstream_keys (
+    user_email   TEXT PRIMARY KEY,
+    enc_key      TEXT NOT NULL,
+    provider     TEXT NOT NULL DEFAULT 'openai',
+    updated_at   REAL NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS idx_vk_user   ON virtual_keys(user_email, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_evt_user  ON gateway_events(user_email, timestamp DESC);
 """
 
 
@@ -177,6 +212,136 @@ def user_set_twofa(email: str, enabled: bool) -> None:
 
 def user_all() -> list[dict]:
     return [dict(r) for r in get().execute("SELECT * FROM users ORDER BY created_at")]
+
+
+# ── virtual keys ─────────────────────────────────────────────────────────────
+
+def vk_upsert(user_email: str, vk: dict) -> None:
+    get().execute(
+        """INSERT INTO virtual_keys
+           (key, user_email, name, budget_usd, spent_usd, rate_limit_per_min,
+            enabled, request_count, blocked_count, cost_saved_usd, created_at, recent_blocks)
+           VALUES (?,?,?,?,?,?,?,?,?,?,?,?)
+           ON CONFLICT(key) DO UPDATE SET
+             spent_usd=excluded.spent_usd,
+             enabled=excluded.enabled,
+             request_count=excluded.request_count,
+             blocked_count=excluded.blocked_count,
+             cost_saved_usd=excluded.cost_saved_usd,
+             recent_blocks=excluded.recent_blocks""",
+        (vk["key"], user_email, vk["name"], vk["budget_usd"], vk["spent_usd"],
+         vk["rate_limit_per_min"], 1 if vk["enabled"] else 0,
+         vk["request_count"], vk["blocked_count"], vk["cost_saved_usd"],
+         vk["created_at"], json.dumps(vk.get("recent_blocks", []))),
+    )
+    get().commit()
+
+
+def vk_list(user_email: str) -> list[dict]:
+    rows = get().execute(
+        "SELECT * FROM virtual_keys WHERE user_email=? ORDER BY created_at DESC",
+        (user_email,),
+    ).fetchall()
+    out = []
+    for r in rows:
+        d = dict(r)
+        d["recent_blocks"] = json.loads(d.get("recent_blocks") or "[]")
+        d["enabled"] = bool(d["enabled"])
+        out.append(d)
+    return out
+
+
+def vk_get(key: str) -> dict | None:
+    row = get().execute("SELECT * FROM virtual_keys WHERE key=?", (key,)).fetchone()
+    if not row:
+        return None
+    d = dict(row)
+    d["recent_blocks"] = json.loads(d.get("recent_blocks") or "[]")
+    d["enabled"] = bool(d["enabled"])
+    return d
+
+
+# ── gateway events ────────────────────────────────────────────────────────────
+
+_MAX_EVENTS_DB = 200
+
+
+def evt_append(user_email: str, event: dict) -> None:
+    get().execute(
+        "INSERT INTO gateway_events (user_email, timestamp, data) VALUES (?,?,?)",
+        (user_email, event.get("timestamp", time.time()), json.dumps(event)),
+    )
+    # Keep only the most recent _MAX_EVENTS_DB rows per user
+    get().execute(
+        """DELETE FROM gateway_events WHERE user_email=? AND id NOT IN (
+             SELECT id FROM gateway_events WHERE user_email=?
+             ORDER BY timestamp DESC LIMIT ?)""",
+        (user_email, user_email, _MAX_EVENTS_DB),
+    )
+    get().commit()
+
+
+def evt_list(user_email: str, limit: int = 50) -> list[dict]:
+    rows = get().execute(
+        "SELECT data FROM gateway_events WHERE user_email=? ORDER BY timestamp DESC LIMIT ?",
+        (user_email, limit),
+    ).fetchall()
+    return [json.loads(r["data"]) for r in rows]
+
+
+# ── upstream keys (encrypted at rest) ────────────────────────────────────────
+
+def _xor_key(plaintext: str, secret: bytes) -> str:
+    """Simple XOR cipher with repeating secret. Good enough for at-rest protection."""
+    import base64
+    enc = bytes(b ^ secret[i % len(secret)] for i, b in enumerate(plaintext.encode()))
+    return base64.urlsafe_b64encode(enc).decode()
+
+
+def _xor_decrypt(ciphertext: str, secret: bytes) -> str:
+    import base64
+    enc = base64.urlsafe_b64decode(ciphertext)
+    return bytes(b ^ secret[i % len(secret)] for i, b in enumerate(enc)).decode()
+
+
+def _db_secret() -> bytes:
+    import os
+    s = os.environ.get("AGSEC_SECRET", "")
+    if s:
+        return s.encode()
+    from pathlib import Path
+    sf = Path(__file__).resolve().parents[2] / "data" / ".session_secret"
+    return sf.read_text(encoding="utf-8").strip().encode() if sf.exists() else b"agentshield-default-secret"
+
+
+def upstream_save(user_email: str, api_key: str, provider: str) -> None:
+    enc = _xor_key(api_key, _db_secret())
+    get().execute(
+        """INSERT INTO upstream_keys (user_email, enc_key, provider, updated_at)
+           VALUES (?,?,?,?)
+           ON CONFLICT(user_email) DO UPDATE SET enc_key=excluded.enc_key,
+             provider=excluded.provider, updated_at=excluded.updated_at""",
+        (user_email, enc, provider, time.time()),
+    )
+    get().commit()
+
+
+def upstream_load(user_email: str) -> tuple[str, str] | None:
+    """Returns (api_key, provider) or None."""
+    row = get().execute(
+        "SELECT enc_key, provider FROM upstream_keys WHERE user_email=?", (user_email,)
+    ).fetchone()
+    if not row:
+        return None
+    try:
+        return _xor_decrypt(row["enc_key"], _db_secret()), row["provider"]
+    except Exception:
+        return None
+
+
+def upstream_delete(user_email: str) -> None:
+    get().execute("DELETE FROM upstream_keys WHERE user_email=?", (user_email,))
+    get().commit()
 
 
 # ── scans ────────────────────────────────────────────────────────────────────
