@@ -351,7 +351,7 @@ def me(request: Request) -> dict:
     user = _current_user(request)
     if not user:
         raise HTTPException(status_code=401, detail="Not authenticated")
-    return user
+    return {**user, "is_demo": _is_demo(user)}
 
 
 _DEMO_PASSWORD = os.environ.get("AGSEC_DEMO_PASSWORD", "demo1234")

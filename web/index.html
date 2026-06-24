@@ -351,6 +351,12 @@ button:not(:disabled):active{transform:scale(.97)}
 </head>
 <body>
 
+<!-- demo-mode banner (shown only when signed in as the shared demo account) -->
+<div id="demoModeBar" style="display:none;background:var(--lime);color:#000;padding:9px 18px;font-size:12.5px;font-weight:600;display:none;align-items:center;justify-content:center;gap:14px;flex-wrap:wrap;text-align:center">
+  <span>👋 You're exploring the <b>live demo</b> — scan attacks and watch the firewall in action. Connecting your own keys & saving data needs a free account.</span>
+  <button onclick="demoSignup()" style="background:#000;color:var(--lime);border:none;padding:6px 16px;font-weight:700;font-size:11.5px;letter-spacing:.06em;text-transform:uppercase;cursor:pointer;font-family:var(--mono)">Sign up free →</button>
+</div>
+
 <!-- top nav -->
 <nav class="topnav">
   <div class="logo" onclick="window.location.href='/'" style="cursor:pointer"><span class="mk">⛨</span> AgentShield</div>
@@ -1089,6 +1095,7 @@ function gwDetectProvider(key){
 }
 
 async function gwConnectKey(){
+  if(demoGate('Connecting a provider key')) return;
   const key=$('gwUpstreamKey').value.trim();
   const provider=$('gwProviderSel').value||null;
   const msg=$('gwUpstreamMsg');
@@ -1820,6 +1827,7 @@ async function testOTP(){
 }
 
 /* ── auth ── */
+let _IS_DEMO=false;
 async function loadUser(){
   try{
     const r=await fetch('/api/auth/me');
@@ -1828,7 +1836,38 @@ async function loadUser(){
     const first=(u.name||'Analyst').split(' ')[0];
     $('meName').textContent=first;
     $('mePic').textContent=(u.name||'AN').split(' ').map(s=>s[0]).join('').slice(0,2).toUpperCase();
+    _IS_DEMO=!!u.is_demo;
+    if(_IS_DEMO) applyDemoMode();
   }catch(e){}
+}
+
+function demoSignup(){ window.location.href='/login#signup'; }
+
+/* Demo-locked features prompt for signup instead of acting (server also blocks). */
+function demoGate(feature){
+  if(!_IS_DEMO) return false;
+  if(confirm(`${feature} is available on a free account.\n\nSign up now? (Your demo session stays read-only.)`)) demoSignup();
+  return true;
+}
+
+function applyDemoMode(){
+  // show the banner
+  const bar=$('demoModeBar'); if(bar){ bar.style.display='flex'; }
+  // label the account chip
+  const nm=$('meName'); if(nm) nm.textContent='Demo';
+  const pic=$('mePic'); if(pic) pic.textContent='D';
+  const chip=$('meChip'); if(chip) chip.title='Demo account — click to exit';
+  // replace the "connect your real provider key" panel with a signup prompt
+  const up=document.querySelector('#tab-gateway .sec');
+  if(up && up.querySelector('#gwUpstreamKey')){
+    up.innerHTML='<div style="text-align:center;padding:6px 4px"><div style="font-size:13px;font-weight:600;margin-bottom:4px">🔒 Connect your own provider key with a free account</div>'+
+      '<div style="font-size:11.5px;color:var(--muted);margin-bottom:12px;line-height:1.6">The demo runs on a local model so you can see the firewall work without a key. Sign up to route your real OpenAI / Anthropic / Groq traffic through AgentShield.</div>'+
+      '<button class="run-full" style="width:auto;padding:0 18px;margin:0 auto" onclick="demoSignup()">Sign up free →</button></div>';
+  }
+  // land on the Test tab — the self-test shows the firewall blocking attacks with
+  // zero setup, the best first impression of the demo.
+  const tabs=document.querySelectorAll('.nav-tabs a');
+  if(tabs[2]) showTab('redteam', tabs[2]);
 }
 async function logout(){
   try{ await fetch('/api/auth/logout',{method:'POST'}); }catch(e){}
