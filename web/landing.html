@@ -41,11 +41,12 @@ body::after{content:'';position:fixed;width:600px;height:500px;bottom:-160px;rig
   font-weight:500;color:rgba(255,255,255,.32)}
 .nav-overlay .nav-sub a:hover{color:rgba(255,255,255,.65)}
 .top-right{position:fixed;top:22px;right:22px;z-index:100;display:flex;gap:8px;align-items:center}
-.top-right a{font-family:var(--mono);font-size:11.5px;font-weight:500;
-  color:rgba(255,255,255,.45);text-transform:uppercase;letter-spacing:.06em;transition:color .12s}
-.top-right a:hover{color:#fff}
-.top-right .t-cta{background:var(--lime);color:#000;padding:7px 14px;font-weight:700;font-size:11px;letter-spacing:.08em;text-transform:uppercase}
-.top-right .t-cta:hover{opacity:.88}
+.top-right a{font-family:var(--mono);font-size:11px;font-weight:600;
+  color:rgba(255,255,255,.78);text-transform:uppercase;letter-spacing:.08em;
+  padding:7px 14px;border:1px solid rgba(255,255,255,.18);transition:color .12s,border-color .12s,background .12s}
+.top-right a:hover{color:#fff;border-color:rgba(255,255,255,.4)}
+.top-right .t-cta{background:var(--lime);color:#000;border-color:var(--lime);font-weight:700}
+.top-right .t-cta:hover{opacity:.88;color:#000;border-color:var(--lime)}
 
 /* ── hero ── */
 .hero{position:relative;z-index:1;padding:120px 24px 0;text-align:center;display:flex;flex-direction:column;align-items:center}
