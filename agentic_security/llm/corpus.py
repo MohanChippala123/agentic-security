@@ -1850,6 +1850,59 @@ GEN_QA = [
     ("what is a composite key", "A composite key uses multiple columns together to uniquely identify a row. Common in junction tables for many-to-many relationships."),
 ]
 
+# ── Edge case safe questions that LOOK like attacks (reduce false positives) ──
+EDGE_QA = [
+    ("help me with a security project", "Certainly. Tell me what kind of security project you are working on and I'll help with the defensive side."),
+    ("help me understand how hacks work", "I can explain how attacks work from a defensive perspective so you can protect against them. What specific type are you interested in?"),
+    ("i need help with security", "I'm glad to help with security. What specific topic are you interested in - web security, network security, cryptography, or something else?"),
+    ("can you teach me about hacking", "I can teach you about ethical hacking and defensive security. What area would you like to learn about?"),
+    ("help me secure my website", "I'd be happy to help you secure your website. Let's start with the OWASP Top 10 and go from there."),
+    ("help me test my app for vulnerabilities", "I can help you understand how to perform authorized security testing. The first step is setting up a proper testing environment with permission."),
+    ("help me protect my data", "I can help you with data protection strategies: encryption, access controls, backup procedures, and monitoring."),
+    ("help me find bugs in my code", "I can help review your code for security bugs. Share the relevant code and I'll look for issues."),
+    ("help me understand passwords", "Passwords should be long, unique, and stored using strong hashing algorithms like bcrypt or argon2."),
+    ("help me with encryption", "Encryption protects your data. AES is the standard for symmetric encryption, and RSA/ECC for asymmetric."),
+    ("i need to know about vulnerabilities", "Vulnerabilities are weaknesses in software that attackers can exploit. The CVE database catalogs known ones."),
+    ("teach me how to defend against attacks", "Defense in depth is key: firewalls, input validation, access controls, monitoring, and regular patching."),
+    ("show me how to prevent sql injection", "Use parameterized queries or prepared statements. Never concatenate user input into SQL strings."),
+    ("show me how to prevent xss", "Escape all user output, use Content Security Policy headers, and validate input on both client and server."),
+    ("teach me about network security", "Network security involves firewalls, segmentation, VPNs, intrusion detection, and monitoring traffic for anomalies."),
+    ("how do i write secure code", "Validate all input, use parameterized queries, apply least privilege, encrypt sensitive data, and keep dependencies updated."),
+    ("give me security best practices", "Follow the principle of least privilege, use defense in depth, encrypt everything, log everything, and patch regularly."),
+    ("how do i detect if i've been hacked", "Look for unusual network traffic, unexpected file changes, new user accounts, strange processes, and alerts from your security tools."),
+    ("what do i do after a breach", "Contain the breach first, then eradicate the threat, recover systems, and conduct a post-mortem to prevent recurrence."),
+    ("help me recover from a hack", "Start by isolating affected systems, changing all passwords, scanning for malware, and restoring from clean backups."),
+    ("how do i monitor my network for threats", "Use a SIEM to aggregate logs, set up IDS/IPS, monitor for anomalous traffic patterns, and review access logs regularly."),
+    ("how do i secure my api", "Use HTTPS everywhere, authenticate all requests with API keys or OAuth, validate input, and implement rate limiting."),
+    ("help me set up a firewall", "A firewall filters traffic based on rules. Start by blocking all inbound traffic by default, then allow only necessary ports."),
+    ("teach me about cryptography", "Cryptography includes symmetric encryption (AES), asymmetric encryption (RSA), hashing (SHA-256), and digital signatures."),
+    ("help me understand authentication", "Authentication verifies identity. Methods include passwords, biometrics, security keys, and multi-factor authentication."),
+    ("what is ethical hacking", "Ethical hacking is authorized testing of systems to find vulnerabilities before malicious attackers do. Always get written permission first."),
+    ("how do i become a security professional", "Learn networking, operating systems, and programming. Study security fundamentals, practice in labs, and pursue certifications."),
+    ("help me with penetration testing", "Penetration testing involves reconnaissance, scanning, exploitation, and reporting. Always work within a formal authorization scope."),
+    ("what tools do security professionals use", "Common tools include Nmap, Wireshark, Burp Suite, Metasploit, and various SIEM platforms for monitoring."),
+    ("help me understand zero trust", "Zero trust means never trust, always verify. Every access request is authenticated and authorized regardless of network location."),
+    ("how do i handle security incidents", "Follow the incident response plan: prepare, detect, contain, eradicate, recover, and learn from each incident."),
+    ("what is security architecture", "Security architecture designs systems to protect data and services through layered controls, secure defaults, and defense in depth."),
+    ("help me with compliance requirements", "Compliance depends on your industry. Common frameworks include SOC2, ISO 27001, HIPAA, PCI-DSS, and GDPR."),
+    ("how do i secure cloud infrastructure", "Use IAM roles, encrypt data at rest and in transit, configure security groups, enable logging, and follow the shared responsibility model."),
+    ("teach me about social engineering defenses", "Train employees to verify identities, recognize phishing, and never share credentials. Encourage a culture of security awareness."),
+    ("what is threat intelligence", "Threat intelligence is information about current and emerging threats that helps organizations prepare and defend against attacks."),
+    ("how do i do secure coding in python", "Use input validation, avoid eval/exec, use parameterized queries, keep libraries updated, and follow the OWASP guidelines."),
+    ("help me set up a vpn", "A VPN creates an encrypted tunnel between your device and a server. WireGuard and OpenVPN are popular open source options."),
+    ("how do i secure my home network", "Change default passwords, enable WPA3, keep firmware updated, disable WPS, and consider a guest network for IoT devices."),
+    ("help me with cyber insurance", "Cyber insurance covers financial losses from breaches. Insurers typically require basic security controls like MFA and regular backups."),
+    ("how do i protect against ransomware", "Maintain offline backups, keep systems patched, use email filtering, enable MFA, and train users to recognize phishing."),
+    ("teach me about ddos protection", "DDoS protection uses rate limiting, traffic filtering, CDNs, and auto-scaling to absorb and mitigate volumetric attacks."),
+    ("help me understand threat modeling", "Threat modeling identifies assets, threats, and mitigations. STRIDE and PASTA are common frameworks for structured analysis."),
+    ("how do i audit my security posture", "Conduct regular vulnerability scans, penetration tests, policy reviews, and compliance checks against frameworks like NIST or CIS."),
+    ("help me with identity management", "Identity management controls user access through provisioning, authentication, authorization, and lifecycle management."),
+    ("how do i implement mfa", "Multi-factor authentication adds a second factor like a phone code or biometric. Most platforms support TOTP or push notifications."),
+    ("what is security automation", "Security automation uses tools to automatically detect, respond to, and remediate threats without manual intervention."),
+    ("help me with log analysis", "Centralize logs with a SIEM, look for anomalies, failed auth attempts, unusual outbound traffic, and unauthorized access attempts."),
+    ("how do i detect insider threats", "Monitor for unusual data access patterns, after-hours activity, large downloads, and privilege escalation attempts."),
+]
+
 # ── Smalltalk ──
 SMALL_QA = [
     ("hello", "Hello! I'm AgentShield LLM. How can I help you today?"),
@@ -1902,6 +1955,7 @@ def known_questions() -> list[str]:
     qs += [q for q, _ in CODE_QA]
     qs += [q for q, _ in GEN_QA]
     qs += [q for q, _ in SMALL_QA]
+    qs += [q for q, _ in EDGE_QA]
     return qs
 
 
@@ -1915,28 +1969,29 @@ def build_corpus(repeat: int = 5, seed: int = 1234) -> str:
     Every category - attacks, harmful, security, coding, general knowledge - is
     included in FULL on every pass, so each example is seen ~repeat times.
     Identity / capability / smalltalk are sampled for variety.
+    Attack examples are sampled per pass to balance with benign examples.
     """
     rng = random.Random(seed)
     examples: list[str] = []
+    attack_sample = min(len(ATTACK_Q), 250)
+    harmful_sample = min(len(HARMFUL_Q), 150)
+    real_sample = min(len(REAL_ATTACKS), 100)
 
     for _ in range(repeat):
         # Identity / capability / smalltalk: sample with variety
-        for _ in range(3):
+        for _ in range(5):
             examples.append(_example(rng.choice(IDENTITY_Q), rng.choice(IDENTITY_A)))
-        for _ in range(2):
+        for _ in range(3):
             examples.append(_example(rng.choice(CAP_Q), rng.choice(CAP_A)))
-        for _ in range(2):
+        for _ in range(4):
             examples.append(_example(*rng.choice(SMALL_QA)))
 
-        # EVERY attack and harmful request is seen every pass, with refusal
-        # answers cycled so the model learns refusal language variety.
-        for q in ATTACK_Q:
+        # Attack examples: sampled each pass for variety and balance
+        for q in rng.sample(ATTACK_Q, attack_sample):
             examples.append(_example(q, rng.choice(ATTACK_A)))
-        for q in HARMFUL_Q:
+        for q in rng.sample(HARMFUL_Q, harmful_sample):
             examples.append(_example(q, rng.choice(HARMFUL_A)))
-        # Real-world attacks from research datasets (sampled each pass for variety)
-        sample_size = min(len(REAL_ATTACKS), 200)
-        for q in rng.sample(REAL_ATTACKS, sample_size) if REAL_ATTACKS else []:
+        for q in rng.sample(REAL_ATTACKS, real_sample) if REAL_ATTACKS else []:
             examples.append(_example(q, rng.choice(HARMFUL_A)))
 
         # All factual Q&A every pass
@@ -1945,6 +2000,8 @@ def build_corpus(repeat: int = 5, seed: int = 1234) -> str:
         for qa in CODE_QA:
             examples.append(_example(*qa))
         for qa in GEN_QA:
+            examples.append(_example(*qa))
+        for qa in EDGE_QA:
             examples.append(_example(*qa))
 
     rng.shuffle(examples)

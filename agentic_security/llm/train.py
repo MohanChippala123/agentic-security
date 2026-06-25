@@ -6,6 +6,7 @@ Saves a single checkpoint to agentic_security/llm/checkpoint.pt
 
 from __future__ import annotations
 
+import math
 import time
 from pathlib import Path
 
@@ -26,17 +27,17 @@ def get_batch(data: torch.Tensor, block_size: int, batch_size: int, device: str)
 
 
 def train(
-    steps: int = 5000,
-    batch_size: int = 32,
+    steps: int = 1500,
+    batch_size: int = 16,
     block_size: int = 256,
     n_layer: int = 6,
     n_head: int = 8,
     n_embd: int = 256,
-    lr: float = 4e-4,
-    eval_every: int = 800,
+    lr: float = 3e-4,
+    eval_every: int = 500,
+    grad_accum: int = 1,
     device: str | None = None,
 ) -> None:
-    # Prefer Intel GPU (XPU) if a torch XPU build is present, else CUDA, else CPU.
     if device is None:
         if hasattr(torch, "xpu") and torch.xpu.is_available():
             device = "xpu"
@@ -44,10 +45,10 @@ def train(
             device = "cuda"
         else:
             device = "cpu"
-            torch.set_num_threads(torch.get_num_threads())  # use all CPU cores
+            torch.set_num_threads(torch.get_num_threads())
     torch.manual_seed(1337)
 
-    print("Building corpus…")
+    print("Building corpus...")
     text = build_corpus()
     print(f"  corpus: {len(text):,} chars, {len(set(text))} unique")
 
@@ -64,12 +65,13 @@ def train(
         n_embd=n_embd,
     )
     model = GPT(cfg).to(device)
-    print(f"  model: {model.num_params():,} params on {device}")
+    compiled_ok = model.try_compile()
+    print(f"  model: {model.num_params():,} params on {device}" + (" (compiled)" if compiled_ok else ""))
 
     opt = torch.optim.AdamW(model.parameters(), lr=lr, weight_decay=0.01)
 
     @torch.no_grad()
-    def estimate_loss(d: torch.Tensor, iters: int = 10) -> float:
+    def estimate_loss(d: torch.Tensor, iters: int = 5) -> float:
         model.eval()
         losses = []
         for _ in range(iters):
@@ -79,7 +81,6 @@ def train(
         model.train()
         return sum(losses) / len(losses)
 
-    import math
     warmup = max(50, steps // 20)
 
     def lr_at(step: int) -> float:
@@ -88,24 +89,53 @@ def train(
         prog = (step - warmup) / max(1, steps - warmup)
         return 0.1 * lr + 0.5 * (1 + math.cos(math.pi * prog)) * (lr - 0.1 * lr)
 
-    print(f"Training for {steps} steps…")
+    print(f"Training for {steps} steps (grad_accum={grad_accum})...")
     start = time.time()
     model.train()
-    for step in range(1, steps + 1):
+    best_val = float("inf")
+    step = 0
+    micro_step = 0
+    accum_loss = 0.0
+
+    while step < steps:
         for g in opt.param_groups:
             g["lr"] = lr_at(step)
         x, y = get_batch(train_data, block_size, batch_size, device)
         _, loss = model(x, y)
-        opt.zero_grad(set_to_none=True)
+        loss = loss / grad_accum
         loss.backward()
+        accum_loss += loss.item()
+        micro_step += 1
+
+        if micro_step % grad_accum == 0:
+            torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)
+            opt.step()
+            opt.zero_grad(set_to_none=True)
+            step += 1
+
+            if step % eval_every == 0 or step == 1:
+                vl = estimate_loss(val_data, iters=5)
+                elapsed = time.time() - start
+                avg_loss = accum_loss / micro_step if micro_step else 0.0
+                print(f"  step {step:>5}/{steps} | train {avg_loss:.3f} | val {vl:.3f} | {elapsed:.0f}s")
+
+                if vl < best_val:
+                    best_val = vl
+                    _save(model, cfg, tok)
+                    print(f"    * new best val loss {vl:.3f}, checkpoint saved")
+
+            accum_loss = 0.0
+            micro_step = 0
+
+    opt.zero_grad(set_to_none=True)
+    if micro_step > 0:
         torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)
         opt.step()
-
-        if step % eval_every == 0 or step == 1:
-            vl = estimate_loss(val_data)
-            elapsed = time.time() - start
-            print(f"  step {step:>5}/{steps} | train {loss.item():.3f} | val {vl:.3f} | {elapsed:.0f}s")
-            _save(model, cfg, tok)  # checkpoint as we go
+        step += 1
+        vl = estimate_loss(val_data)
+        if vl < best_val:
+            best_val = vl
+            _save(model, cfg, tok)
 
     _save(model, cfg, tok)
     print(f"Done in {time.time() - start:.0f}s. Saved -> {CKPT_PATH}")

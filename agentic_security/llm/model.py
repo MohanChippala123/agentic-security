@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import math
 from dataclasses import dataclass
+from typing import Literal
 
 import torch
 import torch.nn as nn
@@ -19,51 +20,47 @@ import torch.nn.functional as F
 @dataclass
 class GPTConfig:
     vocab_size: int = 128
-    block_size: int = 128       # context length (chars)
-    n_layer: int = 4
-    n_head: int = 4
-    n_embd: int = 128
+    block_size: int = 128
+    n_layer: int = 6
+    n_head: int = 8
+    n_embd: int = 256
     dropout: float = 0.1
 
 
 class SelfAttention(nn.Module):
-    """Multi-head causal self-attention, written from scratch."""
-
     def __init__(self, cfg: GPTConfig):
         super().__init__()
         assert cfg.n_embd % cfg.n_head == 0
         self.n_head = cfg.n_head
         self.n_embd = cfg.n_embd
-        # one projection that produces query, key, value together
         self.qkv = nn.Linear(cfg.n_embd, 3 * cfg.n_embd)
         self.proj = nn.Linear(cfg.n_embd, cfg.n_embd)
-        self.attn_drop = nn.Dropout(cfg.dropout)
         self.resid_drop = nn.Dropout(cfg.dropout)
-        # causal mask: a token may only attend to itself and earlier tokens
-        mask = torch.tril(torch.ones(cfg.block_size, cfg.block_size))
-        self.register_buffer("mask", mask.view(1, 1, cfg.block_size, cfg.block_size))
+        self.flash = hasattr(F, "scaled_dot_product_attention")
+        if not self.flash:
+            mask = torch.tril(torch.ones(cfg.block_size, cfg.block_size))
+            self.register_buffer("mask", mask.view(1, 1, cfg.block_size, cfg.block_size))
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         B, T, C = x.shape
         q, k, v = self.qkv(x).split(self.n_embd, dim=2)
         hs = C // self.n_head
-        # (B, n_head, T, head_size)
         q = q.view(B, T, self.n_head, hs).transpose(1, 2)
         k = k.view(B, T, self.n_head, hs).transpose(1, 2)
         v = v.view(B, T, self.n_head, hs).transpose(1, 2)
-        # scaled dot-product attention
-        att = (q @ k.transpose(-2, -1)) * (1.0 / math.sqrt(hs))
-        att = att.masked_fill(self.mask[:, :, :T, :T] == 0, float("-inf"))
-        att = F.softmax(att, dim=-1)
-        att = self.attn_drop(att)
-        y = att @ v                                  # (B, n_head, T, head_size)
+        if self.flash:
+            y = F.scaled_dot_product_attention(q, k, v, is_causal=True)
+        else:
+            att = (q @ k.transpose(-2, -1)) * (1.0 / math.sqrt(hs))
+            att = att.masked_fill(self.mask[:, :, :T, :T] == 0, float("-inf"))
+            att = F.softmax(att, dim=-1)
+            att = F.dropout(att, p=self.resid_drop.p, training=self.training)
+            y = att @ v
         y = y.transpose(1, 2).contiguous().view(B, T, C)
         return self.resid_drop(self.proj(y))
 
 
 class MLP(nn.Module):
-    """Position-wise feed-forward network."""
-
     def __init__(self, cfg: GPTConfig):
         super().__init__()
         self.fc = nn.Linear(cfg.n_embd, 4 * cfg.n_embd)
@@ -75,8 +72,6 @@ class MLP(nn.Module):
 
 
 class Block(nn.Module):
-    """One transformer block: attention + MLP with pre-LayerNorm residuals."""
-
     def __init__(self, cfg: GPTConfig):
         super().__init__()
         self.ln1 = nn.LayerNorm(cfg.n_embd)
@@ -91,8 +86,6 @@ class Block(nn.Module):
 
 
 class GPT(nn.Module):
-    """The full agentic-1 language model."""
-
     def __init__(self, cfg: GPTConfig):
         super().__init__()
         self.cfg = cfg
@@ -102,9 +95,9 @@ class GPT(nn.Module):
         self.blocks = nn.ModuleList([Block(cfg) for _ in range(cfg.n_layer)])
         self.ln_f = nn.LayerNorm(cfg.n_embd)
         self.head = nn.Linear(cfg.n_embd, cfg.vocab_size, bias=False)
-        # weight tying: input embedding and output projection share weights
         self.head.weight = self.tok_emb.weight
         self.apply(self._init_weights)
+        self._compiled = False
 
     def _init_weights(self, module):
         if isinstance(module, nn.Linear):
@@ -117,16 +110,32 @@ class GPT(nn.Module):
     def num_params(self) -> int:
         return sum(p.numel() for p in self.parameters())
 
+    def try_compile(
+        self,
+        mode: Literal["default", "reduce-overhead", "max-autotune", "max-autotune-no-cudagraphs"] | None = None,
+    ) -> bool:
+        if self._compiled:
+            return True
+        try:
+            compiled = torch.compile(self.forward, mode=mode or "default")
+            dummy = torch.zeros(1, 1, dtype=torch.long)
+            compiled(dummy)
+            self.forward = compiled
+            self._compiled = True
+            return True
+        except Exception:
+            return False
+
     def forward(self, idx: torch.Tensor, targets: torch.Tensor | None = None):
         B, T = idx.shape
         assert T <= self.cfg.block_size, "sequence longer than context window"
-        tok = self.tok_emb(idx)                       # (B, T, n_embd)
-        pos = self.pos_emb[:, :T, :]                   # (1, T, n_embd)
+        tok = self.tok_emb(idx)
+        pos = self.pos_emb[:, :T, :]
         x = self.drop(tok + pos)
         for block in self.blocks:
             x = block(x)
         x = self.ln_f(x)
-        logits = self.head(x)                          # (B, T, vocab)
+        logits = self.head(x)
 
         loss = None
         if targets is not None:
@@ -149,15 +158,6 @@ class GPT(nn.Module):
         stop_ids: list[int] | None = None,
         return_conf: bool = False,
     ):
-        """Autoregressively generate new tokens.
-
-        top_k: keep only the k most likely tokens at each step.
-        top_p (nucleus): keep the smallest set of tokens whose cumulative
-                         probability exceeds p.
-        repetition_penalty: >1.0 penalizes tokens that already appeared.
-        If return_conf, also returns the mean probability the model assigned to
-        the characters it chose - a proxy for how confident (vs guessing) it is.
-        """
         self.eval()
         greedy = temperature <= 0.0
         confs: list[float] = []
