@@ -50,12 +50,60 @@ async def lifespan(app):
         threading.Thread(target=_warmup_models, daemon=True).start()
     yield
 
+import collections
+import threading as _threading
+import time as _time
+
+# Per-IP per-route rate limiter (sliding window, thread-safe).
+# Route prefix → (max_calls, window_seconds)
+_RATE_LIMITS: dict[str, tuple[int, int]] = {
+    "/api/auth/signup":              (10, 60),
+    "/api/auth/login":               (20, 60),
+    "/api/shield/":                  (60, 60),
+    "/api/agentshield/":             (30, 60),
+}
+_rl_lock = _threading.Lock()
+# ip -> path_prefix -> deque of call timestamps
+_rl_store: dict[str, dict[str, collections.deque]] = collections.defaultdict(
+    lambda: collections.defaultdict(collections.deque)
+)
+
+def _rate_limit_check(ip: str, path: str) -> bool:
+    """Return True if the request is allowed, False if rate-limited."""
+    prefix = None
+    limit = None
+    for key, val in _RATE_LIMITS.items():
+        if path.startswith(key):
+            prefix = key
+            limit = val
+            break
+    if limit is None:
+        return True
+    max_calls, window = limit
+    now = _time.monotonic()
+    cutoff = now - window
+    with _rl_lock:
+        dq = _rl_store[ip][prefix]
+        while dq and dq[0] < cutoff:
+            dq.popleft()
+        if len(dq) >= max_calls:
+            return False
+        dq.append(now)
+    return True
+
 app = FastAPI(
     title="AgentShield",
     description="The Security LLM platform for AI agents.",
     version="1.0.0",
     lifespan=lifespan,
 )
+
+@app.middleware("http")
+async def rate_limit_middleware(request: Request, call_next):
+    ip = request.headers.get("x-forwarded-for", request.client.host if request.client else "unknown").split(",")[0].strip()
+    if not _rate_limit_check(ip, request.url.path):
+        return JSONResponse({"detail": "Too many requests"}, status_code=429)
+    return await call_next(request)
 
 # Allowed origins: the env var AGSEC_ORIGIN overrides the default (localhost dev).
 # In production set e.g. AGSEC_ORIGIN=https://agentshield.yourdomain.com
