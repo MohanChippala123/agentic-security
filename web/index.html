@@ -1119,6 +1119,7 @@ async function loadGwKeys(){
           <span>${k.request_count} req · <span style="color:var(--rose)">${k.blocked_count} blocked</span> · ${k.rate_limit_per_min}/min</span>
         </div>
         <div class="gwbar"><div style="width:${Math.min(100,k.pct_used)}%;background:${col};transition:width .4s"></div></div>
+        ${k.request_count>0?(()=>{const bpct=Math.round(k.blocked_count/k.request_count*100);return `<div style="display:flex;align-items:center;gap:6px;margin-top:4px"><div style="flex:1;height:3px;background:rgba(255,255,255,.07);border-radius:2px;overflow:hidden"><div style="width:${bpct}%;height:100%;background:var(--rose);border-radius:2px;transition:width .4s"></div></div><span style="font-family:var(--mono);font-size:9px;color:var(--muted);white-space:nowrap">${bpct}% attack rate</span></div>`;})():''}
         ${(()=>{
           const tags=[];
           if(k.expires_at){
