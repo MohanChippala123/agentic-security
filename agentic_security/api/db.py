@@ -128,6 +128,13 @@ def connect() -> sqlite3.Connection:
         "ALTER TABLE users ADD COLUMN twofa_enabled INTEGER NOT NULL DEFAULT 0",
         "ALTER TABLE users ADD COLUMN failed_attempts INTEGER NOT NULL DEFAULT 0",
         "ALTER TABLE users ADD COLUMN locked_until REAL",
+        # Virtual key security features
+        "ALTER TABLE virtual_keys ADD COLUMN expires_at REAL",                           # key TTL
+        "ALTER TABLE virtual_keys ADD COLUMN allowed_models TEXT NOT NULL DEFAULT '[]'", # model allowlist
+        "ALTER TABLE virtual_keys ADD COLUMN allowed_hours TEXT NOT NULL DEFAULT '[]'",  # UTC hour restrictions
+        "ALTER TABLE virtual_keys ADD COLUMN velocity_window_sec INTEGER NOT NULL DEFAULT 60",  # spend velocity
+        "ALTER TABLE virtual_keys ADD COLUMN velocity_max_usd REAL NOT NULL DEFAULT 0",         # spend velocity cap
+        "ALTER TABLE virtual_keys ADD COLUMN velocity_spent TEXT NOT NULL DEFAULT '[]'",         # (ts, cost) pairs
     ]:
         try:
             conn.execute(sql)
@@ -239,19 +246,30 @@ def vk_upsert(user_email: str, vk: dict) -> None:
     get().execute(
         """INSERT INTO virtual_keys
            (key, user_email, name, budget_usd, spent_usd, rate_limit_per_min,
-            enabled, request_count, blocked_count, cost_saved_usd, created_at, recent_blocks)
-           VALUES (?,?,?,?,?,?,?,?,?,?,?,?)
+            enabled, request_count, blocked_count, cost_saved_usd, created_at, recent_blocks,
+            expires_at, allowed_models, allowed_hours, velocity_window_sec, velocity_max_usd, velocity_spent)
+           VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
            ON CONFLICT(key) DO UPDATE SET
              spent_usd=excluded.spent_usd,
              enabled=excluded.enabled,
              request_count=excluded.request_count,
              blocked_count=excluded.blocked_count,
              cost_saved_usd=excluded.cost_saved_usd,
-             recent_blocks=excluded.recent_blocks""",
+             recent_blocks=excluded.recent_blocks,
+             expires_at=excluded.expires_at,
+             allowed_models=excluded.allowed_models,
+             allowed_hours=excluded.allowed_hours,
+             velocity_window_sec=excluded.velocity_window_sec,
+             velocity_max_usd=excluded.velocity_max_usd,
+             velocity_spent=excluded.velocity_spent""",
         (vk["key"], user_email, vk["name"], vk["budget_usd"], vk["spent_usd"],
          vk["rate_limit_per_min"], 1 if vk["enabled"] else 0,
          vk["request_count"], vk["blocked_count"], vk["cost_saved_usd"],
-         vk["created_at"], json.dumps(vk.get("recent_blocks", []))),
+         vk["created_at"], json.dumps(vk.get("recent_blocks", [])),
+         vk.get("expires_at"), json.dumps(vk.get("allowed_models", [])),
+         json.dumps(vk.get("allowed_hours", [])),
+         vk.get("velocity_window_sec", 60), vk.get("velocity_max_usd", 0),
+         json.dumps(vk.get("velocity_spent", []))),
     )
     get().commit()
 
@@ -264,7 +282,10 @@ def vk_list(user_email: str) -> list[dict]:
     out = []
     for r in rows:
         d = dict(r)
-        d["recent_blocks"] = json.loads(d.get("recent_blocks") or "[]")
+        d["recent_blocks"]   = json.loads(d.get("recent_blocks")   or "[]")
+        d["allowed_models"]  = json.loads(d.get("allowed_models")  or "[]")
+        d["allowed_hours"]   = json.loads(d.get("allowed_hours")   or "[]")
+        d["velocity_spent"]  = json.loads(d.get("velocity_spent")  or "[]")
         d["enabled"] = bool(d["enabled"])
         out.append(d)
     return out
@@ -275,7 +296,10 @@ def vk_get(key: str) -> dict | None:
     if not row:
         return None
     d = dict(row)
-    d["recent_blocks"] = json.loads(d.get("recent_blocks") or "[]")
+    d["recent_blocks"]   = json.loads(d.get("recent_blocks")  or "[]")
+    d["allowed_models"]  = json.loads(d.get("allowed_models") or "[]")
+    d["allowed_hours"]   = json.loads(d.get("allowed_hours")  or "[]")
+    d["velocity_spent"]  = json.loads(d.get("velocity_spent") or "[]")
     d["enabled"] = bool(d["enabled"])
     return d
 

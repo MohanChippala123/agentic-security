@@ -514,6 +514,21 @@ class CreateKeyRequest(BaseModel):
     name: str = Field("unnamed", description="Label for this virtual key")
     budget_usd: float = Field(5.0, description="Spend cap in USD")
     rate_limit_per_min: int = Field(30, description="Max requests per minute")
+    expires_in_days: float | None = Field(None, description="Auto-expire after N days (None = never)")
+    allowed_models: list[str] = Field(default_factory=list, description="Allowed model IDs (empty = all)")
+    allowed_hours: list[int] = Field(default_factory=list, description="Allowed UTC hours 0-23 (empty = all)")
+    velocity_window_sec: int = Field(60, description="Spend velocity rolling window (seconds)")
+    velocity_max_usd: float = Field(0.0, description="Max spend per velocity window (0 = disabled)")
+
+
+class UpdateKeyRequest(BaseModel):
+    key: str = Field(..., description="Virtual key to update")
+    expires_in_days: float | None = Field(None, description="Set new TTL from now (None = clear expiry)")
+    clear_expiry: bool = Field(False, description="Remove expiry entirely")
+    allowed_models: list[str] | None = Field(None, description="Replace model allowlist (None = no change)")
+    allowed_hours: list[int] | None = Field(None, description="Replace allowed hours (None = no change)")
+    velocity_window_sec: int | None = Field(None, description="Update velocity window")
+    velocity_max_usd: float | None = Field(None, description="Update velocity cap (0 = disable)")
 
 
 class RevokeKeyRequest(BaseModel):
@@ -879,7 +894,28 @@ def gateway_list_keys(request: Request) -> dict:
 def gateway_create_key(req: CreateKeyRequest, request: Request) -> dict:
     """Create a virtual key. The full key is returned ONCE, here."""
     user = _require_user(request)
-    return gw.create_key(user["email"], req.name, req.budget_usd, req.rate_limit_per_min)
+    return gw.create_key(
+        user["email"], req.name, req.budget_usd, req.rate_limit_per_min,
+        expires_in_days=req.expires_in_days,
+        allowed_models=req.allowed_models,
+        allowed_hours=req.allowed_hours,
+        velocity_window_sec=req.velocity_window_sec,
+        velocity_max_usd=req.velocity_max_usd,
+    )
+
+
+@app.post("/api/gateway/keys/update")
+def gateway_update_key(req: UpdateKeyRequest, request: Request) -> dict:
+    """Update security settings on an existing virtual key."""
+    user = _require_user(request)
+    return gw.update_key(user["email"], req.key,
+        expires_in_days=req.expires_in_days,
+        clear_expiry=req.clear_expiry,
+        allowed_models=req.allowed_models,
+        allowed_hours=req.allowed_hours,
+        velocity_window_sec=req.velocity_window_sec,
+        velocity_max_usd=req.velocity_max_usd,
+    )
 
 
 @app.post("/api/gateway/keys/revoke")

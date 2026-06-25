@@ -70,8 +70,14 @@ class VirtualKey:
     cost_saved_usd: float = 0.0
     created_at: float = field(default_factory=time.time)
     hits: list[float] = field(default_factory=list)
-    # Persistent attacker tracking: timestamps of recent blocks
     recent_blocks: list[float] = field(default_factory=list)
+    # ── New security controls ──────────────────────────────────────────────────
+    expires_at: float | None = None               # Unix ts; None = never expires
+    allowed_models: list[str] = field(default_factory=list)   # empty = all allowed
+    allowed_hours: list[int] = field(default_factory=list)    # UTC hours 0-23; empty = all hours
+    velocity_window_sec: int = 60                 # rolling window for spend velocity
+    velocity_max_usd: float = 0.0                 # max spend in window (0 = disabled)
+    velocity_spent: list[tuple] = field(default_factory=list) # [(ts, cost), ...]
 
     def public(self, reveal: bool = False) -> dict[str, Any]:
         shown = self.key if reveal else (self.key[:8] + "..." + self.key[-4:])
@@ -88,6 +94,12 @@ class VirtualKey:
             "blocked_count": self.blocked_count,
             "cost_saved_usd": round(self.cost_saved_usd, 6),
             "created_at": self.created_at,
+            "expires_at": self.expires_at,
+            "allowed_models": self.allowed_models,
+            "allowed_hours": self.allowed_hours,
+            "velocity_window_sec": self.velocity_window_sec,
+            "velocity_max_usd": self.velocity_max_usd,
+            "is_expired": bool(self.expires_at and time.time() > self.expires_at),
         }
 
 
@@ -122,6 +134,12 @@ def _ensure_loaded(user: str) -> None:
             request_count=row["request_count"], blocked_count=row["blocked_count"],
             cost_saved_usd=row["cost_saved_usd"], created_at=row["created_at"],
             recent_blocks=row.get("recent_blocks", []),
+            expires_at=row.get("expires_at"),
+            allowed_models=row.get("allowed_models") or [],
+            allowed_hours=row.get("allowed_hours") or [],
+            velocity_window_sec=row.get("velocity_window_sec") or 60,
+            velocity_max_usd=row.get("velocity_max_usd") or 0.0,
+            velocity_spent=row.get("velocity_spent") or [],
         )
         _user_keys[user][vk.key] = vk
     # Load upstream key
@@ -158,6 +176,12 @@ def _persist_key(user: str, vk: VirtualKey) -> None:
             "enabled": vk.enabled, "request_count": vk.request_count,
             "blocked_count": vk.blocked_count, "cost_saved_usd": vk.cost_saved_usd,
             "created_at": vk.created_at, "recent_blocks": vk.recent_blocks,
+            "expires_at": vk.expires_at,
+            "allowed_models": vk.allowed_models,
+            "allowed_hours": vk.allowed_hours,
+            "velocity_window_sec": vk.velocity_window_sec,
+            "velocity_max_usd": vk.velocity_max_usd,
+            "velocity_spent": vk.velocity_spent,
         })
     except Exception:
         pass  # never let DB errors break a request
@@ -184,14 +208,63 @@ def recent_events(user: str, limit: int = 50) -> list[dict]:
 
 # ── Key management ─────────────────────────────────────────────────────────────
 
-def create_key(user: str, name: str, budget_usd: float = 5.0, rate_limit_per_min: int = 30) -> dict:
+def create_key(
+    user: str, name: str, budget_usd: float = 5.0, rate_limit_per_min: int = 30,
+    expires_in_days: float | None = None,
+    allowed_models: list[str] | None = None,
+    allowed_hours: list[int] | None = None,
+    velocity_window_sec: int = 60,
+    velocity_max_usd: float = 0.0,
+) -> dict:
     key = "agk-" + secrets.token_hex(16)
-    vk = VirtualKey(key=key, name=name or "unnamed",
-                    budget_usd=max(0.0, budget_usd),
-                    rate_limit_per_min=max(1, rate_limit_per_min))
+    expires_at = time.time() + expires_in_days * 86400 if expires_in_days else None
+    vk = VirtualKey(
+        key=key, name=name or "unnamed",
+        budget_usd=max(0.0, budget_usd),
+        rate_limit_per_min=max(1, rate_limit_per_min),
+        expires_at=expires_at,
+        allowed_models=allowed_models or [],
+        allowed_hours=[h for h in (allowed_hours or []) if 0 <= h <= 23],
+        velocity_window_sec=max(10, velocity_window_sec),
+        velocity_max_usd=max(0.0, velocity_max_usd),
+    )
     _keys(user)[key] = vk
     _persist_key(user, vk)
     return vk.public(reveal=True)
+
+
+def update_key(
+    user: str, key: str,
+    expires_in_days: float | None = None,
+    clear_expiry: bool = False,
+    allowed_models: list[str] | None = None,
+    allowed_hours: list[int] | None = None,
+    velocity_window_sec: int | None = None,
+    velocity_max_usd: float | None = None,
+) -> dict:
+    """Update security controls on an existing virtual key."""
+    ku = _keys(user)
+    vk = ku.get(key)
+    if not vk:
+        for k, v in ku.items():
+            if k.startswith(key.split("...")[0]):
+                vk = v; break
+    if not vk:
+        return {"error": "Key not found"}
+    if clear_expiry:
+        vk.expires_at = None
+    elif expires_in_days is not None:
+        vk.expires_at = time.time() + expires_in_days * 86400
+    if allowed_models is not None:
+        vk.allowed_models = allowed_models
+    if allowed_hours is not None:
+        vk.allowed_hours = [h for h in allowed_hours if 0 <= h <= 23]
+    if velocity_window_sec is not None:
+        vk.velocity_window_sec = max(10, velocity_window_sec)
+    if velocity_max_usd is not None:
+        vk.velocity_max_usd = max(0.0, velocity_max_usd)
+    _persist_key(user, vk)
+    return {"ok": True, "key": vk.public()}
 
 
 def list_keys(user: str) -> list[dict]:
@@ -341,6 +414,45 @@ def _record_block(vk: VirtualKey) -> bool:
     return False
 
 
+# ── Multi-turn conversation memory (per session) ──────────────────────────────
+# Stores the last N user messages per session so we can detect jailbreaks that
+# spread across multiple turns (each innocent alone, dangerous together).
+_CONV_STORE: dict[str, list[str]] = {}  # session_id -> [user messages]
+_CONV_WINDOW = 6       # how many past turns to concatenate for the scan
+_CONV_MAX_SESSIONS = 5000  # evict oldest when limit reached
+
+
+def _record_turn(session_id: str, user_text: str) -> str:
+    """Append this turn and return a concatenated context window for scanning."""
+    if session_id not in _CONV_STORE:
+        if len(_CONV_STORE) >= _CONV_MAX_SESSIONS:
+            # evict oldest entry
+            oldest = next(iter(_CONV_STORE))
+            del _CONV_STORE[oldest]
+        _CONV_STORE[session_id] = []
+    _CONV_STORE[session_id].append(user_text)
+    # Keep only the last N turns
+    _CONV_STORE[session_id] = _CONV_STORE[session_id][-_CONV_WINDOW:]
+    return " |TURN| ".join(_CONV_STORE[session_id])
+
+
+# ── Spend velocity guard ───────────────────────────────────────────────────────
+
+def _velocity_ok(vk: VirtualKey, cost: float) -> bool:
+    """Return False if this spend would exceed the velocity cap in the rolling window."""
+    if vk.velocity_max_usd <= 0:
+        return True  # disabled
+    now = time.time()
+    window_start = now - vk.velocity_window_sec
+    # Prune old entries
+    vk.velocity_spent = [(ts, c) for ts, c in vk.velocity_spent if ts >= window_start]
+    window_sum = sum(c for _, c in vk.velocity_spent) + cost
+    if window_sum > vk.velocity_max_usd:
+        return False
+    vk.velocity_spent.append((now, cost))
+    return True
+
+
 # ── Indirect injection scanner ────────────────────────────────────────────────
 
 def _scan_indirect_injection(text: str) -> dict | None:
@@ -412,6 +524,29 @@ def gateway_chat(
         return {"error": f"Rate limit exceeded ({vk.rate_limit_per_min}/min).",
                 "status": 429, "blocked": True, "key": vk.public()}
 
+    # ── Security check 1: Key expiry ─────────────────────────────────────────
+    if vk.expires_at and time.time() > vk.expires_at:
+        vk.enabled = False
+        _persist_key(user, vk)
+        import datetime as _dt
+        exp = _dt.datetime.utcfromtimestamp(vk.expires_at).strftime("%Y-%m-%d %H:%M UTC")
+        return {"error": f"This key expired on {exp} and has been automatically disabled.",
+                "status": 403, "blocked": True, "key": vk.public()}
+
+    # ── Security check 2: Allowed hours (UTC) ────────────────────────────────
+    if vk.allowed_hours:
+        import datetime as _dt
+        current_hour = _dt.datetime.utcnow().hour
+        if current_hour not in vk.allowed_hours:
+            return {"error": f"This key is restricted to UTC hours {sorted(vk.allowed_hours)}. "
+                             f"Current UTC hour: {current_hour}.",
+                    "status": 403, "blocked": True, "key": vk.public()}
+
+    # ── Security check 3: Model allowlist ────────────────────────────────────
+    if vk.allowed_models and model not in vk.allowed_models:
+        return {"error": f"Model '{model}' is not in this key's allowlist {vk.allowed_models}.",
+                "status": 403, "blocked": True, "key": vk.public()}
+
     vk.request_count += 1
     user_text = " ".join(m.get("content", "") for m in messages if m.get("role") == "user")
     msg_preview = (user_text[:120] + "…") if len(user_text) > 120 else user_text
@@ -441,9 +576,21 @@ def gateway_chat(
             "message": "Blocked: indirect prompt injection detected in external content.",
         }
 
+    # ── Security check 4: Multi-turn jailbreak detection ─────────────────────
+    # Build a rolling window of the last N user turns (keyed by virtual key so
+    # each key gets its own conversation memory). A jailbreak spread across
+    # multiple innocent-looking turns is caught by scanning the concatenation.
+    session_id = f"{user}:{api_key}"
+    multi_turn_ctx = _record_turn(session_id, user_text)
+
     # ── Layer 2: Full Security LLM analysis ───────────────────────────────────
     from ..agentshield import analyze_threat, record_action
-    report = analyze_threat(user_text, source=source)
+    # Scan the multi-turn context window; fall back to single-turn if the
+    # concatenated scan raises the risk score above single-turn.
+    report = analyze_threat(multi_turn_ctx, source=source)
+    if report["risk_score"] < 40 and multi_turn_ctx != user_text:
+        # No cross-turn escalation detected; use single-turn report for latency
+        report = analyze_threat(user_text, source=source)
 
     if report["decision"] in ("block", "review"):
         vk.blocked_count += 1
@@ -502,6 +649,14 @@ def gateway_chat(
             "message": f"Blocked by AgentShield. Risk: {report['risk_score']}/100 ({report['severity']}).{suspension_note}",
             "key": vk.public(),
         }
+
+    # ── Security check 5: Spend velocity guard ───────────────────────────────
+    est_cost = get_cost(_user_provider.get(user, "openai"), model,
+                        _est_tokens(user_text), max_tokens)
+    if not _velocity_ok(vk, est_cost):
+        return {"error": f"Spend velocity limit hit: max ${vk.velocity_max_usd:.4f} "
+                         f"per {vk.velocity_window_sec}s. Slow down or raise the limit.",
+                "status": 429, "blocked": True, "key": vk.public()}
 
     # ── Budget check ──────────────────────────────────────────────────────────
     if vk.spent_usd >= vk.budget_usd:
