@@ -347,6 +347,14 @@ button:not(:disabled):active{transform:scale(.97)}
 /* ── copy btn ── */
 .cpbtn{background:rgba(255,255,255,.05);border:1px solid var(--border);color:rgba(255,255,255,.5);padding:3px 9px;font-size:10px;font-family:var(--mono);cursor:pointer;transition:.12s}
 .cpbtn:hover{background:rgba(255,255,255,.1);color:var(--ink)}
+/* toasts */
+#toastArea{position:fixed;bottom:24px;right:24px;z-index:9999;display:flex;flex-direction:column;gap:8px;pointer-events:none}
+.toast{background:#1e1e1e;border:1px solid var(--border2);color:var(--ink);font-size:12.5px;padding:10px 16px;border-radius:8px;display:flex;align-items:center;gap:10px;box-shadow:0 8px 24px rgba(0,0,0,.5);animation:toastIn .22s cubic-bezier(.34,1.15,.64,1);pointer-events:none;max-width:320px}
+.toast.ok{border-left:3px solid var(--teal)}
+.toast.err{border-left:3px solid var(--rose)}
+.toast.warn{border-left:3px solid var(--amber)}
+@keyframes toastIn{from{opacity:0;transform:translateX(16px)}to{opacity:1;transform:translateX(0)}}
+@keyframes toastOut{to{opacity:0;transform:translateX(16px)}}
 </style>
 </head>
 <body>
@@ -437,7 +445,8 @@ button:not(:disabled):active{transform:scale(.97)}
 
   <!-- defense layers -->
   <div class="sec" style="border:1px solid var(--border);background:var(--panel);padding:14px 16px;margin-bottom:1px">
-    <div class="panel-h" style="margin-bottom:10px"><b>Defense Pipeline</b><span class="panel-badge">Security LLM</span></div>
+    <div class="panel-h" style="margin-bottom:10px;cursor:pointer" onclick="toggleCollapse('defPipeBody',this)"><b>Defense Pipeline</b><span class="panel-badge">Security LLM</span><span style="margin-left:auto;font-family:var(--mono);font-size:10px;color:var(--muted)" id="defPipeChevron">▾</span></div>
+    <div id="defPipeBody">
     <div style="display:flex;align-items:center;gap:10px;font-size:12px;flex-wrap:wrap">
       <span style="font-family:var(--mono);font-size:10px;color:var(--muted)">USER REQUEST</span>
       <span style="color:rgba(255,255,255,.3)">→</span>
@@ -446,21 +455,30 @@ button:not(:disabled):active{transform:scale(.97)}
       <span style="background:rgba(58,208,164,.1);color:var(--teal);border:1px solid rgba(58,208,164,.3);padding:5px 10px;font-family:var(--mono);font-size:10.5px">UPSTREAM (OpenAI / Anthropic / your LLM)</span>
     </div>
     <div style="font-size:10.5px;color:rgba(255,255,255,.3);margin-top:8px">The Security LLM acts as analyst: regex shield + attack-pattern recognition + hidden-instruction detection + homoglyph/encoding scan + content sanitization. Produces a structured threat report on every request, with risk score, attack chain, severity, and recommended action.</div>
+    </div>
   </div>
 
   <!-- stats -->
   <div class="kpis sec" style="border:1px solid var(--border)">
-    <div class="kpi"><div class="klabel">Virtual Keys</div><div class="kval" id="gwKeys">0</div></div>
-    <div class="kpi"><div class="klabel">Requests</div><div class="kval" id="gwReqs">0</div></div>
-    <div class="kpi"><div class="klabel">Attacks Blocked</div><div class="kval" id="gwBlocked" style="color:var(--rose)">0</div></div>
-    <div class="kpi"><div class="klabel">$ Saved (blocked)</div><div class="kval" id="gwSaved" style="color:var(--teal)">$0</div></div>
+    <div class="kpi"><div class="klabel">Virtual Keys</div><div class="kval" id="gwKeys">0</div><div class="ksub" id="gwKeysSub">active</div></div>
+    <div class="kpi"><div class="klabel">Requests</div><div class="kval" id="gwReqs">0</div><div class="ksub" id="gwReqsSub">all time</div></div>
+    <div class="kpi"><div class="klabel">Attacks Blocked</div><div class="kval" id="gwBlocked" style="color:var(--rose)">0</div><div class="ksub" id="gwBlockedSub">by Security LLM</div></div>
+    <div class="kpi"><div class="klabel">$ Saved (blocked)</div><div class="kval" id="gwSaved" style="color:var(--teal)">$0</div><div class="ksub" id="gwSavedSub">in blocked attacks</div></div>
   </div>
 
   <div class="sec" style="display:grid;grid-template-columns:1.3fr 1fr;gap:1px;background:var(--border);border:1px solid var(--border)">
     <!-- keys table -->
     <div style="background:var(--panel);padding:16px">
-      <div class="panel-h" style="margin-bottom:14px"><b>Virtual Keys</b><span class="panel-badge" id="gwKeyCount">—</span></div>
-      <div id="gwKeyList"><div class="empty">No keys yet. Create one to protect your real key.</div></div>
+      <div class="panel-h" style="margin-bottom:10px"><b>Virtual Keys</b><span class="panel-badge" id="gwKeyCount">—</span></div>
+      <input id="gwKeySearch" placeholder="Search keys…" oninput="filterKeys(this.value)" style="width:100%;background:rgba(255,255,255,.04);border:1px solid var(--border);outline:none;padding:7px 10px;font-size:12px;color:var(--ink);margin-bottom:10px;border-radius:5px">
+      <div id="gwKeyList"><div class="empty" id="gwEmptyState" style="padding:20px 12px;text-align:left">
+  <div style="font-size:13px;font-weight:600;color:var(--ink);margin-bottom:12px">Get started in 3 steps</div>
+  <div style="display:flex;flex-direction:column;gap:8px">
+    <div style="display:flex;align-items:center;gap:10px;font-size:12px"><span style="width:20px;height:20px;border-radius:50%;background:rgba(196,241,53,.12);border:1px solid rgba(196,241,53,.2);color:var(--lime);font-size:10px;display:grid;place-items:center;flex-shrink:0;font-family:var(--mono)">1</span><span style="color:rgba(255,255,255,.65)">Paste your provider key above (OpenAI, Anthropic, Groq…)</span></div>
+    <div style="display:flex;align-items:center;gap:10px;font-size:12px"><span style="width:20px;height:20px;border-radius:50%;background:rgba(196,241,53,.12);border:1px solid rgba(196,241,53,.2);color:var(--lime);font-size:10px;display:grid;place-items:center;flex-shrink:0;font-family:var(--mono)">2</span><span style="color:rgba(255,255,255,.65)">Click <b style="color:var(--ink)">+ New virtual key</b> and set a budget</span></div>
+    <div style="display:flex;align-items:center;gap:10px;font-size:12px"><span style="width:20px;height:20px;border-radius:50%;background:rgba(196,241,53,.12);border:1px solid rgba(196,241,53,.2);color:var(--lime);font-size:10px;display:grid;place-items:center;flex-shrink:0;font-family:var(--mono)">3</span><span style="color:rgba(255,255,255,.65)">Replace your real key with the <code style="font-family:var(--mono);font-size:10px;background:rgba(255,255,255,.07);padding:1px 5px">agk-…</code> virtual key in your app</span></div>
+  </div>
+</div></div>
     </div>
 
     <!-- test console -->
@@ -530,7 +548,8 @@ button:not(:disabled):active{transform:scale(.97)}
 
   <!-- integration -->
   <div class="sec" style="background:var(--panel);border:1px solid var(--border);padding:18px;margin-top:1px">
-    <div class="panel-h" style="margin-bottom:12px"><b>Integration</b><span class="panel-badge">drop-in</span></div>
+    <div class="panel-h" style="margin-bottom:12px;cursor:pointer" onclick="toggleCollapse('integBody',this)"><b>Integration</b><span class="panel-badge">drop-in</span><span style="margin-left:auto;font-family:var(--mono);font-size:10px;color:var(--muted)" id="integChevron">▸</span></div>
+    <div id="integBody" style="display:none">
     <p style="font-size:12.5px;color:var(--muted);margin-bottom:12px;line-height:1.6">Point your app at the gateway and use a virtual key. Your real provider key stays on the server.</p>
     <div class="code" style="font-size:11px;line-height:1.7">POST /api/gateway/chat
 Authorization: Bearer agk-your-virtual-key
@@ -538,6 +557,7 @@ Content-Type: application/json
 
 { "messages": [{"role":"user","content":"Hello"}],
   "model": "gpt-4o-mini" }</div>
+    </div>
   </div>
 </div>
 
@@ -689,6 +709,12 @@ Content-Type: application/json
           <div class="mm-avatar">S</div>
           <div class="mm-bubble">I'm your <b>Security Console</b>. Ask me anything about your API-key activity — spend, blocked attacks, virtual keys, money saved, or anomalies. Every answer comes from <b>live gateway data</b>, not a chatbot.</div>
         </div>
+      </div>
+      <div style="padding:8px 12px;display:flex;gap:6px;flex-wrap:wrap;border-top:1px solid var(--border)">
+        <button class="mm-try" style="font-size:10.5px" onclick="$('mmInput').value='How many requests today?';sendMyModel()">Today's requests</button>
+        <button class="mm-try" style="font-size:10.5px" onclick="$('mmInput').value='How much have I spent?';sendMyModel()">Spend summary</button>
+        <button class="mm-try" style="font-size:10.5px" onclick="$('mmInput').value='Which key had the most attacks?';sendMyModel()">Most attacked key</button>
+        <button class="mm-try" style="font-size:10.5px" onclick="$('mmInput').value='Show me a summary of blocked threats';sendMyModel()">Threat summary</button>
       </div>
       <div style="border-top:1px solid var(--border);padding:12px;display:flex;gap:8px">
         <input id="mmInput" placeholder="Ask about your API-key activity…" onkeydown="if(event.key==='Enter')sendMyModel()" style="flex:1;background:rgba(255,255,255,.04);border:1px solid var(--border);outline:none;padding:11px 12px;font-family:'Inter',sans-serif;font-size:13px;color:var(--ink)">
@@ -1008,6 +1034,10 @@ async function loadGatewayTab(){
     $('gwReqs').textContent=st.total_requests||0;
     $('gwBlocked').textContent=st.total_blocked||0;
     $('gwSaved').textContent='$'+(st.total_saved_usd||0).toFixed(4);
+    $('gwKeysSub').textContent=(st.active_keys||0)+' active';
+    $('gwReqsSub').textContent='all time';
+    $('gwBlockedSub').textContent='by Security LLM';
+    $('gwSavedSub').textContent=st.total_blocked>0?'attacks cost $0 each when blocked':'no attacks yet';
   }catch(e){}
   loadGwKeys();
   loadGatewayEvents();
@@ -1103,7 +1133,7 @@ async function loadGwKeys(){
     // fill test console dropdown
     const sel=$('gwTestKey');
     if(sel) sel.innerHTML=keys.length?keys.map(k=>`<option value="${k.key}">${esc(k.name)} (${esc(k.key)})</option>`).join(''):'<option>— create a key first —</option>';
-    if(!keys.length){ $('gwKeyList').innerHTML='<div class="empty">No keys yet. Create one to protect your real key.</div>'; return; }
+    if(!keys.length){ $('gwKeyList').innerHTML='<div class="empty" id="gwEmptyState" style="padding:20px 12px;text-align:left"><div style="font-size:13px;font-weight:600;color:var(--ink);margin-bottom:12px">Get started in 3 steps</div><div style="display:flex;flex-direction:column;gap:8px"><div style="display:flex;align-items:center;gap:10px;font-size:12px"><span style="width:20px;height:20px;border-radius:50%;background:rgba(196,241,53,.12);border:1px solid rgba(196,241,53,.2);color:var(--lime);font-size:10px;display:grid;place-items:center;flex-shrink:0;font-family:var(--mono)">1</span><span style="color:rgba(255,255,255,.65)">Paste your provider key above (OpenAI, Anthropic, Groq…)</span></div><div style="display:flex;align-items:center;gap:10px;font-size:12px"><span style="width:20px;height:20px;border-radius:50%;background:rgba(196,241,53,.12);border:1px solid rgba(196,241,53,.2);color:var(--lime);font-size:10px;display:grid;place-items:center;flex-shrink:0;font-family:var(--mono)">2</span><span style="color:rgba(255,255,255,.65)">Click <b style="color:var(--ink)">+ New virtual key</b> and set a budget</span></div><div style="display:flex;align-items:center;gap:10px;font-size:12px"><span style="width:20px;height:20px;border-radius:50%;background:rgba(196,241,53,.12);border:1px solid rgba(196,241,53,.2);color:var(--lime);font-size:10px;display:grid;place-items:center;flex-shrink:0;font-family:var(--mono)">3</span><span style="color:rgba(255,255,255,.65)">Replace your real key with the <code style="font-family:var(--mono);font-size:10px;background:rgba(255,255,255,.07);padding:1px 5px">agk-…</code> virtual key in your app</span></div></div></div>'; return; }
     $('gwKeyList').innerHTML=keys.map(k=>{
       const col=k.pct_used>=100?'var(--rose)':k.pct_used>=70?'var(--amber)':'var(--teal)';
       const masked=k.key.slice(0,8)+'…'+k.key.slice(-6);
@@ -1188,6 +1218,7 @@ async function gwConnectKey(){
     msg.innerHTML=v.ok
       ?`<span style="color:var(--teal)">Connected to <b>${esc(pLabel)}</b>. Requests forward securely; your key stays server-side.</span>`
       :'<span style="color:var(--rose)">'+esc(v.detail||v.error||'failed')+'</span>';
+    if(v.ok) toast('Provider key connected');
     loadGatewayTab();
   }catch(e){ msg.innerHTML='<span style="color:var(--rose)">Error: '+esc(e.message)+'</span>'; }
 }
@@ -1339,12 +1370,14 @@ async function gwCreate(){
     $('gwNewKey').innerHTML=`<div style="background:var(--teal-bg);border:1px solid rgba(58,208,164,.3);padding:12px;border-radius:8px">
       <div style="font-size:11px;color:var(--muted);margin-bottom:6px">Save this key — it won't be shown again. Use it as your API key with the integration snippet below.</div>
       <code style="font-family:var(--mono);font-size:11px;color:var(--teal);word-break:break-all">${esc(k.key)}</code></div>`;
+    toast('Virtual key created');
     loadGatewayTab();
   }catch(e){ $('gwNewKey').innerHTML='<div class="empty">Error creating key.</div>'; }
 }
 
 async function gwRevoke(key){
   await fetch('/api/gateway/keys/revoke',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({key})});
+  toast('Key revoked', 'warn');
   loadGatewayTab();
 }
 
@@ -2000,6 +2033,33 @@ async function runQuickScan(){
   }catch(e){ result.innerHTML=`<span style="color:var(--rose)">${esc(e.message)}</span>`; }
 }
 
+/* ── Toast notifications ── */
+function toast(msg, type='ok', duration=3200){
+  const a=$('toastArea');
+  const t=document.createElement('div');
+  t.className='toast '+type;
+  t.textContent=msg;
+  a.appendChild(t);
+  setTimeout(()=>{t.style.animation='toastOut .2s forwards';setTimeout(()=>t.remove(),200)},duration);
+}
+
+/* ── Key search filter ── */
+function filterKeys(q){
+  q=q.toLowerCase();
+  document.querySelectorAll('.gwrow').forEach(row=>{
+    const name=row.querySelector('b')?.textContent?.toLowerCase()||'';
+    row.style.display=(q===''||name.includes(q))?'':'none';
+  });
+}
+
+/* ── Collapsible sections ── */
+function toggleCollapse(id, header){
+  const el=document.getElementById(id);
+  const ch=header.querySelector('[id$="Chevron"]')||header.querySelector('span:last-child');
+  if(el.style.display==='none'){el.style.display='';if(ch)ch.textContent='▾';}
+  else{el.style.display='none';if(ch)ch.textContent='▸';}
+}
+
 /* ── Red Team export ── */
 let _rtLastResults=null;
 function exportRedTeam(){
@@ -2015,5 +2075,6 @@ function exportRedTeam(){
 loadUser();
 showTab('gateway', document.querySelector('.nav-tabs a'));
 </script>
+<div id="toastArea"></div>
 </body>
 </html>
