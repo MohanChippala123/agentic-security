@@ -144,11 +144,17 @@ class GPT(nn.Module):
         max_new_tokens: int,
         temperature: float = 0.8,
         top_k: int | None = 40,
+        top_p: float | None = None,
+        repetition_penalty: float = 1.0,
         stop_ids: list[int] | None = None,
         return_conf: bool = False,
     ):
         """Autoregressively generate new tokens.
 
+        top_k: keep only the k most likely tokens at each step.
+        top_p (nucleus): keep the smallest set of tokens whose cumulative
+                         probability exceeds p.
+        repetition_penalty: >1.0 penalizes tokens that already appeared.
         If return_conf, also returns the mean probability the model assigned to
         the characters it chose - a proxy for how confident (vs guessing) it is.
         """
@@ -160,9 +166,12 @@ class GPT(nn.Module):
             logits, _ = self(idx_cond)
             logits = logits[:, -1, :]
             full_probs = F.softmax(logits, dim=-1)
+
+            if repetition_penalty != 1.0:
+                for token_id in idx[0].tolist():
+                    logits[0, token_id] /= repetition_penalty
+
             if greedy:
-                # deterministic: always take the most likely next char.
-                # eliminates random-letter glitches from sampling.
                 nxt = torch.argmax(logits, dim=-1, keepdim=True)
             else:
                 scaled = logits / max(temperature, 1e-5)
@@ -170,7 +179,16 @@ class GPT(nn.Module):
                     v, _ = torch.topk(scaled, min(top_k, scaled.size(-1)))
                     scaled[scaled < v[:, [-1]]] = float("-inf")
                 probs = F.softmax(scaled, dim=-1)
-                nxt = torch.multinomial(probs, num_samples=1)
+                if top_p is not None:
+                    sorted_probs, sorted_idx = torch.sort(probs, descending=True)
+                    cumsum = torch.cumsum(sorted_probs, dim=-1)
+                    mask = cumsum - sorted_probs > top_p
+                    sorted_probs[mask] = 0.0
+                    sorted_probs.div_(sorted_probs.sum(dim=-1, keepdim=True).clamp(min=1e-8))
+                    nxt = torch.multinomial(sorted_probs, num_samples=1)
+                    nxt = sorted_idx.gather(-1, nxt)
+                else:
+                    nxt = torch.multinomial(probs, num_samples=1)
             confs.append(full_probs[0, nxt.item()].item())
             idx = torch.cat((idx, nxt), dim=1)
             if stop_ids is not None and nxt.item() in stop_ids:

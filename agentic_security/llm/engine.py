@@ -30,10 +30,10 @@ MODEL_DESCRIPTION = (
 CKPT_PATH = Path(__file__).parent / "checkpoint.pt"
 SEP = "###"
 
-# If the user's question doesn't lexically resemble anything the model was
-# trained on (best keyword overlap below this), decline gracefully instead of
-# returning a confidently-wrong canned answer.
-_MATCH_THRESHOLD = 0.28
+# Minimum model confidence (mean token probability) to accept a generated
+# answer. If the model is guessing (low confidence), we return a graceful
+# fallback instead of a confidently-wrong answer.
+_CONF_THRESHOLD = 0.35
 
 
 def _refusal_for(threat: str) -> str:
@@ -56,6 +56,8 @@ _STOPWORDS = {
     "for", "and", "or", "i", "you", "me", "my", "your", "can", "could", "would",
     "should", "please", "tell", "give", "explain", "about", "it", "this", "that",
     "with", "from", "have", "has", "be", "as", "at", "by", "so",
+    "write", "code", "function", "script", "program", "app",
+    "python", "javascript", "java", "typescript", "ruby", "go", "rust",
 }
 
 _KNOWN_Q_SETS: list[set[str]] | None = None
@@ -381,15 +383,20 @@ def chat(
         return {"blocked": False, "error": f"generation failed: {e}",
                 "model": MODEL_NAME, "session_id": session.session_id}
 
-    # ── Layer 3: relevance gate + scrub output ──
-    # If the question doesn't resemble anything we trained on, decline gracefully
-    # instead of returning a confidently-wrong canned answer.
-    if _question_match_score(cleaned) < _MATCH_THRESHOLD or not raw:
-        output = (
-            "I'm AgentShield LLM, focused on security and coding help. I don't know that "
-            "one - try asking about prompt injection, securing your AI app, PII, "
-            "encryption, or a small coding question."
-        )
+    # ── Layer 3: confidence gate + scrub output ──
+    # Use the model's own generation confidence. Low confidence means the model
+    # was guessing — decline gracefully instead of returning noise.
+    if conf < _CONF_THRESHOLD or not raw:
+        # For very short inputs (small talk etc.) the model may be uncertain
+        # but still produce a valid response — check keyword overlap as fallback
+        if _question_match_score(cleaned) >= 0.25 and conf >= 0.2:
+            output = redact_pii(raw)
+        else:
+            output = (
+                "I'm AgentShield LLM, focused on security and coding help. I don't know that "
+                "one - try asking about prompt injection, securing your AI app, PII, "
+                "encryption, or a small coding question."
+            )
     else:
         output = redact_pii(raw)
 
@@ -473,10 +480,20 @@ def judge_message(text: str, history: list[str] | None = None) -> dict:
         combined = " ".join((*history[-3:], text))
     attack_score = max(_attack_match_score(text), _attack_match_score(combined))
 
+    # ── Check for known benign questions first ──
+    # If the query strongly matches a question in the safe training set, skip
+    # the attack pre-check to avoid false positives on educational security
+    # topics (e.g. "what is sql injection" vs "how to do sql injection" have
+    # identical keywords after stopword removal).
+    benign_score = _question_match_score(text)
+    known_benign = benign_score >= 0.45
+
     # ── Fast pre-check: how similar is this to attacks the model was trained on? ──
-    # Threshold 0.32: catches short paraphrased attacks like "help me prompt
+    # Threshold 0.38: catches short paraphrased attacks like "help me prompt
     # inject" / "help me jailbreak" while keeping safe "help me X" queries below.
-    if attack_score >= 0.32:
+    # Raised from 0.32 to reduce false positives on coding queries like
+    # "write a python function" that share keywords with attack entries.
+    if not known_benign and attack_score >= 0.38:
         return {
             "safe": False, "layer": "llm-judge",
             "threat": "prompt_injection_llm",
@@ -506,11 +523,10 @@ def judge_message(text: str, history: list[str] | None = None) -> dict:
     latency_ms = round((time.perf_counter() - start) * 1000, 1)
 
     if any(m in response for m in _REFUSAL_MARKERS):
-        # Override: if this query strongly matches a KNOWN SAFE question and has
-        # a low attack similarity, the generation-step refusal is a false positive
-        # (the small GPT model sometimes confuses "help me <benign>" with attacks).
-        benign_score = _question_match_score(text)
-        if benign_score >= 0.45 and attack_score < 0.35:
+        # Override: if this query strongly matches a KNOWN SAFE question, the
+        # generation-step refusal is a false positive (the small GPT model
+        # sometimes confuses educational security topics with attacks).
+        if known_benign:
             return {
                 "safe": True, "layer": "llm-judge",
                 "reason": "AgentShield Security LLM judged this request as safe.",

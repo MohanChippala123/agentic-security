@@ -205,12 +205,21 @@ def _narrate(signals: list[ThreatSignal], score: int, decision: str, attack_type
 def _attack_similarity_signal(text: str) -> ThreatSignal | None:
     """Use the trained Security LLM's attack-question knowledge."""
     try:
-        from ..llm.engine import _attack_match_score  # type: ignore
+        from ..llm.engine import _attack_match_score, _question_match_score  # type: ignore
         score = _attack_match_score(text)
     except Exception:
         return None
     if score < 0.20:
         return None
+    # Suppress signal if the input strongly matches a known benign question
+    # (educational security terms like "sql injection" or "prompt injection"
+    # have the same keywords as attack phrases after stopword removal).
+    try:
+        benign = _question_match_score(text)
+        if benign >= 0.45:
+            return None
+    except Exception:
+        pass
     return ThreatSignal(
         name="known_attack_pattern",
         confidence=min(1.0, score),

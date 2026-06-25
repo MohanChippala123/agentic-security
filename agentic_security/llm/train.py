@@ -26,14 +26,14 @@ def get_batch(data: torch.Tensor, block_size: int, batch_size: int, device: str)
 
 
 def train(
-    steps: int = 3500,
+    steps: int = 5000,
     batch_size: int = 32,
-    block_size: int = 128,
-    n_layer: int = 4,
+    block_size: int = 256,
+    n_layer: int = 6,
     n_head: int = 8,
     n_embd: int = 256,
-    lr: float = 3e-4,
-    eval_every: int = 500,
+    lr: float = 4e-4,
+    eval_every: int = 800,
     device: str | None = None,
 ) -> None:
     # Prefer Intel GPU (XPU) if a torch XPU build is present, else CUDA, else CPU.
