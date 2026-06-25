@@ -816,8 +816,9 @@ def agentshield_scan_memory(req: MemoryScanRequest) -> dict:
 
 
 @app.post("/api/agentshield/redteam")
-def agentshield_redteam(limit: int | None = None) -> dict:
+def agentshield_redteam(request: Request, limit: int | None = None) -> dict:
     """Run the autonomous red-team suite against the Security LLM. Returns a security score."""
+    _require_user(request)
     return run_redteam(limit=limit)
 
 

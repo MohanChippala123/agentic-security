@@ -585,12 +585,62 @@ Content-Type: application/json
 
 <!-- create-key modal -->
 <div id="gwModal" class="modal-overlay" style="display:none" onclick="if(event.target===this)closeCreateKey()">
-  <div class="modal-card">
+  <div class="modal-card" style="width:500px;max-height:90vh;overflow-y:auto">
     <div class="modal-h"><b>New virtual key</b><span class="modal-x" onclick="closeCreateKey()">✕</span></div>
+
+    <div style="font-family:var(--mono);font-size:9.5px;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin-bottom:10px">Basic</div>
     <div class="field"><label>Name</label><input id="gwName" placeholder="my-app"></div>
-    <div class="field"><label>Budget (USD)</label><input id="gwBudget" type="number" value="5" step="0.5"></div>
-    <div class="field"><label>Rate limit (req/min)</label><input id="gwRate" type="number" value="30"></div>
-    <button class="run-full" style="margin-top:6px" onclick="gwCreate()">Create key</button>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+      <div class="field"><label>Budget (USD)</label><input id="gwBudget" type="number" value="5" step="0.5" min="0"></div>
+      <div class="field"><label>Rate limit (req/min)</label><input id="gwRate" type="number" value="30" min="1"></div>
+    </div>
+
+    <div style="font-family:var(--mono);font-size:9.5px;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin:14px 0 10px;border-top:1px solid var(--border);padding-top:14px">Security controls</div>
+
+    <div class="field">
+      <label style="display:flex;align-items:center;justify-content:space-between">
+        <span>Key expiry</span>
+        <span style="font-size:10px;color:var(--muted);font-weight:400">leave blank = never expires</span>
+      </label>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+        <input id="gwExpireDays" type="number" placeholder="e.g. 30" min="0.1" step="1" style="background:rgba(255,255,255,.04);border:1px solid var(--border);outline:none;padding:8px 12px;font-size:12.5px;color:var(--ink)">
+        <select id="gwExpireUnit" style="background:rgba(255,255,255,.06);border:1px solid var(--border);color:var(--ink);padding:8px 10px;font-size:12.5px">
+          <option value="1">days</option>
+          <option value="0.041666">hours</option>
+          <option value="7">weeks</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="field">
+      <label style="display:flex;align-items:center;justify-content:space-between">
+        <span>Allowed models</span>
+        <span style="font-size:10px;color:var(--muted);font-weight:400">comma-separated, blank = all</span>
+      </label>
+      <input id="gwAllowedModels" placeholder="gpt-4o-mini, claude-3-haiku, gpt-3.5-turbo" style="background:rgba(255,255,255,.04);border:1px solid var(--border);outline:none;padding:8px 12px;font-size:12px;color:var(--ink);width:100%;font-family:var(--mono)">
+    </div>
+
+    <div class="field">
+      <label style="display:flex;align-items:center;justify-content:space-between">
+        <span>Allowed hours (UTC)</span>
+        <span style="font-size:10px;color:var(--muted);font-weight:400">blank = all hours</span>
+      </label>
+      <input id="gwAllowedHours" placeholder="e.g. 9,10,11,12,13,14,15,16,17  (business hours UTC)" style="background:rgba(255,255,255,.04);border:1px solid var(--border);outline:none;padding:8px 12px;font-size:12px;color:var(--ink);width:100%;font-family:var(--mono)">
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+      <div class="field">
+        <label>Spend velocity cap (USD)</label>
+        <input id="gwVelMax" type="number" placeholder="0 = off" value="0" min="0" step="0.01" style="background:rgba(255,255,255,.04);border:1px solid var(--border);outline:none;padding:8px 12px;font-size:12.5px;color:var(--ink);width:100%">
+      </div>
+      <div class="field">
+        <label>Velocity window (seconds)</label>
+        <input id="gwVelWindow" type="number" value="60" min="10" style="background:rgba(255,255,255,.04);border:1px solid var(--border);outline:none;padding:8px 12px;font-size:12.5px;color:var(--ink);width:100%">
+      </div>
+    </div>
+    <div style="font-size:10.5px;color:var(--muted);margin-top:-4px;margin-bottom:10px">Block if the key spends more than the cap in the rolling window. Set to 0 to disable.</div>
+
+    <button class="run-full" style="margin-top:6px;width:100%" onclick="gwCreate()">Create key</button>
     <div id="gwNewKey" style="margin-top:12px"></div>
   </div>
 </div>
@@ -1069,6 +1119,18 @@ async function loadGwKeys(){
           <span>${k.request_count} req · <span style="color:var(--rose)">${k.blocked_count} blocked</span> · ${k.rate_limit_per_min}/min</span>
         </div>
         <div class="gwbar"><div style="width:${Math.min(100,k.pct_used)}%;background:${col};transition:width .4s"></div></div>
+        ${(()=>{
+          const tags=[];
+          if(k.expires_at){
+            const exp=new Date(k.expires_at*1000);
+            const expired=k.is_expired;
+            tags.push(`<span class="fbadge ${expired?'fb-crit':'fb-low'}" title="Key expiry">${expired?'expired':'expires'} ${exp.toLocaleDateString()}</span>`);
+          }
+          if(k.allowed_models&&k.allowed_models.length) tags.push(`<span class="fbadge fb-info" title="Model allowlist">${k.allowed_models.length} model${k.allowed_models.length>1?'s':''} only</span>`);
+          if(k.allowed_hours&&k.allowed_hours.length) tags.push(`<span class="fbadge fb-info" title="Allowed hours (UTC)">${k.allowed_hours.length}h/day</span>`);
+          if(k.velocity_max_usd>0) tags.push(`<span class="fbadge fb-info" title="Spend velocity cap">$${k.velocity_max_usd.toFixed(2)}/${k.velocity_window_sec}s</span>`);
+          return tags.length?`<div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:6px">${tags.join('')}</div>`:'';
+        })()}
         <div style="display:flex;gap:8px;margin-top:8px">
           ${k.enabled?`<button class="mm-try" onclick="gwRevoke('${esc(k.key)}')">Revoke key</button>`:`<button class="mm-try" style="background:var(--teal);color:#000" onclick="gwEnable('${esc(k.key)}')">Re-enable key</button>`}
         </div>
@@ -1222,8 +1284,15 @@ function showCreateKey(){
     const btn=$('gwModal').querySelector('.run-full'); if(btn) btn.style.display='none';
     return;
   }
-  // real mode — show form normally
-  ['gwName','gwBudget','gwRate'].forEach(id=>{ const e=$(id); if(e&&e.parentElement) e.parentElement.style.display=''; });
+  // real mode — show form, reset all fields
+  ['gwName','gwBudget','gwRate','gwExpireDays','gwAllowedModels','gwAllowedHours','gwVelMax','gwVelWindow']
+    .forEach(id=>{ const e=$(id); if(!e) return; if(e.parentElement) e.parentElement.style.display='';
+      if(id==='gwBudget') e.value='5';
+      else if(id==='gwRate') e.value='30';
+      else if(id==='gwVelMax') e.value='0';
+      else if(id==='gwVelWindow') e.value='60';
+      else e.value='';
+    });
   const btn=$('gwModal').querySelector('.run-full'); if(btn) btn.style.display='';
   $('gwModal').style.display='flex'; $('gwNewKey').innerHTML='';
 }
@@ -1240,7 +1309,25 @@ const _FULL_KEYS = {};
 function _mask(k){ return k.slice(0,8)+'...'+k.slice(-4); }
 
 async function gwCreate(){
-  const body={name:$('gwName').value||'unnamed', budget_usd:parseFloat($('gwBudget').value)||5, rate_limit_per_min:parseInt($('gwRate').value)||30};
+  const body={
+    name:$('gwName').value||'unnamed',
+    budget_usd:parseFloat($('gwBudget').value)||5,
+    rate_limit_per_min:parseInt($('gwRate').value)||30,
+  };
+  // expiry
+  const expDays=parseFloat($('gwExpireDays').value);
+  const expUnit=parseFloat($('gwExpireUnit').value)||1;
+  if(expDays>0) body.expires_in_days=expDays*expUnit;
+  // model allowlist
+  const models=($('gwAllowedModels').value||'').split(',').map(s=>s.trim()).filter(Boolean);
+  if(models.length) body.allowed_models=models;
+  // allowed hours
+  const hours=($('gwAllowedHours').value||'').split(',').map(s=>parseInt(s.trim())).filter(h=>!isNaN(h)&&h>=0&&h<=23);
+  if(hours.length) body.allowed_hours=hours;
+  // velocity
+  const velMax=parseFloat($('gwVelMax').value)||0;
+  const velWin=parseInt($('gwVelWindow').value)||60;
+  if(velMax>0){ body.velocity_max_usd=velMax; body.velocity_window_sec=velWin; }
   try{
     const k=await (await fetch('/api/gateway/keys',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)})).json();
     _FULL_KEYS[_mask(k.key)] = k.key;
