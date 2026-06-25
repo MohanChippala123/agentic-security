@@ -59,8 +59,15 @@ import time as _time
 _RATE_LIMITS: dict[str, tuple[int, int]] = {
     "/api/auth/signup":              (10, 60),
     "/api/auth/login":               (20, 60),
+    "/api/auth/change-password":     (5, 300),
+    "/api/auth/2fa":                 (5, 300),
+    "/api/auth/gmail-config":        (5, 300),
+    "/api/auth/verify-otp":         (10, 300),
     "/api/shield/":                  (60, 60),
     "/api/agentshield/":             (30, 60),
+    "/api/gateway/":                 (120, 60),
+    "/v1/":                          (60, 60),
+    "/api/llm/":                     (30, 60),
 }
 _rl_lock = _threading.Lock()
 # ip -> path_prefix -> deque of call timestamps
@@ -91,12 +98,56 @@ def _rate_limit_check(ip: str, path: str) -> bool:
         dq.append(now)
     return True
 
+
+# IP-based brute force tracking for proxy key auth failures
+_PROXY_AUTH_FAILURES: dict[str, list[float]] = {}
+_PROXY_AUTH_MAX = 10
+_PROXY_AUTH_WINDOW = 300
+
+
+def _client_ip(request: Request) -> str:
+    return request.headers.get("x-forwarded-for", request.client.host if request.client else "unknown").split(",")[0].strip()
+
+
+def _proxy_auth_ok(ip: str) -> bool:
+    now = _time.monotonic()
+    fails = [t for t in _PROXY_AUTH_FAILURES.get(ip, []) if now - t < _PROXY_AUTH_WINDOW]
+    if len(fails) >= _PROXY_AUTH_MAX:
+        return False
+    return True
+
+
+def _proxy_auth_fail(ip: str) -> None:
+    now = _time.monotonic()
+    if ip not in _PROXY_AUTH_FAILURES:
+        _PROXY_AUTH_FAILURES[ip] = []
+    _PROXY_AUTH_FAILURES[ip] = [t for t in _PROXY_AUTH_FAILURES[ip] if now - t < _PROXY_AUTH_WINDOW]
+    _PROXY_AUTH_FAILURES[ip].append(now)
+
 app = FastAPI(
     title="AgentShield",
     description="The Security LLM platform for AI agents.",
     version="1.0.0",
     lifespan=lifespan,
 )
+
+_SECURITY_HEADERS = {
+    "X-Content-Type-Options": "nosniff",
+    "X-Frame-Options": "DENY",
+    "X-XSS-Protection": "0",
+    "Strict-Transport-Security": "max-age=31536000; includeSubDomains",
+    "Referrer-Policy": "strict-origin-when-cross-origin",
+    "Permissions-Policy": "geolocation=(), microphone=(), camera=()",
+}
+
+
+@app.middleware("http")
+async def security_headers(request: Request, call_next):
+    resp = await call_next(request)
+    for k, v in _SECURITY_HEADERS.items():
+        resp.headers[k] = v
+    return resp
+
 
 @app.middleware("http")
 async def rate_limit_middleware(request: Request, call_next):
@@ -192,10 +243,15 @@ def signup(creds: Credentials) -> JSONResponse:
 
 
 @app.post("/api/auth/login")
-def login(creds: Credentials) -> JSONResponse:
+def login(creds: Credentials, request: Request) -> JSONResponse:
+    ip = _client_ip(request)
     try:
         user = auth.verify_user(creds.email, creds.password)
     except ValueError as exc:
+        import logging
+        logging.getLogger("agentic_security.auth").warning(
+            "Failed login attempt for %s from %s: %s", creds.email, ip, exc
+        )
         raise HTTPException(status_code=401, detail=str(exc))
 
     # If 2FA is enabled, send OTP and return a temp token instead of a session
@@ -668,6 +724,10 @@ class ProxyChatRequest(BaseModel):
 @app.post("/v1/chat/completions")
 async def proxy_openai_chat(req: ProxyChatRequest, request: Request) -> JSONResponse:
     """OpenAI-compatible drop-in proxy. Point your SDK here instead of api.openai.com."""
+    ip = _client_ip(request)
+    if not _proxy_auth_ok(ip):
+        return JSONResponse(status_code=429, content={"error": {"message": "Too many failed auth attempts from this IP. Try again later.", "type": "rate_limit_error"}})
+
     auth_header = request.headers.get("authorization", "")
     api_key = auth_header.removeprefix("Bearer ").strip()
     if not api_key:
@@ -676,6 +736,7 @@ async def proxy_openai_chat(req: ProxyChatRequest, request: Request) -> JSONResp
     # Resolve virtual key to user
     user, vk = gw.resolve_virtual_key(api_key)
     if not user or not vk:
+        _proxy_auth_fail(ip)
         return JSONResponse(status_code=401, content={"error": {"message": "Invalid AgentShield virtual key", "type": "auth_error"}})
 
     result = gw.gateway_chat(
@@ -727,6 +788,10 @@ async def proxy_openai_chat(req: ProxyChatRequest, request: Request) -> JSONResp
 @app.post("/v1/messages")
 async def proxy_anthropic_messages(request: Request) -> JSONResponse:
     """Anthropic-compatible drop-in proxy. Point your Anthropic SDK here."""
+    ip = _client_ip(request)
+    if not _proxy_auth_ok(ip):
+        return JSONResponse(status_code=429, content={"error": {"type": "rate_limit_error", "message": "Too many failed auth attempts from this IP. Try again later."}})
+
     auth_header = request.headers.get("x-api-key", "") or request.headers.get("authorization", "")
     api_key = auth_header.removeprefix("Bearer ").strip()
     if not api_key:
@@ -739,6 +804,7 @@ async def proxy_anthropic_messages(request: Request) -> JSONResponse:
 
     user, vk = gw.resolve_virtual_key(api_key)
     if not user or not vk:
+        _proxy_auth_fail(ip)
         return JSONResponse(status_code=401, content={"error": {"type": "authentication_error", "message": "Invalid AgentShield virtual key"}})
 
     messages = body.get("messages", [])
