@@ -68,6 +68,7 @@ _RATE_LIMITS: dict[str, tuple[int, int]] = {
     "/api/gateway/":                 (120, 60),
     "/v1/":                          (60, 60),
     "/api/llm/":                     (30, 60),
+    "/api/admin/":                   (30, 60),
 }
 _rl_lock = _threading.Lock()
 # ip -> path_prefix -> deque of call timestamps
@@ -131,6 +132,18 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
+_CSP = (
+    "default-src 'self'; "
+    "script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; "
+    "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net; "
+    "font-src 'self' https://fonts.gstatic.com; "
+    "img-src 'self' data: blob:; "
+    "connect-src 'self' ws: wss:; "
+    "frame-ancestors 'none'; "
+    "base-uri 'self'; "
+    "form-action 'self'"
+)
+
 _SECURITY_HEADERS = {
     "X-Content-Type-Options": "nosniff",
     "X-Frame-Options": "DENY",
@@ -138,6 +151,7 @@ _SECURITY_HEADERS = {
     "Strict-Transport-Security": "max-age=31536000; includeSubDomains",
     "Referrer-Policy": "strict-origin-when-cross-origin",
     "Permissions-Policy": "geolocation=(), microphone=(), camera=()",
+    "Content-Security-Policy": _CSP,
 }
 
 
@@ -159,6 +173,12 @@ async def rate_limit_middleware(request: Request, call_next):
 # Allowed origins: the env var AGSEC_ORIGIN overrides the default (localhost dev).
 # In production set e.g. AGSEC_ORIGIN=https://agentshield.yourdomain.com
 _ALLOWED_ORIGINS = [o.strip() for o in os.environ.get("AGSEC_ORIGIN", "http://localhost:8000,http://127.0.0.1:8000").split(",") if o.strip()]
+
+# Secure cookies only when a production HTTPS origin is configured
+_SECURE_COOKIE = any(
+    o.startswith("https://") and "localhost" not in o and "127.0.0.1" not in o
+    for o in _ALLOWED_ORIGINS
+)
 
 app.add_middleware(
     CORSMiddleware,
@@ -190,7 +210,7 @@ class Credentials(BaseModel):
 
 
 def _set_session(resp: JSONResponse, email: str) -> None:
-    resp.set_cookie(auth.COOKIE, auth.issue_token(email), httponly=True, samesite="strict", max_age=7 * 24 * 3600, path="/")
+    resp.set_cookie(auth.COOKIE, auth.issue_token(email), httponly=True, samesite="strict", secure=_SECURE_COOKIE, max_age=7 * 24 * 3600, path="/")
 
 
 def _current_user(request: Request) -> dict | None:
@@ -354,8 +374,8 @@ def list_webhooks(request: Request) -> dict:
 def create_webhook(req: WebhookCreateRequest, request: Request) -> dict:
     user = _require_user(request)
     _block_demo(user, "create webhooks")
-    if not req.url.startswith(("http://", "https://")):
-        raise HTTPException(status_code=400, detail="URL must start with http:// or https://")
+    if not req.url.startswith("https://"):
+        raise HTTPException(status_code=400, detail="Webhook URL must start with https://")
     import secrets as _sec
     wh_id = _sec.token_hex(12)
     secret = _sec.token_hex(24)
@@ -462,9 +482,12 @@ _DEMO_PASSWORD = os.environ.get("AGSEC_DEMO_PASSWORD", "demo1234")
 
 
 @app.get("/demo")
-def demo_login() -> RedirectResponse:
+def demo_login(request: Request) -> RedirectResponse:
     """One-click demo: ensure the shared demo account exists, sign in, and land
-    straight on the dashboard — no login form."""
+    straight on the dashboard — no login form. Does not overwrite an existing
+    session (prevents session fixation)."""
+    if _current_user(request):
+        return RedirectResponse("/app", status_code=302)
     if not db.user_get(DEMO_EMAIL):
         try:
             auth.create_user(DEMO_EMAIL, _DEMO_PASSWORD, "Demo Analyst")
