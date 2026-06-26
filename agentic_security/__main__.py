@@ -18,6 +18,20 @@ for _stream in (sys.stdout, sys.stderr):
 
 def cmd_serve(args: argparse.Namespace) -> int:
     import os
+
+    # Load .env from project root so GOOGLE_CLIENT_ID et al are available
+    _env_path = os.path.join(os.path.dirname(__file__), "..", ".env")
+    try:
+        with open(_env_path) as _f:
+            for _line in _f:
+                _line = _line.strip()
+                if _line and not _line.startswith("#") and "=" in _line:
+                    _k, _v = _line.split("=", 1)
+                    if _k and not os.environ.get(_k):
+                        os.environ[_k] = _v
+    except OSError:
+        pass
+
     import uvicorn
 
     port = int(os.environ.get("PORT", args.port))

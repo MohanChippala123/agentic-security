@@ -21,7 +21,7 @@
         --bg: #0f0f0f;
         --panel: #161616;
         --ink: #e8e6df;
-        --muted: rgba(232, 230, 223, 0.38);
+        --muted: rgba(232, 230, 223, 0.52);
         --border: rgba(255, 255, 255, 0.08);
         --border2: rgba(255, 255, 255, 0.12);
         --rose: #f06a82;
@@ -172,10 +172,10 @@
 
       /* ── body ── */
       .body {
-        padding: 24px 24px 40px;
+        padding: 28px 32px 48px;
         display: flex;
         flex-direction: column;
-        gap: 18px;
+        gap: 6px;
         max-width: 1400px;
         margin: 0 auto;
         width: 100%;
@@ -201,23 +201,22 @@
         line-height: 1.55;
       }
       .runbtn {
-        display: flex;
+        display: inline-flex;
         align-items: center;
-        gap: 8px;
-        background: var(--lime);
+        gap: 6px;
+        background: rgba(255, 255, 255, 0.04);
         border: 1px solid var(--border);
-        color: #000;
-        padding: 8px 12px;
+        color: var(--ink);
+        padding: 8px 14px;
         font-size: 11.5px;
         font-family: "Inter", sans-serif;
         cursor: pointer;
         transition: 0.12s;
         white-space: nowrap;
-        flex-shrink: 0;
       }
       .runbtn:hover {
-        opacity: 0.9;
-        border-color: var(--border2);
+        background: rgba(255, 255, 255, 0.08);
+        border-color: rgba(190, 242, 100, 0.3);
       }
       .runbtn:disabled {
         opacity: 0.45;
@@ -590,15 +589,16 @@
         background: var(--lime);
         border: 1px solid var(--border);
         color: #000;
-        padding: 8px 12px;
+        border: none;
+        padding: 8px 14px;
         font-size: 11.5px;
         font-family: "Inter", sans-serif;
+        font-weight: 600;
         cursor: pointer;
         transition: 0.12s;
       }
       .run-full:hover {
-        opacity: 0.9;
-        border-color: var(--border2);
+        opacity: 0.88;
       }
       .run-full:disabled {
         opacity: 0.38;
@@ -837,7 +837,7 @@
           display: none;
         }
         .body {
-          padding: 16px;
+          padding: 20px;
         }
       }
 
@@ -941,20 +941,6 @@
       button:not(:disabled):active {
         transform: scale(0.97);
       }
-      .run-full {
-        transition:
-          opacity var(--trans),
-          transform var(--trans);
-      }
-      .mm-try {
-        transition:
-          background var(--trans),
-          border-color var(--trans),
-          transform var(--trans);
-      }
-      .mm-try:hover {
-        border-color: rgba(196, 241, 53, 0.2);
-      }
       .cpbtn {
         transition:
           background var(--trans),
@@ -968,8 +954,7 @@
       }
       .modal-card {
         animation: modalIn 0.22s cubic-bezier(0.34, 1.15, 0.64, 1);
-      }
-      .modal-card {
+        border-radius: 14px;
       }
 
       /* badges */
@@ -1005,18 +990,6 @@
         padding-right: 8px;
       }
 
-      /* chat bubbles */
-      .mm-try {
-        font-size: 12px;
-      }
-
-      /* empty state */
-      .empty {
-        color: var(--muted);
-        font-size: 12.5px;
-        text-align: center;
-        padding: 28px 12px;
-      }
       /* ── My LLM chat ── */
       .mm-msg {
         display: flex;
@@ -1360,7 +1333,11 @@
             being forwarded. Your real key never leaves the server.
           </p>
         </div>
-        <button class="run-full" style="width: auto" onclick="showCreateKey()">
+        <button
+          class="mm-try"
+          style="width: auto; padding: 8px 14px; font-size: 11.5px"
+          onclick="showCreateKey()"
+        >
           + New virtual key
         </button>
       </div>
@@ -1403,7 +1380,11 @@
             font-family: &quot;Inter&quot;, sans-serif;
           "
         />
-        <button class="run-full" style="width: auto" onclick="runQuickScan()">
+        <button
+          class="mm-try"
+          style="width: auto; padding: 8px 14px; font-size: 11.5px"
+          onclick="runQuickScan()"
+        >
           Scan
         </button>
         <div
@@ -1470,7 +1451,11 @@
             <option value="together">Together AI</option>
             <option value="cohere">Cohere</option>
           </select>
-          <button class="run-full" style="width: auto" onclick="gwConnectKey()">
+          <button
+            class="mm-try"
+            style="width: auto; padding: 8px 14px; font-size: 11.5px"
+            onclick="gwConnectKey()"
+          >
             Connect key
           </button>
           <button
@@ -2606,7 +2591,7 @@
               style="
                 margin-left: auto;
                 display: flex;
-                gap: 6px;
+                gap: 22px;
                 align-items: center;
               "
             >
@@ -4364,7 +4349,7 @@ curl ${base}/v1/chat/completions \\
             <div style="font-size:11.5px;color:var(--muted)">Protect your account with email verification</div>
           </div>
           <div style="display:flex;align-items:center;gap:10px">
-            <span style="font-family:var(--mono);font-size:10px;padding:3px 8px;${enabled ? "background:rgba(58,208,164,.1);color:var(--teal);border:1px solid rgba(58,208,164,.2)" : "background:rgba(255,255,255,.05);color:var(--muted);border:1px solid var(--border)"}">${enabled ? "ENABLED" : "DISABLED"}</span>
+            <span style="font-family:var(--mono);font-size:10px;padding:3px 8px;border-radius:4px;${enabled ? "background:rgba(58,208,164,.1);color:var(--teal);border:1px solid rgba(58,208,164,.2)" : "background:rgba(255,255,255,.05);color:var(--muted);border:1px solid var(--border)"}">${enabled ? "ENABLED" : "DISABLED"}</span>
             <button class="run-full" style="width:auto" onclick="toggle2FA(${!enabled})">${enabled ? "Disable" : "Enable"}</button>
           </div>
         </div>
@@ -4409,7 +4394,7 @@ curl ${base}/v1/chat/completions \\
         <div style="padding:14px 16px;background:rgba(255,255,255,.02);border:1px solid var(--border);">
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
             <div style="font-size:13px;font-weight:600">Webhooks</div>
-            <button class="mm-try" style="font-size:10px" onclick="showAddWebhook()">+ Add</button>
+            <button class="mm-try" onclick="showAddWebhook()">+ Add</button>
           </div>
           <div style="font-size:11.5px;color:var(--muted);margin-bottom:12px;line-height:1.6">POST to your URL on every blocked attack. Payload is HMAC-signed with your webhook secret.</div>
           <div id="webhookList"><div class="empty" style="font-size:11.5px">No webhooks yet.</div></div>
@@ -4494,7 +4479,7 @@ curl ${base}/v1/chat/completions \\
           <div style="font-family:var(--mono);font-size:10px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(w.url)}</div>
           <div style="font-family:var(--mono);font-size:9.5px;color:rgba(255,255,255,.25);margin-top:2px">fired ${w.fire_count} time${w.fire_count !== 1 ? "s" : ""}</div>
         </div>
-        <button class="mm-try" style="font-size:9.5px;color:var(--rose);border-color:rgba(240,106,130,.25);flex-shrink:0" onclick="deleteWebhook('${esc(w.id)}')">Remove</button>
+        <button class="mm-try" style="color:var(--rose);border-color:rgba(240,106,130,.25)" onclick="deleteWebhook('${esc(w.id)}')">Remove</button>
       </div>`,
             )
             .join("");
