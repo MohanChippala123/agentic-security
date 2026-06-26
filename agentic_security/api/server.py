@@ -549,10 +549,15 @@ def shield_scan(req: ShieldScanRequest) -> dict:
             except ImportError:
                 pass
     verdict = shield_detect(req.text, client=client, model=model)
+
+    risk_score = round(verdict.confidence * 100)
     return {
         "blocked": verdict.blocked,
-        "threat_type": verdict.threat_type.value,
+        "risk_score": risk_score,
+        "verdict": "attack" if verdict.blocked else "clean",
+        "is_attack": verdict.blocked,
         "confidence": verdict.confidence,
+        "threat_type": verdict.threat_type.value,
         "explanation": verdict.explanation,
         "layer": verdict.layer,
         "latency_ms": round(verdict.latency_ms, 2),
