@@ -1,4 +1,4 @@
-"""Character-level tokenizer — built from scratch.
+"""Character-level tokenizer - built from scratch.
 
 No external tokenizer library. We map every unique character in the training
 corpus to an integer id. Simple, transparent, and fully ours.

@@ -9,7 +9,7 @@ slowapi>=0.1.9        # per-IP rate limiting for public endpoints
 fastapi>=0.110
 uvicorn[standard]>=0.27
 pydantic>=2.6
-torch==2.2.2+cpu      # AgentShield Security LLM — CPU-only build (see index above)
+torch==2.2.2+cpu      # AgentShield Security LLM - CPU-only build (see index above)
 numpy>=1.26           # tensor / data handling
 
 # ── Hybrid Firewall Layer ────────────────────────────────────────────────────
@@ -21,7 +21,7 @@ scikit-learn>=1.3     # preprocessing pipeline for XGBoost
 # LangGraph orchestration (parallel fan-out firewall graph)
 langgraph>=0.1
 
-# ── Provider SDKs (all optional — gateway degrades gracefully if not installed) ──
+# ── Provider SDKs (all optional - gateway degrades gracefully if not installed) ──
 openai>=1.30          # OpenAI + Groq (Groq uses OpenAI-compatible SDK)
 anthropic>=0.40       # Anthropic Claude
 groq>=0.9             # Groq (native SDK)

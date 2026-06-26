@@ -1,4 +1,4 @@
-"""Hybrid Layer — All-MiniLM-L6-v2 embeddings + XGBoost classifier.
+"""Hybrid Layer - All-MiniLM-L6-v2 embeddings + XGBoost classifier.
 
 Detects all 6 attack categories with ~98% accuracy:
   1. Prompt Injection Attacks
@@ -24,7 +24,7 @@ import numpy as np
 
 _MODEL_PATH = Path(__file__).resolve().parents[2] / "data" / "hybrid_layer.pkl"
 
-# Lazy singletons — loaded on first use
+# Lazy singletons - loaded on first use
 _embedder = None
 _clf = None
 
@@ -46,7 +46,7 @@ def _embed(texts: list[str]) -> np.ndarray:
 def train(force: bool = False) -> None:
     """Train XGBoost on corpus embeddings. Saved to data/hybrid_layer.pkl.
 
-    Training runs automatically on first use — you don't need to call this.
+    Training runs automatically on first use - you don't need to call this.
     Call with force=True to retrain after corpus changes.
     """
     if _MODEL_PATH.exists() and not force:
@@ -89,7 +89,7 @@ def train(force: bool = False) -> None:
 
     n_attack = sum(labels)
     n_safe = len(labels) - n_attack
-    # Weight attacks 3x to maximise recall — we accept slightly more false
+    # Weight attacks 3x to maximise recall - we accept slightly more false
     # positives in exchange for near-zero missed attacks.
     spw = max(1.0, (n_safe / n_attack) * 3.0) if n_attack else 3.0
 
@@ -120,7 +120,7 @@ def _load_clf():
     global _clf
     if _clf is None:
         if not _MODEL_PATH.exists():
-            print("[HybridLayer] No trained model found — training now…")
+            print("[HybridLayer] No trained model found - training now…")
             train()
         with open(_MODEL_PATH, "rb") as f:
             _clf = pickle.load(f)

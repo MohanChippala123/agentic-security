@@ -1,4 +1,4 @@
-"""Protected AI proxy — wraps OpenAI-compatible APIs with security layers.
+"""Protected AI proxy - wraps OpenAI-compatible APIs with security layers.
 
 Users send chat requests here instead of directly to OpenAI. Every request
 passes through the shield before reaching the model, and every response is

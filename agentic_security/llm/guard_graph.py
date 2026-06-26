@@ -4,21 +4,21 @@ Architecture (mirrors the diagram):
 
   START
     ├──→ hybrid_Layer  (XGBoost + All-MiniLM-L6-v2)
-    └──→ ml_layer      (AgentShield Security LLM — from-scratch)
+    └──→ ml_layer      (AgentShield Security LLM - from-scratch)
               ↓ (both merge into)
          decision_layer (weighted combination → block / allow)
               ↓
              END
 
 State schema:
-  prompt          str      — the input to analyse
-  verdict         str      — "safe" | "attack"
-  keep_jailbreak  float    — attack probability from hybrid layer (0–1)
-  score           float    — combined risk score 0–100
-  notes           str      — human-readable decision explanation
-  signals         list     — per-layer signal dicts (merged from both branches)
-  hybrid_result   dict     — raw hybrid layer output
-  ml_result       dict     — raw ML layer output
+  prompt          str      - the input to analyse
+  verdict         str      - "safe" | "attack"
+  keep_jailbreak  float    - attack probability from hybrid layer (0-1)
+  score           float    - combined risk score 0-100
+  notes           str      - human-readable decision explanation
+  signals         list     - per-layer signal dicts (merged from both branches)
+  hybrid_result   dict     - raw hybrid layer output
+  ml_result       dict     - raw ML layer output
 """
 
 from __future__ import annotations
@@ -179,7 +179,7 @@ def run_firewall(prompt: str) -> GuardState:
             "verdict": "safe",
             "keep_jailbreak": 0.0,
             "score": 0.0,
-            "notes": "Guard graph unavailable — falling back to regex + LLM signals.",
+            "notes": "Guard graph unavailable - falling back to regex + LLM signals.",
             "signals": [],
             "hybrid_result": {},
             "ml_result": {},

@@ -1,4 +1,4 @@
-"""Provider adapters — unified interface to OpenAI, Anthropic, Groq, Gemini, Mistral, etc."""
+"""Provider adapters - unified interface to OpenAI, Anthropic, Groq, Gemini, Mistral, etc."""
 
 from __future__ import annotations
 
@@ -81,7 +81,7 @@ def detect_provider(api_key: str) -> str:
     if k.startswith("sk-ant-"):
         return "anthropic"
     if k.startswith("sk-"):
-        # Could be OpenAI or Mistral — check length/format
+        # Could be OpenAI or Mistral - check length/format
         if len(k) > 60:
             return "openai"
         return "openai"

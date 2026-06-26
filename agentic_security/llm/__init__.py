@@ -1,1 +1,1 @@
-"""Agentic LLM — your own secured language model."""
+"""Agentic LLM - your own secured language model."""

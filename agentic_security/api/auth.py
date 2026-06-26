@@ -1,4 +1,4 @@
-"""Authentication — PBKDF2-HMAC-SHA256 passwords, HMAC-signed session cookies.
+"""Authentication - PBKDF2-HMAC-SHA256 passwords, HMAC-signed session cookies.
 
 User records now live in SQLite (via db.py) instead of users.json.
 """
@@ -89,7 +89,7 @@ def verify_user(email: str, password: str) -> dict:
         remaining = _MAX_ATTEMPTS - attempts
         raise ValueError(f"Invalid email or password. {remaining} attempt(s) remaining.")
 
-    # Success — reset lockout counter
+    # Success - reset lockout counter
     db.user_reset_failed(email)
     db.user_record_login(email)
 
@@ -140,7 +140,7 @@ def read_token(token: str | None) -> dict | None:
 
 def seed_demo_account() -> None:
     """Migrate any legacy users.json on first run only.
-    Never creates fake or demo accounts — real users sign up themselves."""
+    Never creates fake or demo accounts - real users sign up themselves."""
     migrated = db.migrate_legacy_users()
     if migrated:
         import logging

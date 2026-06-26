@@ -240,7 +240,7 @@ def _block_demo(user: dict, action: str = "do that") -> None:
     if _is_demo(user):
         raise HTTPException(
             status_code=403,
-            detail=f"The demo account is read-only — you can't {action}. Sign up for a free account to use this feature.",
+            detail=f"The demo account is read-only - you can't {action}. Sign up for a free account to use this feature.",
         )
 
 
@@ -324,7 +324,7 @@ def set_twofa(req: TwoFARequest, request: Request) -> JSONResponse:
     """Enable or disable 2FA for the authenticated user."""
     user = _require_user(request)
     _block_demo(user, "change 2FA settings")
-    # Don't let a user turn on 2FA when email delivery isn't configured — they'd
+    # Don't let a user turn on 2FA when email delivery isn't configured - they'd
     # never receive the login code and would lock themselves out.
     if req.enable:
         from .otp import is_configured
@@ -484,7 +484,7 @@ _DEMO_PASSWORD = os.environ.get("AGSEC_DEMO_PASSWORD", "demo1234")
 @app.get("/demo")
 def demo_login(request: Request) -> RedirectResponse:
     """One-click demo: ensure the shared demo account exists, sign in, and land
-    straight on the dashboard — no login form. Does not overwrite an existing
+    straight on the dashboard - no login form. Does not overwrite an existing
     session (prevents session fixation)."""
     if _current_user(request):
         return RedirectResponse("/app", status_code=302)
@@ -522,7 +522,7 @@ class ShieldScanRequest(BaseModel):
 
 @app.post("/api/shield/chat")
 def shield_chat(req: ShieldChatRequest) -> dict:
-    """Protected chat proxy — send messages through the security shield."""
+    """Protected chat proxy - send messages through the security shield."""
     return shield_request(
         messages=req.messages,
         model=req.model,
@@ -717,7 +717,7 @@ def gateway_chart(request: Request, days: int = 7) -> dict:
 
 @app.get("/api/gateway/events")
 def gateway_events(request: Request, limit: int = 50) -> dict:
-    """Recent gateway events — every request flowing through the defense pipeline."""
+    """Recent gateway events - every request flowing through the defense pipeline."""
     user = _require_user(request)
     return {"events": gw.recent_events(user["email"], limit)}
 
@@ -1106,7 +1106,7 @@ class LLMChatRequest(BaseModel):
 
 @app.post("/api/llm/chat")
 def agentic_llm_chat(req: LLMChatRequest) -> dict:
-    """Chat with Agentic LLM — your secured model with built-in defenses."""
+    """Chat with Agentic LLM - your secured model with built-in defenses."""
     return llm_chat(
         message=req.message,
         session_id=req.session_id,

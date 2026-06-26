@@ -1,1 +1,1 @@
-"""Agentic Security Shield — real-time AI firewall."""
+"""Agentic Security Shield - real-time AI firewall."""

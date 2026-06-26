@@ -1,4 +1,4 @@
-"""OTP — 6-digit codes sent via Gmail for 2FA.
+"""OTP - 6-digit codes sent via Gmail for 2FA.
 
 Setup required (add to .env or server environment):
     GMAIL_USER=your@gmail.com
@@ -55,7 +55,7 @@ def verify(temp_token: str, otp: str) -> Optional[str]:
     """Verify OTP. Returns email on success, None on failure. Consumes the token.
 
     The code is invalidated after _MAX_ATTEMPTS wrong guesses to stop brute-forcing
-    the 6-digit space — the attacker must re-authenticate (password) for a new code."""
+    the 6-digit space - the attacker must re-authenticate (password) for a new code."""
     _purge_expired()
     entry = _store.get(temp_token)
     if not entry:
@@ -114,7 +114,7 @@ def send_otp(to_email: str, otp: str) -> dict:
         msg = MIMEMultipart("alternative")
         msg["From"] = f"AgentShield <{gmail_user}>"
         msg["To"] = to_email
-        msg["Subject"] = f"AgentShield — Your login code: {otp}"
+        msg["Subject"] = f"AgentShield - Your login code: {otp}"
 
         plain = f"""Your AgentShield verification code is:
 
@@ -123,7 +123,7 @@ def send_otp(to_email: str, otp: str) -> dict:
 This code expires in 10 minutes.
 If you did not request this code, you can safely ignore this email.
 
-— AgentShield Security"""
+- AgentShield Security"""
 
         html = f"""<!DOCTYPE html>
 <html>

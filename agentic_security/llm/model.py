@@ -1,8 +1,8 @@
-"""agentic-1 — a GPT-style transformer built from scratch.
+"""agentic-1 - a GPT-style transformer built from scratch.
 
 No pretrained weights, no external model APIs. Every layer here is written
 by hand on top of raw PyTorch tensor ops (Linear, Embedding, LayerNorm).
-We deliberately do NOT use nn.Transformer / nn.MultiheadAttention — the
+We deliberately do NOT use nn.Transformer / nn.MultiheadAttention - the
 attention mechanism is implemented directly so this is genuinely our model.
 """
 

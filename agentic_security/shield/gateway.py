@@ -1,4 +1,4 @@
-"""API Key Guard — multi-provider LLM gateway with active attack blocking.
+"""API Key Guard - multi-provider LLM gateway with active attack blocking.
 
 Per-user isolation: every user's virtual keys, events, spend, and upstream
 key are stored separately. One user can never see or touch another's data.
@@ -43,7 +43,7 @@ _INDIRECT_PATTERNS = [
     ]
 ]
 
-# ── Data exfiltration patterns (in LLM output — attacker trying to leak) ──────
+# ── Data exfiltration patterns (in LLM output - attacker trying to leak) ──────
 _EXFIL_PATTERNS = [
     re.compile(p, re.I) for p in [
         r"(?:system\s+prompt|hidden\s+instruction|secret\s+instruction)\s*(?:is|says|reads|contains)\s*[:\"]",

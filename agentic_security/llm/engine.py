@@ -1,4 +1,4 @@
-"""agentic-1 engine — runs OUR from-scratch model behind a security firewall.
+"""agentic-1 engine - runs OUR from-scratch model behind a security firewall.
 
 No external API. The model weights are loaded from our own trained checkpoint.
 The "prevents all agent attacks" guarantee comes from the deterministic shield:
@@ -24,7 +24,7 @@ MODEL_NAME = "agentshield-llm"
 MODEL_VERSION = "1.0.0"
 MODEL_DESCRIPTION = (
     "AgentShield Security LLM. From-scratch GPT-style transformer with a built-in "
-    "security firewall — no external APIs, no pretrained weights, hardened against "
+    "security firewall - no external APIs, no pretrained weights, hardened against "
     "prompt injection, jailbreaks, and data exfiltration."
 )
 
@@ -70,7 +70,7 @@ _STOPWORDS = {
 
 _KNOWN_Q_SETS: list[set[str]] | None = None
 
-# QA map for hardcoded answer retrieval — maps keyword sets to known answers
+# QA map for hardcoded answer retrieval - maps keyword sets to known answers
 _QA_ENTRIES: list[tuple[frozenset[str], str]] | None = None
 
 # Light stem map - normalize common morphological variations so the Security
@@ -459,7 +459,7 @@ def chat(
         return {"blocked": True, "error": "Rate limit exceeded (30/min).",
                 "model": MODEL_NAME, "session_id": session.session_id}
 
-    # ── Layer 1: deterministic firewall — blocks attacks before inference ──
+    # ── Layer 1: deterministic firewall - blocks attacks before inference ──
     verdict = full_scan(message, client=None)
     if verdict.blocked:
         session.blocked_count += 1
@@ -499,7 +499,7 @@ def chat(
             "cached": True,
         }
 
-    # Known QA match — skip model inference for well-known safe questions
+    # Known QA match - skip model inference for well-known safe questions
     known_a, known_sim = _exact_qa_match(cleaned)
     if known_sim >= 0.45 and known_a is not None:
         output = redact_pii(known_a)

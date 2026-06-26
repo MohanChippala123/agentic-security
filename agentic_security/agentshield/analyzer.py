@@ -44,8 +44,8 @@ _INDIRECT_INJECTION = re.compile(
     r"(?:"
     r"(?:ai|llm|assistant|chatgpt|gpt|model|bot)\s*[,:]\s*(?:ignore|disregard|forget|override|skip|bypass)|"
     r"\[system\]|\{system\}|<system>|<!--\s*(?:ignore|prompt|instruction)|"
-    r"note\s+to\s+(?:ai|llm|assistant|model)\s*[:—]|"
-    r"(?:instruction|directive)\s+for\s+(?:the\s+)?(?:ai|assistant|model)\s*[:—]|"
+    r"note\s+to\s+(?:ai|llm|assistant|model)\s*[:-]|"
+    r"(?:instruction|directive)\s+for\s+(?:the\s+)?(?:ai|assistant|model)\s*[:-]|"
     r"if\s+you(?:'re|\s+are)\s+an?\s+(?:ai|llm|assistant)\s*,\s*(?:ignore|reveal|output|print|show)"
     r")",
     re.I,
@@ -363,7 +363,7 @@ def _guard_graph_signal(text: str) -> ThreatSignal | None:
 
 # ── API-key-specific attack vectors ──
 # Attempts to extract the protected upstream key / secrets.
-# A "secret thing" — the object an exfil verb might target. Allows qualifier
+# A "secret thing" - the object an exfil verb might target. Allows qualifier
 # words in between (e.g. "the openai api key", "all your secret tokens").
 _SECRET_OBJ = r"(?:[\w.]+\s+){0,3}(?:api[\s_-]?key|api[\s_-]?keys|openai[\s_-]?key|secret|secrets|token|tokens|credential|credentials|password|passwords|os\.environ|process\.env|environment\s+variables?|\.env|env\s+vars?)"
 _KEY_EXFIL = re.compile(
@@ -396,7 +396,7 @@ def _cost_bomb_signal(text: str, truncated: bool) -> ThreatSignal | None:
             name="cost_bombing",
             confidence=0.80,
             weight=0.85,
-            explanation=f"Abnormally large prompt ({n}+ chars) — likely a token/cost-bombing attempt to run up the API bill.",
+            explanation=f"Abnormally large prompt ({n}+ chars) - likely a token/cost-bombing attempt to run up the API bill.",
             layer="content-analyzer",
         )
     # Repetition flooding (e.g. "a"*5000 or repeated tokens)
@@ -407,7 +407,7 @@ def _cost_bomb_signal(text: str, truncated: bool) -> ThreatSignal | None:
                 name="cost_bombing",
                 confidence=0.78,
                 weight=0.8,
-                explanation="Highly repetitive payload — token-flooding pattern aimed at inflating cost.",
+                explanation="Highly repetitive payload - token-flooding pattern aimed at inflating cost.",
                 layer="content-analyzer",
             )
     return None
@@ -506,7 +506,7 @@ def analyze_threat(text: str, *, source: str = "user", context: dict | None = No
                 layer="regex-shield",
             ))
 
-    # Content-analyzer — all 6 attack categories
+    # Content-analyzer - all 6 attack categories
     weight_bump = 1.0 if source == "user" else 1.15
     for sig in (
         # 1. Prompt injection / hidden instructions
@@ -533,7 +533,7 @@ def analyze_threat(text: str, *, source: str = "user", context: dict | None = No
     if sim:
         signals.append(sim)
 
-    # LLM judge + hybrid-layer graph — both run as CONFIRMERS (only when there
+    # LLM judge + hybrid-layer graph - both run as CONFIRMERS (only when there
     # is pre-existing suspicion, to avoid over-triggering on benign queries).
     pre_score = _compose_risk_score(signals)
     if 25 <= pre_score < 80:
@@ -541,7 +541,7 @@ def analyze_threat(text: str, *, source: str = "user", context: dict | None = No
         if llm:
             signals.append(llm)
 
-    # Hybrid-layer (XGBoost+MiniLM via LangGraph) — runs in parallel with existing
+    # Hybrid-layer (XGBoost+MiniLM via LangGraph) - runs in parallel with existing
     # signals; only adds a signal if it also votes "attack".
     graph_sig = _safe(_guard_graph_signal, cleaned)
     if graph_sig:

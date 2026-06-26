@@ -1,10 +1,10 @@
-"""Security Console — LLM-powered assistant grounded in live gateway data.
+"""Security Console - LLM-powered assistant grounded in live gateway data.
 
 Architecture:
   1. Pull all real gateway state (keys, events, stats, anomalies).
   2. Serialize it into a structured context block.
   3. Call the user's already-connected provider (GPT-4o-mini / Claude Haiku / Groq Llama)
-     with that context as a system prompt — so every answer is grounded in real data.
+     with that context as a system prompt - so every answer is grounded in real data.
   4. Fall back to deterministic keyword matching if no provider key is configured.
 
 This is a completely separate LLM from the security firewall. The firewall uses
@@ -81,7 +81,7 @@ def _build_context(user: str) -> str:
             if k["pct_used"] >= 90:
                 anomaly = " [NEAR BUDGET LIMIT]"
             if block_rate >= 40 and k["request_count"] >= 5:
-                anomaly += " [HIGH BLOCK RATE — possible attack]"
+                anomaly += " [HIGH BLOCK RATE - possible attack]"
             lines.append(
                 f"- {k['name']} [{status}]{anomaly}: "
                 f"spent {_fmt_usd(k['spent_usd'])} of {_fmt_usd(k['budget_usd'])} ({k['pct_used']}%), "
@@ -109,7 +109,7 @@ def _build_context(user: str) -> str:
             anomalies.append(f"Key '{k['name']}' is at {k['pct_used']}% of its budget.")
         block_rate = k["blocked_count"] / max(1, k["request_count"]) if k["request_count"] else 0
         if block_rate >= 0.4 and k["request_count"] >= 5:
-            anomalies.append(f"Key '{k['name']}' has a {block_rate*100:.0f}% block rate ({k['blocked_count']}/{k['request_count']}) — may be under active attack.")
+            anomalies.append(f"Key '{k['name']}' has a {block_rate*100:.0f}% block rate ({k['blocked_count']}/{k['request_count']}) - may be under active attack.")
     if anomalies:
         lines.append("=== ANOMALIES ===")
         for a in anomalies:
@@ -141,9 +141,9 @@ def _build_context(user: str) -> str:
     return "\n".join(lines)
 
 
-_SYSTEM_PROMPT = """You are the AgentShield Security Console — an intelligent assistant that answers questions about a user's API gateway activity.
+_SYSTEM_PROMPT = """You are the AgentShield Security Console - an intelligent assistant that answers questions about a user's API gateway activity.
 
-You have access to real-time gateway data above, including virtual keys, spend, blocked attacks, anomalies, and recent events. Every answer you give MUST be grounded in that data — do not make things up.
+You have access to real-time gateway data above, including virtual keys, spend, blocked attacks, anomalies, and recent events. Every answer you give MUST be grounded in that data - do not make things up.
 
 Rules:
 - Answer concisely and directly. No fluff, no preamble.
@@ -244,7 +244,7 @@ def _deterministic_answer(question: str, user: str) -> str:
         lines = [f"{stats['total_keys']} key(s), {stats['active_keys']} active:"]
         for k in keys:
             status = "active" if k["enabled"] else "REVOKED"
-            lines.append(f"  {k['name']} [{status}] — {_fmt_usd(k['spent_usd'])}/{_fmt_usd(k['budget_usd'])} "
+            lines.append(f"  {k['name']} [{status}] - {_fmt_usd(k['spent_usd'])}/{_fmt_usd(k['budget_usd'])} "
                          f"({k['pct_used']}%), {k['request_count']} req, {k['blocked_count']} blocked")
         return "\n".join(lines)
 
@@ -272,12 +272,12 @@ def _deterministic_answer(question: str, user: str) -> str:
         lines = ["Recent activity:"]
         for e in events[:5]:
             if e.get("outcome") == "blocked":
-                lines.append(f"  [BLOCKED] \"{e.get('message','')}\" — {e.get('threat','')} (risk {e.get('risk_score','?')})")
+                lines.append(f"  [BLOCKED] \"{e.get('message','')}\" - {e.get('threat','')} (risk {e.get('risk_score','?')})")
             else:
-                lines.append(f"  [PASSED]  \"{e.get('message','')}\" — {_fmt_usd(e.get('cost_usd',0))}")
+                lines.append(f"  [PASSED]  \"{e.get('message','')}\" - {_fmt_usd(e.get('cost_usd',0))}")
         return "\n".join(lines)
 
-    return ("I can answer questions about your gateway — spend, blocked attacks, "
+    return ("I can answer questions about your gateway - spend, blocked attacks, "
             "virtual keys, savings, anomalies, and recent events. Try a suggestion below.")
 
 

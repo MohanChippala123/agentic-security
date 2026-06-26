@@ -1,4 +1,4 @@
-"""Guardrails — additional AI-security primitives built on the detector layer.
+"""Guardrails - additional AI-security primitives built on the detector layer.
 
 Provides higher-level, demo-friendly security features:
   - risk_score()  : multi-category risk breakdown (0-100) with a recommendation

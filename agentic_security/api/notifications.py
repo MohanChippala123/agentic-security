@@ -1,4 +1,4 @@
-"""Email notifications — budget alerts and critical attack alerts.
+"""Email notifications - budget alerts and critical attack alerts.
 
 Uses the same Gmail config as 2FA OTPs.
 Fires in a background thread so it never blocks a gateway request.
@@ -45,7 +45,7 @@ def _send_alert(to_email: str, subject: str, body_plain: str, body_html: str) ->
 
 
 def notify_budget_warning(user_email: str, key_name: str, pct_used: float, spent: float, budget: float) -> None:
-    subject = f"AgentShield — Key '{key_name}' is at {pct_used:.0f}% of its budget"
+    subject = f"AgentShield - Key '{key_name}' is at {pct_used:.0f}% of its budget"
     plain = f"""Your AgentShield virtual key '{key_name}' has used {pct_used:.0f}% of its budget.
 
 Spent: ${spent:.4f} / ${budget:.2f}
@@ -53,7 +53,7 @@ Spent: ${spent:.4f} / ${budget:.2f}
 If requests continue at the current rate, this key will be suspended when it hits 100%.
 Log in to top up the budget or create a new key: http://localhost:8000/app
 
-— AgentShield"""
+- AgentShield"""
     html = f"""<!DOCTYPE html><html><body style="margin:0;padding:0;background:#0a0a0a;font-family:Inter,system-ui,sans-serif">
 <div style="max-width:480px;margin:48px auto;padding:0 20px">
   <div style="margin-bottom:24px"><span style="font-weight:700;font-size:14px;color:#e8e6df">AgentShield</span></div>
@@ -73,7 +73,7 @@ Log in to top up the budget or create a new key: http://localhost:8000/app
 
 
 def notify_critical_attack(user_email: str, key_name: str, threat: str, message: str, risk_score: int) -> None:
-    subject = f"AgentShield — Critical attack blocked on '{key_name}'"
+    subject = f"AgentShield - Critical attack blocked on '{key_name}'"
     plain = f"""AgentShield blocked a critical attack on your virtual key '{key_name}'.
 
 Threat: {threat}
@@ -82,7 +82,7 @@ Message: "{message}"
 
 Log in to review the full event log: http://localhost:8000/app
 
-— AgentShield"""
+- AgentShield"""
     html = f"""<!DOCTYPE html><html><body style="margin:0;padding:0;background:#0a0a0a;font-family:Inter,system-ui,sans-serif">
 <div style="max-width:480px;margin:48px auto;padding:0 20px">
   <div style="margin-bottom:24px"><span style="font-weight:700;font-size:14px;color:#e8e6df">AgentShield</span></div>

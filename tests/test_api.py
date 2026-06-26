@@ -56,7 +56,7 @@ class TestShieldScan:
         assert r.status_code == 422
 
     def test_scan_with_llm_fallback_no_key(self):
-        """LLM detection requested but no key available — should fall back to pattern-only."""
+        """LLM detection requested but no key available - should fall back to pattern-only."""
         r = client.post("/api/shield/scan", json={"text": "test", "use_llm": True})
         assert r.status_code == 200
 
@@ -488,7 +488,7 @@ class TestRateLimiting:
         r = c.post("/api/auth/signup", json={
             "name": "test", "email": "overflow@test.com", "password": "longenough",
         })
-        # Either 429 or the actual response — rate limiter is per-client-IP
+        # Either 429 or the actual response - rate limiter is per-client-IP
         assert r.status_code in (200, 429)
 
 

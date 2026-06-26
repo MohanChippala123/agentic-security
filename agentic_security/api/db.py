@@ -1,12 +1,12 @@
 """SQLite persistence layer.
 
 Single file database at data/agentic.db. Tables:
-  users         — email, hashed password, salt, 2FA, lockout
-  scans         — one row per completed scan, linked to a user
-  findings      — one row per de-duplicated finding, linked to a scan
-  virtual_keys  — gateway virtual keys with live spend/blocked counters
-  gateway_events— full activity log per user (capped at 200/user)
-  upstream_keys — encrypted provider API key + provider name per user
+  users         - email, hashed password, salt, 2FA, lockout
+  scans         - one row per completed scan, linked to a user
+  findings      - one row per de-duplicated finding, linked to a scan
+  virtual_keys  - gateway virtual keys with live spend/blocked counters
+  gateway_events- full activity log per user (capped at 200/user)
+  upstream_keys - encrypted provider API key + provider name per user
 """
 
 from __future__ import annotations
@@ -336,7 +336,7 @@ def evt_list(user_email: str, limit: int = 50) -> list[dict]:
 
 def _fernet() -> "Fernet":
     """Return a Fernet instance keyed from AGSEC_SECRET env var or the on-disk session secret.
-    Fernet uses AES-128-CBC + HMAC-SHA256 — far stronger than the old XOR cipher."""
+    Fernet uses AES-128-CBC + HMAC-SHA256 - far stronger than the old XOR cipher."""
     import os, hashlib, base64
     from cryptography.fernet import Fernet
 
@@ -346,7 +346,7 @@ def _fernet() -> "Fernet":
         sf = Path(__file__).resolve().parents[2] / "data" / ".session_secret"
         raw = sf.read_text(encoding="utf-8").strip() if sf.exists() else "agentshield-default-secret"
 
-    # Derive a 32-byte key and base64url-encode it — Fernet requires exactly this format
+    # Derive a 32-byte key and base64url-encode it - Fernet requires exactly this format
     key = base64.urlsafe_b64encode(hashlib.sha256(raw.encode()).digest())
     return Fernet(key)
 

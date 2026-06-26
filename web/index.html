@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>AgentShield — Security LLM for AI Agents</title>
+<title>AgentShield - Security LLM for AI Agents</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -361,7 +361,7 @@ button:not(:disabled):active{transform:scale(.97)}
 
 <!-- demo-mode banner (shown only when signed in as the shared demo account) -->
 <div id="demoModeBar" style="display:none;background:var(--lime);color:#000;padding:9px 18px;font-size:12.5px;font-weight:600;align-items:center;justify-content:center;gap:14px;flex-wrap:wrap;text-align:center">
-  <span>👋 You're exploring the <b>live demo</b> — scan attacks and watch the firewall in action. Connecting your own keys & saving data needs a free account.</span>
+  <span>👋 You're exploring the <b>live demo</b> - scan attacks and watch the firewall in action. Connecting your own keys & saving data needs a free account.</span>
   <button onclick="demoSignup()" style="background:#000;color:var(--lime);border:none;padding:6px 16px;font-weight:700;font-size:11.5px;letter-spacing:.06em;text-transform:uppercase;cursor:pointer;font-family:var(--mono)">Sign up free →</button>
 </div>
 
@@ -393,7 +393,7 @@ button:not(:disabled):active{transform:scale(.97)}
   <div class="pg-header">
     <div>
       <h1>Protect</h1>
-      <p>A protective gateway in front of your real LLM API key. <b>Every request flows through the AgentShield Security LLM</b> — which acts as a security analyst, producing a full threat report (risk score, severity, attack chain, recommended action) — before being forwarded. Your real key never leaves the server.</p>
+      <p>A protective gateway in front of your real LLM API key. <b>Every request flows through the AgentShield Security LLM</b> - which acts as a security analyst, producing a full threat report (risk score, severity, attack chain, recommended action) - before being forwarded. Your real key never leaves the server.</p>
     </div>
     <button class="run-full" style="width:auto;padding:0 16px" onclick="showCreateKey()">+ New virtual key</button>
   </div>
@@ -432,7 +432,7 @@ button:not(:disabled):active{transform:scale(.97)}
   <!-- integration / SDK snippet -->
   <div class="sec" id="gwIntegration" style="display:none;border:1px solid var(--border);background:var(--panel);padding:14px 16px;margin-bottom:1px">
     <div class="panel-h" style="margin-bottom:10px"><b>Connect your app</b><span class="panel-badge">Drop-in proxy</span></div>
-    <p style="font-size:11.5px;color:var(--muted);margin-bottom:12px;line-height:1.65">Point your existing SDK at AgentShield instead of the provider. Every request flows through the security firewall automatically — no code changes beyond the base URL.</p>
+    <p style="font-size:11.5px;color:var(--muted);margin-bottom:12px;line-height:1.65">Point your existing SDK at AgentShield instead of the provider. Every request flows through the security firewall automatically - no code changes beyond the base URL.</p>
     <div style="display:flex;gap:6px;margin-bottom:10px">
       <button class="mm-try" onclick="showSnippet('openai')" id="snip-openai" style="font-size:10px">OpenAI SDK</button>
       <button class="mm-try" onclick="showSnippet('anthropic')" id="snip-anthropic" style="font-size:10px">Anthropic SDK</button>
@@ -469,7 +469,7 @@ button:not(:disabled):active{transform:scale(.97)}
   <div class="sec" style="display:grid;grid-template-columns:1.3fr 1fr;gap:1px;background:var(--border);border:1px solid var(--border)">
     <!-- keys table -->
     <div style="background:var(--panel);padding:16px">
-      <div class="panel-h" style="margin-bottom:10px"><b>Virtual Keys</b><span class="panel-badge" id="gwKeyCount">—</span></div>
+      <div class="panel-h" style="margin-bottom:10px"><b>Virtual Keys</b><span class="panel-badge" id="gwKeyCount">-</span></div>
       <input id="gwKeySearch" placeholder="Search keys…" oninput="filterKeys(this.value)" style="width:100%;background:rgba(255,255,255,.04);border:1px solid var(--border);outline:none;padding:7px 10px;font-size:12px;color:var(--ink);margin-bottom:10px;border-radius:5px">
       <div id="gwKeyList"><div class="empty" id="gwEmptyState" style="padding:20px 12px;text-align:left">
   <div style="font-size:13px;font-weight:600;color:var(--ink);margin-bottom:12px">Get started in 3 steps</div>
@@ -505,7 +505,7 @@ button:not(:disabled):active{transform:scale(.97)}
   <!-- Activity Chart -->
   <div class="sec" style="border:1px solid var(--border);background:var(--panel);padding:16px 18px;margin-bottom:1px">
     <div class="panel-h" style="margin-bottom:14px">
-      <b>Activity — last 7 days</b>
+      <b>Activity - last 7 days</b>
       <div style="margin-left:auto;display:flex;gap:14px;align-items:center;font-family:var(--mono);font-size:9.5px;color:var(--muted)">
         <span style="display:flex;align-items:center;gap:5px"><span style="width:10px;height:2px;background:var(--rose);display:inline-block;border-radius:1px"></span>Attacks</span>
         <span style="display:flex;align-items:center;gap:5px"><span style="width:10px;height:2px;background:var(--teal);display:inline-block;border-radius:1px"></span>Passed</span>
@@ -519,7 +519,7 @@ button:not(:disabled):active{transform:scale(.97)}
     <!-- LIVE FEED -->
     <div style="background:var(--panel);padding:16px">
       <div class="panel-h" style="margin-bottom:12px">
-        <b>Live Activity — see Security LLM protecting requests</b>
+        <b>Live Activity - see Security LLM protecting requests</b>
         <div style="display:flex;gap:8px;align-items:center">
           <span id="gwLiveDot" style="width:7px;height:7px;border-radius:50%;background:var(--teal);animation:pulse 1.5s infinite"></span>
           <span class="panel-badge" id="gwLiveCount">0 events</span>
@@ -576,10 +576,10 @@ Content-Type: application/json
 
   <!-- Score card -->
   <div class="kpis sec" style="border:1px solid var(--border)">
-    <div class="kpi"><div class="klabel">Security Score</div><div class="kval" id="rtScore" style="color:var(--lime)">—</div><div class="ksub" id="rtScoreSub">run the suite to see results</div></div>
-    <div class="kpi"><div class="klabel">Accuracy</div><div class="kval" id="rtAccuracy">—</div></div>
-    <div class="kpi"><div class="klabel">Attack Recall</div><div class="kval" id="rtRecall" style="color:var(--teal)">—</div></div>
-    <div class="kpi"><div class="klabel">False Positive Rate</div><div class="kval" id="rtFPR" style="color:var(--amber)">—</div></div>
+    <div class="kpi"><div class="klabel">Security Score</div><div class="kval" id="rtScore" style="color:var(--lime)">-</div><div class="ksub" id="rtScoreSub">run the suite to see results</div></div>
+    <div class="kpi"><div class="klabel">Accuracy</div><div class="kval" id="rtAccuracy">-</div></div>
+    <div class="kpi"><div class="klabel">Attack Recall</div><div class="kval" id="rtRecall" style="color:var(--teal)">-</div></div>
+    <div class="kpi"><div class="klabel">False Positive Rate</div><div class="kval" id="rtFPR" style="color:var(--amber)">-</div></div>
   </div>
 
   <div class="sec" style="display:grid;grid-template-columns:1fr 1.6fr;gap:1px;background:var(--border);border:1px solid var(--border);margin-top:1px">
@@ -590,7 +590,7 @@ Content-Type: application/json
     </div>
     <!-- test results -->
     <div style="background:var(--panel);padding:18px">
-      <div class="panel-h" style="margin-bottom:12px"><b>Per-test results</b><span class="panel-badge" id="rtTestCount">—</span></div>
+      <div class="panel-h" style="margin-bottom:12px"><b>Per-test results</b><span class="panel-badge" id="rtTestCount">-</span></div>
       <div class="scrolly" id="rtResults" style="max-height:520px"><div class="empty">Run the suite to see per-test outcomes.</div></div>
     </div>
   </div>
@@ -690,7 +690,7 @@ Content-Type: application/json
   <div class="pg-header">
     <div>
       <h1>Console</h1>
-      <p>Ask about your API-key activity — spend, blocked attacks, virtual keys, money saved, anomalies. Every answer comes from live data, powered by the Security LLM.</p>
+      <p>Ask about your API-key activity - spend, blocked attacks, virtual keys, money saved, anomalies. Every answer comes from live data, powered by the Security LLM.</p>
     </div>
   </div>
 
@@ -707,7 +707,7 @@ Content-Type: application/json
       <div id="mmChat" style="flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:12px">
         <div class="mm-msg mm-bot">
           <div class="mm-avatar">S</div>
-          <div class="mm-bubble">I'm your <b>Security Console</b>. Ask me anything about your API-key activity — spend, blocked attacks, virtual keys, money saved, or anomalies. Every answer comes from <b>live gateway data</b>, not a chatbot.</div>
+          <div class="mm-bubble">I'm your <b>Security Console</b>. Ask me anything about your API-key activity - spend, blocked attacks, virtual keys, money saved, or anomalies. Every answer comes from <b>live gateway data</b>, not a chatbot.</div>
         </div>
       </div>
       <div style="padding:8px 12px;display:flex;gap:6px;flex-wrap:wrap;border-top:1px solid var(--border)">
@@ -741,7 +741,7 @@ Content-Type: application/json
         <div style="display:flex;align-items:center;gap:6px"><span style="width:5px;height:5px;border-radius:50%;background:var(--lime);flex-shrink:0"></span>Reads live gateway state</div>
         <div style="display:flex;align-items:center;gap:6px"><span style="width:5px;height:5px;border-radius:50%;background:var(--lime);flex-shrink:0"></span>Real spend, blocks &amp; savings</div>
         <div style="display:flex;align-items:center;gap:6px"><span style="width:5px;height:5px;border-radius:50%;background:var(--lime);flex-shrink:0"></span>Per-key budget &amp; anomaly alerts</div>
-        <div style="display:flex;align-items:center;gap:6px"><span style="width:5px;height:5px;border-radius:50%;background:var(--lime);flex-shrink:0"></span>Deterministic — never hallucinates</div>
+        <div style="display:flex;align-items:center;gap:6px"><span style="width:5px;height:5px;border-radius:50%;background:var(--lime);flex-shrink:0"></span>Deterministic - never hallucinates</div>
       </div>
     </div>
   </div>
@@ -941,7 +941,7 @@ async function loadGwChart(){
     if(_gwChartInst){ _gwChartInst.destroy(); _gwChartInst = null; }
     const hasData = d.attacks.some(v=>v>0) || d.passed.some(v=>v>0);
     if(!hasData){
-      canvas.parentElement.innerHTML = '<div class="empty" style="height:140px;display:flex;align-items:center;justify-content:center">No requests yet — send some through the gateway to see activity here.</div>';
+      canvas.parentElement.innerHTML = '<div class="empty" style="height:140px;display:flex;align-items:center;justify-content:center">No requests yet - send some through the gateway to see activity here.</div>';
       return;
     }
     _gwChartInst = new Chart(canvas, {
@@ -1018,8 +1018,8 @@ async function loadGatewayTab(){
     const provLabel=_PROVIDER_LABELS[s.provider]||s.provider||'';
     const provColor=_PROVIDER_COLORS[s.provider]||'var(--teal)';
     $('gwStatus').innerHTML = s.real_key_configured
-      ? `<b style="color:${provColor}">● Upstream: ${esc(provLabel||'Provider')}</b> — ${esc(s.note)}`
-      : `<b style="color:var(--amber)">● Demo mode: AgentShield Security LLM</b> — ${esc(s.note)}`;
+      ? `<b style="color:${provColor}">● Upstream: ${esc(provLabel||'Provider')}</b> - ${esc(s.note)}`
+      : `<b style="color:var(--amber)">● Demo mode: AgentShield Security LLM</b> - ${esc(s.note)}`;
     // show / hide demo banner
     const banner=$('demoBanner');
     if(banner) banner.style.display=_demoMode?'flex':'none';
@@ -1107,7 +1107,7 @@ async function runJudge(){
   try{
     const v=await (await fetch('/api/gateway/judge',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text})})).json();
     const safe=v.safe;
-    const sim=v.attack_similarity!=null?(v.attack_similarity*100).toFixed(0)+'%':'—';
+    const sim=v.attack_similarity!=null?(v.attack_similarity*100).toFixed(0)+'%':'-';
     if(safe){
       $('judgeResult').innerHTML=`<div style="background:var(--teal-bg);border:1px solid rgba(58,208,164,.3);padding:12px">
         <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px"><span class="fbadge fb-low">SAFE</span><span style="font-size:12px;color:var(--teal);font-weight:600">Security LLM would allow this</span></div>
@@ -1132,7 +1132,7 @@ async function loadGwKeys(){
     $('gwKeyCount').textContent=keys.length+' keys';
     // fill test console dropdown
     const sel=$('gwTestKey');
-    if(sel) sel.innerHTML=keys.length?keys.map(k=>`<option value="${k.key}">${esc(k.name)} (${esc(k.key)})</option>`).join(''):'<option>— create a key first —</option>';
+    if(sel) sel.innerHTML=keys.length?keys.map(k=>`<option value="${k.key}">${esc(k.name)} (${esc(k.key)})</option>`).join(''):'<option>- create a key first -</option>';
     if(!keys.length){ $('gwKeyList').innerHTML='<div class="empty" id="gwEmptyState" style="padding:20px 12px;text-align:left"><div style="font-size:13px;font-weight:600;color:var(--ink);margin-bottom:12px">Get started in 3 steps</div><div style="display:flex;flex-direction:column;gap:8px"><div style="display:flex;align-items:center;gap:10px;font-size:12px"><span style="width:20px;height:20px;border-radius:50%;background:rgba(196,241,53,.12);border:1px solid rgba(196,241,53,.2);color:var(--lime);font-size:10px;display:grid;place-items:center;flex-shrink:0;font-family:var(--mono)">1</span><span style="color:rgba(255,255,255,.65)">Paste your provider key above (OpenAI, Anthropic, Groq…)</span></div><div style="display:flex;align-items:center;gap:10px;font-size:12px"><span style="width:20px;height:20px;border-radius:50%;background:rgba(196,241,53,.12);border:1px solid rgba(196,241,53,.2);color:var(--lime);font-size:10px;display:grid;place-items:center;flex-shrink:0;font-family:var(--mono)">2</span><span style="color:rgba(255,255,255,.65)">Click <b style="color:var(--ink)">+ New virtual key</b> and set a budget</span></div><div style="display:flex;align-items:center;gap:10px;font-size:12px"><span style="width:20px;height:20px;border-radius:50%;background:rgba(196,241,53,.12);border:1px solid rgba(196,241,53,.2);color:var(--lime);font-size:10px;display:grid;place-items:center;flex-shrink:0;font-family:var(--mono)">3</span><span style="color:rgba(255,255,255,.65)">Replace your real key with the <code style="font-family:var(--mono);font-size:10px;background:rgba(255,255,255,.07);padding:1px 5px">agk-…</code> virtual key in your app</span></div></div></div>'; return; }
     $('gwKeyList').innerHTML=keys.map(k=>{
       const col=k.pct_used>=100?'var(--rose)':k.pct_used>=70?'var(--amber)':'var(--teal)';
@@ -1196,7 +1196,7 @@ function gwDetectProvider(key){
     sel.value=detected;
     hint.innerHTML=`Detected: <b style="color:${_PROVIDER_COLORS[detected]||'var(--teal)'}">${_PROVIDER_LABELS[detected]||detected}</b>`;
   } else {
-    hint.innerHTML='<span style="color:var(--muted)">Unknown prefix — select provider manually</span>';
+    hint.innerHTML='<span style="color:var(--muted)">Unknown prefix - select provider manually</span>';
   }
 }
 
@@ -1230,7 +1230,7 @@ function showSnippet(type){
   const base=window.location.origin;
   const vk=_virtualKey||'agk-your-virtual-key';
   const snippets={
-    openai:`# OpenAI SDK — just change base_url + api_key
+    openai:`# OpenAI SDK - just change base_url + api_key
 from openai import OpenAI
 
 client = OpenAI(
@@ -1245,7 +1245,7 @@ response = client.chat.completions.create(
 print(response.choices[0].message.content)
 # Every request is screened by the Security LLM before forwarding.`,
 
-    anthropic:`# Anthropic SDK — just change base_url + api_key
+    anthropic:`# Anthropic SDK - just change base_url + api_key
 import anthropic
 
 client = anthropic.Anthropic(
@@ -1260,7 +1260,7 @@ message = client.messages.create(
 )
 print(message.content[0].text)`,
 
-    groq:`# Groq SDK — just change base_url + api_key
+    groq:`# Groq SDK - just change base_url + api_key
 from groq import Groq
 
 client = Groq(
@@ -1274,7 +1274,7 @@ response = client.chat.completions.create(
 )
 print(response.choices[0].message.content)`,
 
-    curl:`# cURL — works with any HTTP client
+    curl:`# cURL - works with any HTTP client
 curl ${base}/v1/chat/completions \\
   -H "Authorization: Bearer ${vk}" \\
   -H "Content-Type: application/json" \\
@@ -1304,7 +1304,7 @@ async function gwDisconnectKey(){
 
 function showCreateKey(){
   if(_demoMode){
-    // demo mode — block key creation
+    // demo mode - block key creation
     const el=$('gwNewKey')||{};
     $('gwModal').style.display='flex';
     $('gwNewKey').innerHTML=`<div style="background:var(--amber-bg);border:1px solid rgba(245,166,74,.35);padding:14px;border-radius:8px;text-align:center">
@@ -1316,7 +1316,7 @@ function showCreateKey(){
     const btn=$('gwModal').querySelector('.run-full'); if(btn) btn.style.display='none';
     return;
   }
-  // real mode — show form, reset all fields
+  // real mode - show form, reset all fields
   ['gwName','gwBudget','gwRate','gwExpireDays','gwAllowedModels','gwAllowedHours','gwVelMax','gwVelWindow']
     .forEach(id=>{ const e=$(id); if(!e) return; if(e.parentElement) e.parentElement.style.display='';
       if(id==='gwBudget') e.value='5';
@@ -1336,7 +1336,7 @@ function closeCreateKey(){
 }
 
 // Map masked key -> full key for keys created in this session (so the test
-// console can use them — the server only ever returns full keys at creation).
+// console can use them - the server only ever returns full keys at creation).
 const _FULL_KEYS = {};
 function _mask(k){ return k.slice(0,8)+'...'+k.slice(-4); }
 
@@ -1368,7 +1368,7 @@ async function gwCreate(){
     const snipEl=$('gwSnippet');
     if(snipEl && snipEl.textContent) showSnippet('openai');
     $('gwNewKey').innerHTML=`<div style="background:var(--teal-bg);border:1px solid rgba(58,208,164,.3);padding:12px;border-radius:8px">
-      <div style="font-size:11px;color:var(--muted);margin-bottom:6px">Save this key — it won't be shown again. Use it as your API key with the integration snippet below.</div>
+      <div style="font-size:11px;color:var(--muted);margin-bottom:6px">Save this key - it won't be shown again. Use it as your API key with the integration snippet below.</div>
       <code style="font-family:var(--mono);font-size:11px;color:var(--teal);word-break:break-all">${esc(k.key)}</code></div>`;
     toast('Virtual key created');
     loadGatewayTab();
@@ -1395,9 +1395,9 @@ async function gwTest(){
   if(_demoMode){
     $('gwTestResult').innerHTML=`<div style="background:var(--amber-bg);border:1px solid rgba(245,166,74,.35);padding:12px;border-radius:8px">
       <span class="fbadge fb-high" style="margin-bottom:8px;display:inline-block">Demo Mode</span>
-      <div style="font-size:12px;color:rgba(255,255,255,.7);line-height:1.6">Connect a real provider key to test actual upstream forwarding. The Security LLM will still analyse the request — but responses will come from the local demo model.</div>
+      <div style="font-size:12px;color:rgba(255,255,255,.7);line-height:1.6">Connect a real provider key to test actual upstream forwarding. The Security LLM will still analyse the request - but responses will come from the local demo model.</div>
     </div>`;
-    // Still send in demo mode but add the banner — let it proceed
+    // Still send in demo mode but add the banner - let it proceed
   }
   $('gwTestResult').innerHTML='<div class="empty"><span class="spin"></span> Sending…</div>';
   try{
@@ -1428,14 +1428,14 @@ async function gwTest(){
 let MM_SESSION=null;
 let _lastBotResponse='';
 
-function loadMyModelTab(){ /* Console needs no preload — answers are fetched per question. */ }
+function loadMyModelTab(){ /* Console needs no preload - answers are fetched per question. */ }
 
 function mmClearChat(){
   if(!confirm('Clear chat history?')) return;
   _lastBotResponse='';
   $('mmChat').innerHTML=`<div class="mm-msg mm-bot">
     <div class="mm-avatar">⛨</div>
-    <div class="mm-bubble">I'm your <b>Security Console</b>. Ask me anything about your API-key activity — spend, blocked attacks, virtual keys, money saved, or anomalies. Every answer comes from <b>live gateway data</b>, not a chatbot.</div>
+    <div class="mm-bubble">I'm your <b>Security Console</b>. Ask me anything about your API-key activity - spend, blocked attacks, virtual keys, money saved, or anomalies. Every answer comes from <b>live gateway data</b>, not a chatbot.</div>
   </div>`;
 }
 
@@ -1583,7 +1583,7 @@ function renderAnalystReport(r){
       ${chainHtml?`<div style="margin-bottom:12px"><div style="font-family:var(--mono);font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;margin-bottom:6px">attack chain</div><div style="display:flex;gap:4px;flex-wrap:wrap;align-items:center">${chainHtml}</div></div>`:''}
       ${sigs?`<div style="margin-bottom:12px"><div style="font-family:var(--mono);font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;margin-bottom:4px">threat signals (${(r.signals||[]).length})</div>${sigs}</div>`:''}
       ${r.recommended_action?`<div style="font-size:11.5px;color:rgba(255,255,255,.7);background:rgba(255,255,255,.03);padding:10px 12px;border-left:2px solid var(--violet)"><b style="color:var(--violet);font-family:var(--mono);font-size:9px;text-transform:uppercase;letter-spacing:.1em;display:block;margin-bottom:5px">recommended action</b>${esc(r.recommended_action)}</div>`:''}
-      <div style="font-family:var(--mono);font-size:9px;color:var(--muted);margin-top:10px;text-align:right">— ${esc(r.analyst||'AgentShield Security LLM')}</div>
+      <div style="font-family:var(--mono);font-size:9px;color:var(--muted);margin-top:10px;text-align:right">- ${esc(r.analyst||'AgentShield Security LLM')}</div>
     </div>`;
 }
 async function runToolVerify(){
@@ -1689,7 +1689,7 @@ async function showUsersModal(){
     const users=j.users||[];
     if(!users.length){ $('usersBody').innerHTML='<div class="empty">No users registered yet.</div>'; return; }
     const fmt=(ts)=>{
-      if(!ts) return '—';
+      if(!ts) return '-';
       const sec=Math.floor(Date.now()/1000)-ts;
       if(sec<60) return 'just now';
       if(sec<3600) return Math.floor(sec/60)+'m ago';
@@ -1736,7 +1736,7 @@ async function showSecModal(){
         <div style="padding:20px 4px">
           <div style="background:rgba(245,166,74,.08);border:1px solid rgba(245,166,74,.25);border-radius:8px;padding:16px 18px;line-height:1.7">
             <div style="font-size:13px;font-weight:700;margin-bottom:6px;color:var(--amber)">Read-only demo account</div>
-            <div style="font-size:12px;color:rgba(255,255,255,.7)">This is a shared public demo, so account settings — password, 2FA, email, provider keys and webhooks — are locked. <a href="/login#signup" style="color:var(--lime)">Sign up for a free account</a> to unlock everything.</div>
+            <div style="font-size:12px;color:rgba(255,255,255,.7)">This is a shared public demo, so account settings - password, 2FA, email, provider keys and webhooks - are locked. <a href="/login#signup" style="color:var(--lime)">Sign up for a free account</a> to unlock everything.</div>
           </div>
         </div>`;
       return;
@@ -1755,7 +1755,7 @@ async function showSecModal(){
           </div>
           ${configured
             ? `<div style="font-size:11.5px;color:var(--muted)">Gmail is connected. Codes are sent automatically on login when 2FA is enabled.</div>`
-            : `<div style="font-size:11.5px;color:var(--muted);margin-bottom:12px;line-height:1.65">Connect your Gmail to send verification codes. You need a Gmail App Password — <a href="https://myaccount.google.com/apppasswords" target="_blank" style="color:var(--lime)">get one here</a>.</div>
+            : `<div style="font-size:11.5px;color:var(--muted);margin-bottom:12px;line-height:1.65">Connect your Gmail to send verification codes. You need a Gmail App Password - <a href="https://myaccount.google.com/apppasswords" target="_blank" style="color:var(--lime)">get one here</a>.</div>
                <div class="field" style="margin-bottom:8px"><label style="display:block;font-family:var(--mono);font-size:9.5px;text-transform:uppercase;letter-spacing:.12em;color:var(--muted);margin-bottom:6px">Gmail address</label>
                  <input id="gmailUser" type="email" placeholder="your@gmail.com" style="width:100%;background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:6px;outline:none;padding:9px 12px;font-size:13px;color:var(--ink)">
                </div>
@@ -1905,7 +1905,7 @@ async function createWebhook(){
     // Show the secret once
     const secBanner=document.createElement('div');
     secBanner.style.cssText='margin-top:10px;padding:10px 13px;background:rgba(196,241,53,.07);border:1px solid rgba(196,241,53,.2);border-radius:6px;font-size:11px;line-height:1.7';
-    secBanner.innerHTML=`<b style="color:var(--lime)">Webhook secret (save this — shown once):</b><br><code style="font-family:var(--mono);font-size:10px;color:var(--ink);word-break:break-all">${esc(v.secret)}</code><br><span style="color:var(--muted)">Use to verify the <code style="font-family:var(--mono);font-size:9.5px">X-AgentShield-Signature</code> header on incoming requests.</span>`;
+    secBanner.innerHTML=`<b style="color:var(--lime)">Webhook secret (save this - shown once):</b><br><code style="font-family:var(--mono);font-size:10px;color:var(--ink);word-break:break-all">${esc(v.secret)}</code><br><span style="color:var(--muted)">Use to verify the <code style="font-family:var(--mono);font-size:9.5px">X-AgentShield-Signature</code> header on incoming requests.</span>`;
     document.getElementById('webhookList').after(secBanner);
   }catch(e){msg.innerHTML=`<span style="color:var(--rose)">${esc(e.message)}</span>`;}
   btn.disabled=false;btn.textContent='Create webhook';
@@ -1957,7 +1957,7 @@ async function testOTP(){
     const v=await r.json();
     if(v.ok){
       msg.innerHTML=v.dev_mode
-        ?'<span style="color:var(--amber)">Dev mode — check server console for the code.</span>'
+        ?'<span style="color:var(--amber)">Dev mode - check server console for the code.</span>'
         :'<span style="color:var(--teal)">Test code sent. Check your inbox.</span>';
     } else {
       msg.innerHTML=`<span style="color:var(--rose)">${esc(v.detail||'Failed')}</span>`;
@@ -1996,7 +1996,7 @@ function applyDemoMode(){
   // label the account chip
   const nm=$('meName'); if(nm) nm.textContent='Demo';
   const pic=$('mePic'); if(pic) pic.textContent='D';
-  const chip=$('meChip'); if(chip) chip.title='Demo account — click to exit';
+  const chip=$('meChip'); if(chip) chip.title='Demo account - click to exit';
   // replace the "connect your real provider key" panel with a signup prompt
   const up=document.querySelector('#tab-gateway .sec');
   if(up && up.querySelector('#gwUpstreamKey')){
@@ -2004,7 +2004,7 @@ function applyDemoMode(){
       '<div style="font-size:11.5px;color:var(--muted);margin-bottom:12px;line-height:1.6">The demo runs on a local model so you can see the firewall work without a key. Sign up to route your real OpenAI / Anthropic / Groq traffic through AgentShield.</div>'+
       '<button class="run-full" style="width:auto;padding:0 18px;margin:0 auto" onclick="demoSignup()">Sign up free →</button></div>';
   }
-  // land on the Test tab — the self-test shows the firewall blocking attacks with
+  // land on the Test tab - the self-test shows the firewall blocking attacks with
   // zero setup, the best first impression of the demo.
   const tabs=document.querySelectorAll('.nav-tabs a');
   if(tabs[2]) showTab('redteam', tabs[2]);
@@ -2025,7 +2025,7 @@ async function runQuickScan(){
     const r=await fetch('/api/shield/scan',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text})});
     const v=await r.json();
     const blocked=v.blocked||v.verdict==='attack'||v.is_attack;
-    const score=v.risk_score??'—';
+    const score=v.risk_score??'-';
     result.innerHTML=blocked
       ?`<span style="color:var(--rose);font-weight:700">⛔ ATTACK</span> <span style="color:var(--muted);font-size:10.5px">(score: ${score})</span>`
       :`<span style="color:var(--teal);font-weight:700">✓ SAFE</span> <span style="color:var(--muted);font-size:10.5px">(score: ${score})</span>`;
