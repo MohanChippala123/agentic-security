@@ -15,8 +15,7 @@
       * {
         box-sizing: border-box;
         margin: 0;
-        padding: 0;
-      }
+        padding: 0}
       :root {
         --bg: #0f0f0f;
         --panel: #161616;
@@ -34,20 +33,17 @@
         --teal-bg: rgba(58, 208, 164, 0.1);
         --violet: #a99cff;
         --violet-bg: rgba(169, 156, 255, 0.1);
-        --mono: "JetBrains Mono", ui-monospace, monospace;
-      }
+        --mono: "JetBrains Mono", ui-monospace, monospace}
       html,
       body {
         height: 100%;
         background: var(--bg);
         color: var(--ink);
         font-family: "Inter", system-ui, sans-serif;
-        -webkit-font-smoothing: antialiased;
-      }
+        -webkit-font-smoothing: antialiased}
       a {
         color: inherit;
-        text-decoration: none;
-      }
+        text-decoration: none}
 
       /* ── top nav ── */
       .topnav {
@@ -60,8 +56,7 @@
         flex-shrink: 0;
         position: sticky;
         top: 0;
-        z-index: 50;
-      }
+        z-index: 50}
       .logo {
         display: flex;
         align-items: center;
@@ -70,21 +65,18 @@
         font-size: 14px;
         color: var(--ink);
         margin-right: 32px;
-        flex-shrink: 0;
-      }
+        flex-shrink: 0}
       .logo .mk {
         width: 26px;
         height: 26px;
         border: 1.5px solid rgba(255, 255, 255, 0.35);
         display: grid;
         place-items: center;
-        font-size: 12px;
-      }
+        font-size: 12px}
       .nav-tabs {
         display: flex;
         height: 100%;
-        gap: 2px;
-      }
+        gap: 2px}
       .nav-tabs a {
         display: flex;
         align-items: center;
@@ -94,21 +86,17 @@
         color: rgba(255, 255, 255, 0.4);
         border-bottom: 2px solid transparent;
         transition: color 0.12s;
-        cursor: pointer;
-      }
+        cursor: pointer}
       .nav-tabs a.on {
         color: var(--ink);
-        border-bottom-color: var(--ink);
-      }
+        border-bottom-color: var(--ink)}
       .nav-tabs a:hover {
-        color: rgba(255, 255, 255, 0.75);
-      }
+        color: rgba(255, 255, 255, 0.75)}
       .nav-right {
         margin-left: auto;
         display: flex;
         gap: 8px;
-        align-items: center;
-      }
+        align-items: center}
       .nav-right .dots {
         width: 32px;
         height: 32px;
@@ -117,8 +105,7 @@
         place-items: center;
         font-size: 16px;
         color: var(--muted);
-        cursor: pointer;
-      }
+        cursor: pointer}
       .nav-right .me-chip {
         display: flex;
         align-items: center;
@@ -126,11 +113,9 @@
         padding: 5px 10px;
         border: 1px solid var(--border);
         cursor: pointer;
-        transition: border-color 0.12s;
-      }
+        transition: border-color 0.12s}
       .nav-right .me-chip:hover {
-        border-color: var(--border2);
-      }
+        border-color: var(--border2)}
       .nav-right .me-chip .pic {
         width: 22px;
         height: 22px;
@@ -139,12 +124,10 @@
         place-items: center;
         font-size: 9px;
         font-weight: 700;
-        color: var(--violet);
-      }
+        color: var(--violet)}
       .nav-right .me-chip .nm {
         font-size: 12px;
-        color: rgba(255, 255, 255, 0.6);
-      }
+        color: rgba(255, 255, 255, 0.6)}
 
       /* subnav */
       .subnav {
@@ -155,20 +138,16 @@
         border-bottom: 1px solid var(--border);
         padding: 0 24px;
         height: 38px;
-        flex-shrink: 0;
-      }
+        flex-shrink: 0}
       .subnav a {
         font-size: 12px;
         color: rgba(255, 255, 255, 0.38);
         cursor: pointer;
-        transition: color 0.12s;
-      }
+        transition: color 0.12s}
       .subnav a:hover {
-        color: rgba(255, 255, 255, 0.7);
-      }
+        color: rgba(255, 255, 255, 0.7)}
       .subnav a.on {
-        color: rgba(255, 255, 255, 0.65);
-      }
+        color: rgba(255, 255, 255, 0.65)}
 
       /* ── body ── */
       .body {
@@ -178,28 +157,24 @@
         gap: 18px;
         max-width: 1400px;
         margin: 0 auto;
-        width: 100%;
-      }
+        width: 100%}
 
       /* page header */
       .pg-header {
         display: flex;
         align-items: flex-start;
         justify-content: space-between;
-        gap: 16px;
-      }
+        gap: 16px}
       .pg-header h1 {
         font-size: 22px;
         font-weight: 700;
-        letter-spacing: -0.02em;
-      }
+        letter-spacing: -0.02em}
       .pg-header p {
         font-size: 13px;
         color: var(--muted);
         margin-top: 5px;
         max-width: 480px;
-        line-height: 1.55;
-      }
+        line-height: 1.55}
       .runbtn {
         display: flex;
         align-items: center;
@@ -214,23 +189,19 @@
         cursor: pointer;
         transition: all 0.14s;
         white-space: nowrap;
-        flex-shrink: 0;
-      }
+        flex-shrink: 0}
       .runbtn:hover {
         background: rgba(255, 255, 255, 0.06);
-        color: #fff;
-      }
+        color: #fff}
       .runbtn:disabled {
         opacity: 0.45;
-        cursor: default;
-      }
+        cursor: default}
 
       /* search + filter bar */
       .filterbar {
         display: flex;
         align-items: center;
-        gap: 10px;
-      }
+        gap: 10px}
       .search-box {
         flex: 1;
         display: flex;
@@ -240,8 +211,7 @@
         border: 1px solid var(--border);
         padding: 10px 14px;
         color: var(--muted);
-        font-size: 13px;
-      }
+        font-size: 13px}
       .search-box input {
         border: none;
         background: none;
@@ -249,15 +219,12 @@
         font-family: "Inter", sans-serif;
         font-size: 13px;
         flex: 1;
-        color: var(--ink);
-      }
+        color: var(--ink)}
       .search-box input::placeholder {
-        color: rgba(255, 255, 255, 0.22);
-      }
+        color: rgba(255, 255, 255, 0.22)}
       .filter-pills {
         display: flex;
-        gap: 6px;
-      }
+        gap: 6px}
       .fpill {
         font-family: var(--mono);
         font-size: 10.5px;
@@ -268,124 +235,100 @@
         background: transparent;
         border: 1px solid var(--border);
         color: rgba(255, 255, 255, 0.4);
-        cursor: pointer;
-      }
+        cursor: pointer}
       .fpill.on {
         background: rgba(255, 255, 255, 0.08);
         color: var(--ink);
-        border-color: var(--border2);
-      }
+        border-color: var(--border2)}
 
       /* KPI cards */
       .kpis {
         display: grid;
         grid-template-columns: repeat(4, 1fr);
         gap: 1px;
-        background: var(--border);
-      }
+        background: var(--border)}
       .kpi {
         background: var(--panel);
-        padding: 18px 20px;
-      }
+        padding: 18px 20px}
       .kpi .klabel {
         font-family: var(--mono);
         font-size: 9.5px;
         text-transform: uppercase;
         letter-spacing: 0.16em;
         color: var(--muted);
-        margin-bottom: 14px;
-      }
+        margin-bottom: 14px}
       .kpi .kval {
         font-size: 28px;
         font-weight: 700;
         line-height: 1;
-        color: var(--ink);
-      }
+        color: var(--ink)}
       .kpi .ksub {
         font-size: 11px;
         color: var(--muted);
-        margin-top: 5px;
-      }
+        margin-top: 5px}
       .kpi .krow {
         display: flex;
         gap: 18px;
-        margin-top: 2px;
-      }
+        margin-top: 2px}
       .kpi .ks {
         display: flex;
         flex-direction: column;
-        gap: 4px;
-      }
+        gap: 4px}
       .kpi .ks .kn {
         font-size: 20px;
         font-weight: 700;
-        line-height: 1;
-      }
+        line-height: 1}
       .kpi .ks .kl {
         font-size: 9.5px;
         color: var(--muted);
         text-transform: uppercase;
-        letter-spacing: 0.06em;
-      }
+        letter-spacing: 0.06em}
       .sev-crit {
-        color: var(--rose);
-      }
+        color: var(--rose)}
       .sev-high {
-        color: var(--amber);
-      }
+        color: var(--amber)}
       .sev-med {
-        color: rgba(255, 255, 255, 0.5);
-      }
+        color: rgba(255, 255, 255, 0.5)}
       .sev-low {
-        color: rgba(255, 255, 255, 0.35);
-      }
+        color: rgba(255, 255, 255, 0.35)}
       .grade-F,
       .grade-D {
-        color: var(--rose);
-      }
+        color: var(--rose)}
       .grade-C {
-        color: var(--amber);
-      }
+        color: var(--amber)}
       .grade-B,
       .grade-A {
-        color: var(--teal);
-      }
+        color: var(--teal)}
       .mini-bars {
         display: flex;
         align-items: flex-end;
         gap: 4px;
         height: 32px;
-        margin-top: 14px;
-      }
+        margin-top: 14px}
       .mini-bars span {
         flex: 1;
-        min-height: 3px;
-      }
+        min-height: 3px}
 
       /* panels */
       .panels {
         display: grid;
         grid-template-columns: 1fr 1fr;
         gap: 1px;
-        background: var(--border);
-      }
+        background: var(--border)}
       .panel {
         background: var(--panel);
-        padding: 18px;
-      }
+        padding: 18px}
       .panel-h {
         display: flex;
         align-items: center;
         justify-content: space-between;
-        margin-bottom: 14px;
-      }
+        margin-bottom: 14px}
       .panel-h b {
         font-family: var(--mono);
         font-size: 9.5px;
         text-transform: uppercase;
         letter-spacing: 0.16em;
-        color: var(--muted);
-      }
+        color: var(--muted)}
       .panel-badge {
         font-family: var(--mono);
         font-size: 9.5px;
@@ -393,12 +336,10 @@
         letter-spacing: 0.1em;
         padding: 4px 10px;
         background: rgba(255, 255, 255, 0.06);
-        color: rgba(255, 255, 255, 0.45);
-      }
+        color: rgba(255, 255, 255, 0.45)}
       .scrolly {
         max-height: 320px;
-        overflow: auto;
-      }
+        overflow: auto}
 
       /* finding rows */
       .frow {
@@ -408,17 +349,13 @@
         padding: 9px 8px;
         border-bottom: 1px solid rgba(255, 255, 255, 0.05);
         cursor: pointer;
-        transition: background 0.1s;
-      }
+        transition: background 0.1s}
       .frow:last-child {
-        border-bottom: none;
-      }
+        border-bottom: none}
       .frow:hover {
-        background: rgba(255, 255, 255, 0.03);
-      }
+        background: rgba(255, 255, 255, 0.03)}
       .frow.sel {
-        background: rgba(255, 255, 255, 0.05);
-      }
+        background: rgba(255, 255, 255, 0.05)}
       .fbadge {
         font-family: var(--mono);
         font-size: 9px;
@@ -426,84 +363,68 @@
         padding: 3px 7px;
         letter-spacing: 0.06em;
         text-transform: uppercase;
-        flex-shrink: 0;
-      }
+        flex-shrink: 0}
       .fb-crit {
         background: var(--rose-bg);
-        color: var(--rose);
-      }
+        color: var(--rose)}
       .fb-high {
         background: var(--amber-bg);
-        color: var(--amber);
-      }
+        color: var(--amber)}
       .fb-med {
         background: rgba(255, 220, 100, 0.1);
-        color: #ffd66b;
-      }
+        color: #ffd66b}
       .fb-low {
         background: rgba(58, 208, 164, 0.1);
-        color: var(--teal);
-      }
+        color: var(--teal)}
       .fb-info {
         background: rgba(255, 255, 255, 0.06);
-        color: rgba(255, 255, 255, 0.4);
-      }
+        color: rgba(255, 255, 255, 0.4)}
       .ftitle {
         font-size: 12.5px;
         flex: 1;
         white-space: nowrap;
         overflow: hidden;
-        text-overflow: ellipsis;
-      }
+        text-overflow: ellipsis}
       .fprobe {
         font-size: 10.5px;
         color: var(--muted);
         font-family: var(--mono);
-        flex-shrink: 0;
-      }
+        flex-shrink: 0}
       .empty {
         color: var(--muted);
         font-size: 12.5px;
         text-align: center;
-        padding: 28px 12px;
-      }
+        padding: 28px 12px}
 
       /* finding detail */
       .fd-head {
         display: flex;
         align-items: flex-start;
         gap: 10px;
-        margin-bottom: 14px;
-      }
+        margin-bottom: 14px}
       .fd-title {
         font-size: 13.5px;
-        font-weight: 600;
-      }
+        font-weight: 600}
       .fd-meta {
         font-size: 11px;
         color: var(--muted);
-        margin-top: 3px;
-      }
+        margin-top: 3px}
       .fd-row {
         padding: 9px 0;
-        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-      }
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05)}
       .fd-row:last-child {
-        border-bottom: none;
-      }
+        border-bottom: none}
       .fd-k {
         font-family: var(--mono);
         font-size: 9px;
         text-transform: uppercase;
         letter-spacing: 0.12em;
         color: var(--muted);
-        margin-bottom: 5px;
-      }
+        margin-bottom: 5px}
       .fd-v {
         font-size: 12.5px;
         line-height: 1.6;
-        color: rgba(255, 255, 255, 0.75);
-      }
+        color: rgba(255, 255, 255, 0.75)}
       .code {
         background: #0a0a0a;
         border: 1px solid var(--border);
@@ -516,25 +437,21 @@
         max-height: 130px;
         overflow: auto;
         line-height: 1.7;
-        margin-top: 5px;
-      }
+        margin-top: 5px}
 
       /* bottom: config + history */
       .bottom {
         display: grid;
         grid-template-columns: 1fr 1fr;
         gap: 1px;
-        background: var(--border);
-      }
+        background: var(--border)}
 
       /* scan config */
       .config-panel {
         background: var(--panel);
-        padding: 18px;
-      }
+        padding: 18px}
       .field {
-        margin-bottom: 14px;
-      }
+        margin-bottom: 14px}
       .field label {
         font-family: var(--mono);
         font-size: 9.5px;
@@ -542,8 +459,7 @@
         letter-spacing: 0.14em;
         color: var(--muted);
         display: block;
-        margin-bottom: 7px;
-      }
+        margin-bottom: 7px}
       .field input {
         width: 100%;
         background: rgba(255, 255, 255, 0.04);
@@ -552,41 +468,33 @@
         padding: 10px 12px;
         font-family: "Inter", sans-serif;
         font-size: 13px;
-        color: var(--ink);
-      }
+        color: var(--ink)}
       .field input:focus {
-        border-color: var(--border2);
-      }
+        border-color: var(--border2)}
       .probe-list {
         display: flex;
         flex-direction: column;
         gap: 2px;
-        margin-bottom: 14px;
-      }
+        margin-bottom: 14px}
       .pchk {
         display: flex;
         align-items: center;
         gap: 10px;
         padding: 8px;
         cursor: pointer;
-        transition: background 0.1s;
-      }
+        transition: background 0.1s}
       .pchk:hover {
-        background: rgba(255, 255, 255, 0.03);
-      }
+        background: rgba(255, 255, 255, 0.03)}
       .pchk input {
         width: 14px;
         height: 14px;
-        accent-color: var(--lime);
-      }
+        accent-color: var(--lime)}
       .pchk .pn {
         font-size: 12.5px;
-        font-weight: 500;
-      }
+        font-weight: 500}
       .pchk .pd {
         font-size: 10.5px;
-        color: var(--muted);
-      }
+        color: var(--muted)}
       .run-full {
         width: 100%;
         background: var(--lime);
@@ -605,35 +513,29 @@
         transition:
           opacity var(--trans),
           transform var(--trans),
-          box-shadow var(--trans);
-      }
+          box-shadow var(--trans)}
       .run-full:hover {
         opacity: 0.93;
         box-shadow:
           0 4px 20px rgba(196, 241, 53, 0.38),
-          0 1px 4px rgba(0, 0, 0, 0.3);
-      }
+          0 1px 4px rgba(0, 0, 0, 0.3)}
       .run-full:not(:disabled):active {
         transform: scale(0.96);
-        box-shadow: 0 1px 6px rgba(196, 241, 53, 0.2);
-      }
+        box-shadow: 0 1px 6px rgba(196, 241, 53, 0.2)}
       .run-full:disabled {
         opacity: 0.38;
         cursor: default;
-        box-shadow: none;
-      }
+        box-shadow: none}
       .hint {
         font-size: 11px;
         color: var(--muted);
         margin-top: 10px;
-        line-height: 1.55;
-      }
+        line-height: 1.55}
 
       /* history */
       .hist-panel {
         background: var(--panel);
-        padding: 18px;
-      }
+        padding: 18px}
       .hrow {
         display: flex;
         align-items: center;
@@ -641,14 +543,11 @@
         padding: 10px 8px;
         border-bottom: 1px solid rgba(255, 255, 255, 0.05);
         cursor: pointer;
-        transition: background 0.1s;
-      }
+        transition: background 0.1s}
       .hrow:hover {
-        background: rgba(255, 255, 255, 0.03);
-      }
+        background: rgba(255, 255, 255, 0.03)}
       .hrow:last-child {
-        border-bottom: none;
-      }
+        border-bottom: none}
       .hgrade {
         width: 32px;
         height: 32px;
@@ -657,36 +556,31 @@
         font-weight: 800;
         font-size: 13px;
         flex-shrink: 0;
-        background: rgba(255, 255, 255, 0.05);
-      }
+        background: rgba(255, 255, 255, 0.05)}
       .htarget {
         font-size: 12.5px;
         font-weight: 500;
         flex: 1;
         white-space: nowrap;
         overflow: hidden;
-        text-overflow: ellipsis;
-      }
+        text-overflow: ellipsis}
       .hmeta {
         font-size: 10.5px;
         color: var(--muted);
-        margin-top: 2px;
-      }
+        margin-top: 2px}
       .hbadge {
         font-family: var(--mono);
         font-size: 9px;
         text-transform: uppercase;
         padding: 3px 7px;
-        flex-shrink: 0;
-      }
+        flex-shrink: 0}
 
       /* provider quick-pick */
       .provider-grid {
         display: grid;
         grid-template-columns: repeat(5, 1fr);
         gap: 4px;
-        margin-top: 2px;
-      }
+        margin-top: 2px}
       .prov-btn {
         background: rgba(255, 255, 255, 0.04);
         border: 1px solid var(--border);
@@ -698,30 +592,25 @@
         padding: 7px 4px;
         cursor: pointer;
         transition: all 0.12s;
-        text-align: center;
-      }
+        text-align: center}
       .prov-btn:hover {
         background: rgba(255, 255, 255, 0.08);
-        color: rgba(255, 255, 255, 0.8);
-      }
+        color: rgba(255, 255, 255, 0.8)}
       .prov-btn.on {
         background: var(--lime);
         color: #000;
         border-color: var(--lime);
-        font-weight: 700;
-      }
+        font-weight: 700}
 
       .dmenu-item {
         padding: 10px 16px;
         font-size: 12.5px;
         cursor: pointer;
         color: rgba(255, 255, 255, 0.7);
-        transition: background 0.1s;
-      }
+        transition: background 0.1s}
       .dmenu-item:hover {
         background: rgba(255, 255, 255, 0.07);
-        color: #fff;
-      }
+        color: #fff}
 
       /* spinner */
       .spin {
@@ -732,53 +621,43 @@
         border-top-color: var(--lime);
         border-radius: 50%;
         animation: sp 0.7s linear infinite;
-        vertical-align: middle;
-      }
+        vertical-align: middle}
       @keyframes sp {
         to {
-          transform: rotate(360deg);
-        }
+          transform: rotate(360deg)}
       }
       @keyframes pulse {
         0%,
         100% {
           opacity: 1;
-          transform: scale(1);
-        }
+          transform: scale(1)}
         50% {
           opacity: 0.4;
-          transform: scale(1.3);
-        }
+          transform: scale(1.3)}
       }
       @keyframes flashIn {
         from {
           background: rgba(58, 208, 164, 0.1);
-          transform: translateX(-3px);
-        }
+          transform: translateX(-3px)}
         to {
           background: transparent;
-          transform: none;
-        }
+          transform: none}
       }
       @keyframes tabIn {
         from {
           opacity: 0;
-          transform: translateY(7px);
-        }
+          transform: translateY(7px)}
         to {
           opacity: 1;
-          transform: translateY(0);
-        }
+          transform: translateY(0)}
       }
       @keyframes modalIn {
         from {
           opacity: 0;
-          transform: translateY(14px) scale(0.97);
-        }
+          transform: translateY(14px) scale(0.97)}
         to {
           opacity: 1;
-          transform: translateY(0) scale(1);
-        }
+          transform: translateY(0) scale(1)}
       }
       .event-row {
         display: flex;
@@ -787,85 +666,68 @@
         padding: 9px 10px;
         border-bottom: 1px solid rgba(255, 255, 255, 0.05);
         font-size: 11.5px;
-        animation: flashIn 0.8s ease-out;
-      }
+        animation: flashIn 0.8s ease-out}
       .event-row:last-child {
-        border-bottom: none;
-      }
+        border-bottom: none}
       .event-row .ev-time {
         font-family: var(--mono);
         font-size: 9.5px;
         color: var(--muted);
         flex-shrink: 0;
-        margin-top: 2px;
-      }
+        margin-top: 2px}
       .event-row .ev-body {
         flex: 1;
-        min-width: 0;
-      }
+        min-width: 0}
       .event-row .ev-msg {
         color: rgba(255, 255, 255, 0.78);
         word-break: break-word;
-        line-height: 1.5;
-      }
+        line-height: 1.5}
       .event-row .ev-meta {
         display: flex;
         gap: 6px;
         align-items: center;
         margin-top: 4px;
-        flex-wrap: wrap;
-      }
+        flex-wrap: wrap}
       .layer-tag {
         font-family: var(--mono);
         font-size: 9px;
         text-transform: uppercase;
         padding: 2px 6px;
-        letter-spacing: 0.06em;
-        border-radius: 3px;
-      }
+        letter-spacing: 0.06em}
       .lt-l1 {
         background: rgba(196, 241, 53, 0.1);
         color: var(--lime);
-        border: 1px solid rgba(196, 241, 53, 0.3);
-      }
+        border: 1px solid rgba(196, 241, 53, 0.3)}
       .lt-l2 {
         background: rgba(169, 156, 255, 0.12);
         color: var(--violet);
-        border: 1px solid rgba(169, 156, 255, 0.3);
-      }
+        border: 1px solid rgba(169, 156, 255, 0.3)}
       .lt-fw {
         background: rgba(58, 208, 164, 0.1);
         color: var(--teal);
-        border: 1px solid rgba(58, 208, 164, 0.3);
-      }
+        border: 1px solid rgba(58, 208, 164, 0.3)}
 
       @media (max-width: 1100px) {
         .kpis {
-          grid-template-columns: repeat(2, 1fr);
-        }
+          grid-template-columns: repeat(2, 1fr)}
         .panels,
         .bottom {
-          grid-template-columns: 1fr;
-        }
+          grid-template-columns: 1fr}
       }
       @media (max-width: 700px) {
         .kpis {
-          grid-template-columns: 1fr;
-        }
+          grid-template-columns: 1fr}
         .topnav .nav-tabs {
-          display: none;
-        }
+          display: none}
         .body {
-          padding: 16px;
-        }
+          padding: 16px}
       }
 
       /* ── Polish Layer ─────────────────────────────────────────── */
       :root {
         --radius: 8px;
         --trans: 0.15s cubic-bezier(0.25, 0, 0.3, 1);
-        --glow: rgba(196, 241, 53, 0.04);
-      }
+        --glow: rgba(196, 241, 53, 0.04)}
 
       /* subtle gradient body background */
       body {
@@ -874,8 +736,7 @@
           #0f0f0f 0%,
           #0d0d0f 40%,
           #0a0a0c 100%
-        );
-      }
+        )}
 
       /* ambient page glow */
       body::before {
@@ -891,67 +752,49 @@
           transparent 65%
         );
         pointer-events: none;
-        z-index: 0;
-      }
+        z-index: 0}
 
       /* custom scrollbars */
       * {
         scrollbar-width: thin;
-        scrollbar-color: rgba(255, 255, 255, 0.09) transparent;
-      }
+        scrollbar-color: rgba(255, 255, 255, 0.09) transparent}
       ::-webkit-scrollbar {
         width: 5px;
-        height: 5px;
-      }
+        height: 5px}
       ::-webkit-scrollbar-track {
-        background: transparent;
-      }
+        background: transparent}
       ::-webkit-scrollbar-thumb {
-        background: rgba(255, 255, 255, 0.1);
-        border-radius: 10px;
-      }
+        background: rgba(255, 255, 255, 0.1)}
       ::-webkit-scrollbar-thumb:hover {
-        background: rgba(255, 255, 255, 0.18);
-      }
+        background: rgba(255, 255, 255, 0.18)}
 
       /* nav: lime active indicator */
       .nav-tabs a.on {
         color: var(--lime);
-        border-bottom-color: var(--lime);
-      }
+        border-bottom-color: var(--lime)}
       .nav-tabs a {
-        border-bottom-width: 2px;
-      }
+        border-bottom-width: 2px}
       .nav-right .dots {
-        border-radius: 6px;
         transition:
           background var(--trans),
-          color var(--trans);
-      }
+          color var(--trans)}
       .nav-right .dots:hover {
         background: rgba(255, 255, 255, 0.07);
-        color: rgba(255, 255, 255, 0.85);
-      }
+        color: rgba(255, 255, 255, 0.85)}
       .nav-right .me-chip {
-        border-radius: 6px;
-      }
+        }
       .nav-right .me-chip .pic {
-        border-radius: 4px;
-      }
+        }
 
       /* dots menu */
       #dotsMenu {
-        border-radius: 10px !important;
         backdrop-filter: blur(16px);
         -webkit-backdrop-filter: blur(16px);
-        box-shadow: 0 16px 48px rgba(0, 0, 0, 0.5);
-      }
+        box-shadow: 0 16px 48px rgba(0, 0, 0, 0.5)}
 
       /* section card wrapper */
       .sec {
-        border-radius: var(--radius);
-        overflow: hidden;
-      }
+        overflow: hidden}
 
       /* input / textarea / select focus glow */
       input:not([type="checkbox"]):not([type="radio"]):focus,
@@ -959,166 +802,130 @@
       select:focus {
         border-color: rgba(196, 241, 53, 0.45) !important;
         box-shadow: 0 0 0 3px rgba(196, 241, 53, 0.07);
-        outline: none;
-      }
+        outline: none}
 
       /* button active feedback */
       button:not(:disabled):active {
-        transform: scale(0.97);
-      }
+        transform: scale(0.97)}
       .run-full {
         transition:
           opacity var(--trans),
-          transform var(--trans);
-      }
+          transform var(--trans)}
       .mm-try {
         transition:
           background var(--trans),
           border-color var(--trans),
-          transform var(--trans);
-        border-radius: 7px;
-      }
+          transform var(--trans)}
       .mm-try:hover {
-        border-color: rgba(196, 241, 53, 0.2);
-      }
+        border-color: rgba(196, 241, 53, 0.2)}
       .cpbtn {
-        border-radius: 4px;
         transition:
           background var(--trans),
-          color var(--trans);
-      }
+          color var(--trans)}
 
       /* modal: backdrop blur + slide-up */
       .modal-overlay {
         backdrop-filter: blur(8px);
-        -webkit-backdrop-filter: blur(8px);
-      }
+        -webkit-backdrop-filter: blur(8px)}
       .modal-card {
-        animation: modalIn 0.22s cubic-bezier(0.34, 1.15, 0.64, 1);
-      }
+        animation: modalIn 0.22s cubic-bezier(0.34, 1.15, 0.64, 1)}
       .modal-card {
-        border-radius: 14px;
-      }
+        }
 
       /* badges */
       .fbadge {
-        border-radius: 3px;
-      }
+        }
       .panel-badge {
-        border-radius: 4px;
-      }
+        }
 
       /* kpi top accent bar on hover */
       .kpi {
         transition: border-top-color 0.25s;
-        border-top: 2px solid rgba(255, 255, 255, 0.04);
-      }
+        border-top: 2px solid rgba(255, 255, 255, 0.04)}
       .kpi:hover {
-        border-top-color: rgba(196, 241, 53, 0.3);
-      }
+        border-top-color: rgba(196, 241, 53, 0.3)}
 
       /* gateway key rows */
       .gwrow {
         transition:
           border-color var(--trans),
-          box-shadow var(--trans);
-      }
+          box-shadow var(--trans)}
       .gwrow:hover {
         border-color: rgba(255, 255, 255, 0.15);
-        box-shadow: 0 2px 14px rgba(0, 0, 0, 0.3);
-      }
+        box-shadow: 0 2px 14px rgba(0, 0, 0, 0.3)}
 
       /* finding rows */
       .frow {
-        border-radius: 4px;
         margin: 0 -4px;
         padding-left: 12px;
-        padding-right: 8px;
-      }
+        padding-right: 8px}
 
       /* chat bubbles */
       .mm-try {
-        font-size: 12px;
-      }
+        font-size: 12px}
 
       /* empty state */
       .empty {
         color: var(--muted);
         font-size: 12.5px;
         text-align: center;
-        padding: 28px 12px;
-        border-radius: 6px;
-      }
+        padding: 28px 12px}
       /* ── My LLM chat ── */
       .mm-msg {
         display: flex;
         gap: 10px;
         align-items: flex-start;
-        max-width: 88%;
-      }
+        max-width: 88%}
       .mm-bot {
-        align-self: flex-start;
-      }
+        align-self: flex-start}
       .mm-user {
         align-self: flex-end;
-        flex-direction: row-reverse;
-      }
+        flex-direction: row-reverse}
       .mm-avatar {
         flex: none;
         width: 26px;
         height: 26px;
-        border-radius: 7px;
         display: flex;
         align-items: center;
         justify-content: center;
         font-size: 13px;
         background: rgba(190, 242, 100, 0.12);
         color: var(--lime);
-        border: 1px solid rgba(190, 242, 100, 0.25);
-      }
+        border: 1px solid rgba(190, 242, 100, 0.25)}
       .mm-user .mm-avatar {
         background: rgba(255, 255, 255, 0.06);
         color: var(--muted);
-        border-color: var(--border);
-      }
+        border-color: var(--border)}
       .mm-bubble {
         padding: 9px 13px;
-        border-radius: 12px;
         font-size: 13px;
         line-height: 1.55;
         background: rgba(255, 255, 255, 0.05);
         border: 1px solid var(--border);
-        color: var(--ink);
-      }
+        color: var(--ink)}
       .mm-bot .mm-bubble {
-        border-top-left-radius: 3px;
-      }
+        border-top-left-radius: 3px}
       .mm-user .mm-bubble {
         background: rgba(190, 242, 100, 0.1);
         border-color: rgba(190, 242, 100, 0.2);
-        border-top-right-radius: 3px;
-      }
+        border-top-right-radius: 3px}
       .mm-bubble.mm-blocked {
         background: var(--rose-bg);
         border-color: rgba(240, 106, 130, 0.35);
-        color: #ffd7df;
-      }
+        color: #ffd7df}
       .mm-try {
         text-align: left;
         background: rgba(255, 255, 255, 0.03);
         border: 1px solid var(--border);
         color: var(--ink);
         padding: 8px 11px;
-        border-radius: 8px;
         font-size: 11.5px;
         cursor: pointer;
         font-family: "Inter", sans-serif;
-        transition: 0.12s;
-      }
+        transition: 0.12s}
       .mm-try:hover {
         background: rgba(255, 255, 255, 0.07);
-        border-color: rgba(190, 242, 100, 0.3);
-      }
+        border-color: rgba(190, 242, 100, 0.3)}
       /* ── modal ── */
       .modal-overlay {
         position: fixed;
@@ -1127,77 +934,61 @@
         z-index: 500;
         display: flex;
         align-items: center;
-        justify-content: center;
-      }
+        justify-content: center}
       .modal-card {
         background: var(--panel);
         border: 1px solid var(--border);
-        border-radius: 14px;
         padding: 22px;
         width: 380px;
         max-width: 92vw;
-        box-shadow: 0 24px 60px rgba(0, 0, 0, 0.5);
-      }
+        box-shadow: 0 24px 60px rgba(0, 0, 0, 0.5)}
       .modal-h {
         display: flex;
         align-items: center;
         justify-content: space-between;
         margin-bottom: 16px;
-        font-size: 15px;
-      }
+        font-size: 15px}
       .modal-x {
         cursor: pointer;
         color: var(--muted);
-        font-size: 14px;
-      }
+        font-size: 14px}
       .modal-x:hover {
-        color: var(--ink);
-      }
+        color: var(--ink)}
       /* ── gateway key rows ── */
       .gwrow {
         border: 1px solid var(--border);
-        border-radius: 10px;
         padding: 12px;
-        margin-bottom: 8px;
-      }
+        margin-bottom: 8px}
       .gwrow.off {
-        opacity: 0.5;
-      }
+        opacity: 0.5}
       .gwbar {
         height: 5px;
         background: rgba(255, 255, 255, 0.06);
-        border-radius: 3px;
         overflow: hidden;
-        margin-top: 6px;
-      }
+        margin-top: 6px}
       .gwbar > div {
-        height: 100%;
-      }
+        height: 100%}
       /* ── arch grid ── */
       .arch-grid {
         display: grid;
         grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
         gap: 1px;
         background: var(--border);
-        margin-top: 12px;
-      }
+        margin-top: 12px}
       .arch-cell {
         background: var(--panel);
-        padding: 12px 14px;
-      }
+        padding: 12px 14px}
       .arch-cell .al {
         font-family: var(--mono);
         font-size: 9px;
         text-transform: uppercase;
         letter-spacing: 0.14em;
         color: var(--muted);
-        margin-bottom: 6px;
-      }
+        margin-bottom: 6px}
       .arch-cell .av {
         font-size: 17px;
         font-weight: 700;
-        color: var(--ink);
-      }
+        color: var(--ink)}
       /* ── audit log rows ── */
       .arow {
         display: flex;
@@ -1205,11 +996,9 @@
         gap: 10px;
         padding: 8px;
         border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-        font-size: 11.5px;
-      }
+        font-size: 11.5px}
       .arow:last-child {
-        border-bottom: none;
-      }
+        border-bottom: none}
       /* ── copy btn ── */
       .cpbtn {
         background: rgba(255, 255, 255, 0.05);
@@ -1219,12 +1008,10 @@
         font-size: 10px;
         font-family: var(--mono);
         cursor: pointer;
-        transition: 0.12s;
-      }
+        transition: 0.12s}
       .cpbtn:hover {
         background: rgba(255, 255, 255, 0.1);
-        color: var(--ink);
-      }
+        color: var(--ink)}
       /* toasts */
       #toastArea {
         position: fixed;
@@ -1234,48 +1021,42 @@
         display: flex;
         flex-direction: column;
         gap: 8px;
-        pointer-events: none;
-      }
+        pointer-events: none}
       .toast {
         background: #1e1e1e;
         border: 1px solid var(--border2);
         color: var(--ink);
         font-size: 12.5px;
         padding: 10px 16px;
-        border-radius: 8px;
         display: flex;
         align-items: center;
         gap: 10px;
         box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
         animation: toastIn 0.22s cubic-bezier(0.34, 1.15, 0.64, 1);
         pointer-events: none;
-        max-width: 320px;
-      }
+        max-width: 320px}
       .toast.ok {
-        border-left: 3px solid var(--teal);
-      }
+        border-left: 3px solid var(--teal)}
       .toast.err {
-        border-left: 3px solid var(--rose);
-      }
+        border-left: 3px solid var(--rose)}
       .toast.warn {
-        border-left: 3px solid var(--amber);
-      }
+        border-left: 3px solid var(--amber)}
       @keyframes toastIn {
         from {
           opacity: 0;
-          transform: translateX(16px);
-        }
+          transform: translateX(16px)}
         to {
           opacity: 1;
-          transform: translateX(0);
-        }
+          transform: translateX(0)}
       }
       @keyframes toastOut {
         to {
           opacity: 0;
-          transform: translateX(16px);
-        }
+          transform: translateX(16px)}
       }
+    
+      /* square corners for JS-generated inline styles */
+      [style*='border-radius']:not([style*='50%']) { border-radius: 0 !important}
     </style>
   </head>
   <body>
@@ -1484,7 +1265,6 @@
               background: rgba(255, 255, 255, 0.04);
               border: 1px solid var(--border);
               outline: none;
-              border-radius: 6px;
               padding: 9px 11px;
               font-family: var(--mono);
               font-size: 12px;
@@ -1497,7 +1277,6 @@
             style="
               background: rgba(255, 255, 255, 0.06);
               border: 1px solid var(--border);
-              border-radius: 6px;
               color: var(--ink);
               padding: 9px 10px;
               font-size: 11.5px;
@@ -1516,7 +1295,7 @@
           </select>
           <button
             class="run-full"
-            style="width: auto; padding: 0 16px; border-radius: 8px"
+            style="width: auto; padding: 0 16px; "
             onclick="gwConnectKey()"
           >
             Connect key
@@ -1617,7 +1396,6 @@
           style="
             background: rgba(0, 0, 0, 0.35);
             border: 1px solid var(--border);
-            border-radius: 6px;
             padding: 14px 16px;
             font-family: var(--mono);
             font-size: 11px;
@@ -1778,8 +1556,7 @@
               font-size: 12px;
               color: var(--ink);
               margin-bottom: 10px;
-              border-radius: 5px;
-            "
+              "
           />
           <div id="gwKeyList">
             <div
@@ -2007,8 +1784,7 @@
                   height: 2px;
                   background: var(--rose);
                   display: inline-block;
-                  border-radius: 1px;
-                "
+                  "
               ></span
               >Attacks</span
             >
@@ -2019,8 +1795,7 @@
                   height: 2px;
                   background: var(--teal);
                   display: inline-block;
-                  border-radius: 1px;
-                "
+                  "
               ></span
               >Passed</span
             >
@@ -2223,7 +1998,6 @@
                 color: var(--rose);
                 border: 1px solid rgba(240, 106, 130, 0.3);
                 padding: 2px 8px;
-                border-radius: 20px;
                 vertical-align: middle;
                 margin-left: 6px;
               "
@@ -2895,37 +2669,31 @@
       function showTab(name, el) {
         ["gateway", "redteam", "mymodel"].forEach((t) => {
           const d = $("tab-" + t);
-          if (d) d.style.display = "none";
-        });
+          if (d) d.style.display = "none"});
         const active = $("tab-" + name);
         if (active) {
           active.style.display = "";
           active.style.animation = "none";
           requestAnimationFrame(() => {
-            active.style.animation = "tabIn .25s cubic-bezier(.25,0,.3,1)";
-          });
-        }
+            active.style.animation = "tabIn .25s cubic-bezier(.25,0,.3,1)"})}
         document
           .querySelectorAll(".nav-tabs a")
           .forEach((a) => a.classList.remove("on"));
         if (el) el.classList.add("on");
         if (name === "gateway") loadGatewayTab();
         if (name === "redteam") loadRedTeamTab();
-        if (name === "mymodel") loadMyModelTab();
-      }
+        if (name === "mymodel") loadMyModelTab()}
 
       /* ── dots menu ── */
       let _dotsOpen = false;
       function toggleDots(e) {
         e.stopPropagation();
         _dotsOpen = !_dotsOpen;
-        $("dotsMenu").style.display = _dotsOpen ? "block" : "none";
-      }
+        $("dotsMenu").style.display = _dotsOpen ? "block" : "none"}
       document.addEventListener("click", () => {
         if (_dotsOpen) {
           _dotsOpen = false;
-          $("dotsMenu").style.display = "none";
-        }
+          $("dotsMenu").style.display = "none"}
       });
       /* ── shield tab ── */
       async function loadShieldTab() {
@@ -2936,10 +2704,8 @@
           $("shReqs").textContent = s.total_requests || 0;
           $("shBlocked").textContent = s.blocked || 0;
           $("shSanitized").textContent = s.sanitized || 0;
-          $("shPassed").textContent = s.passed || 0;
-        } catch (e) {}
-        loadShieldEvents();
-      }
+          $("shPassed").textContent = s.passed || 0} catch (e) {}
+        loadShieldEvents()}
 
       async function loadShieldEvents() {
         try {
@@ -2951,8 +2717,7 @@
           if (!ev.length) {
             $("shieldEvents").innerHTML =
               '<div class="empty">No events yet.</div>';
-            return;
-          }
+            return}
           const typeColor = {
             blocked: "fb-crit",
             sanitized: "fb-high",
@@ -2971,10 +2736,8 @@
         <span class="fbadge ${typeColor[e.event_type] || "fb-info"}">${e.event_type}</span>
         <span class="ftitle">${esc(e.explanation)}</span>
         <span class="fprobe">${when}</span>
-      </div>`;
-            })
-            .join("");
-        } catch (e) {}
+      </div>`})
+            .join("")} catch (e) {}
       }
 
       function riskColor(score) {
@@ -2982,8 +2745,7 @@
           ? "var(--rose)"
           : score >= 50
             ? "var(--amber)"
-            : "var(--teal)";
-      }
+            : "var(--teal)"}
 
       function renderRiskBreakdown(risk, secrets) {
         const col = riskColor(risk.overall_score);
@@ -2996,11 +2758,10 @@
       <div style="display:flex;justify-content:space-between;font-size:10.5px;color:var(--muted);margin-bottom:3px">
         <span>${esc(c.category.replace(/_/g, " "))}</span><span>${pct}%</span>
       </div>
-      <div style="height:5px;background:rgba(255,255,255,.06);border-radius:3px;overflow:hidden">
+      <div style="height:5px;background:rgba(255,255,255,.06);overflow:hidden">
         <div style="height:100%;width:${pct}%;background:${riskColor(pct)}"></div>
       </div>
-    </div>`;
-              })
+    </div>`})
               .join("")
           : '<div style="font-size:11px;color:var(--muted)">No threat categories triggered.</div>';
 
@@ -3017,8 +2778,7 @@
         <code style="font-family:var(--mono);font-size:10px;color:var(--muted)">${esc(f.preview)}</code></div>`,
               )
               .join("") +
-            "</div>";
-        }
+            "</div>"}
 
         return `<div style="margin-top:14px;padding-top:14px;border-top:1px solid var(--border)">
     <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">
@@ -3029,16 +2789,14 @@
       </div>
     </div>
     ${bars}${secHtml}
-  </div>`;
-      }
+  </div>`}
 
       async function runShieldScan() {
         const text = $("shieldInput").value.trim();
         if (!text) {
           $("shieldResult").innerHTML =
             '<div class="empty">Enter some text to scan.</div>';
-          return;
-        }
+          return}
         $("shieldResult").innerHTML = '<div class="empty">Scanning…</div>';
         try {
           const body = { text, use_llm: $("shieldLLM").checked };
@@ -3072,8 +2830,7 @@
           <div style="font-size:12.5px;color:rgba(255,255,255,.7);margin-bottom:8px">${esc(v.explanation)}</div>
           <div style="font-family:var(--mono);font-size:10px;color:var(--muted)">Confidence: ${(v.confidence * 100).toFixed(0)}% · Layer: ${v.layer} · ${v.latency_ms.toFixed(1)}ms</div>
           ${renderRiskBreakdown(risk, secrets)}
-        </div>`;
-          } else {
+        </div>`} else {
             head = `<div style="background:var(--teal-bg);border:1px solid rgba(58,208,164,.3);padding:16px">
           <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
             <span class="fbadge fb-low">SAFE</span>
@@ -3081,14 +2838,11 @@
           </div>
           <div style="font-size:12.5px;color:rgba(255,255,255,.7)">${esc(v.explanation)}</div>
           ${renderRiskBreakdown(risk, secrets)}
-        </div>`;
-          }
+        </div>`}
           $("shieldResult").innerHTML = head;
-          loadShieldTab();
-        } catch (e) {
+          loadShieldTab()} catch (e) {
           $("shieldResult").innerHTML =
-            `<div class="empty">Error: ${esc(e.message)}</div>`;
-        }
+            `<div class="empty">Error: ${esc(e.message)}</div>`}
       }
 
       async function runShieldChat() {
@@ -3096,14 +2850,12 @@
         if (!msg) {
           $("shieldChatResult").innerHTML =
             '<div class="empty">Type a message.</div>';
-          return;
-        }
+          return}
         const key = $("shieldKey").value.trim();
         if (!key) {
           $("shieldChatResult").innerHTML =
             '<div class="empty" style="color:var(--rose)">API key required.</div>';
-          return;
-        }
+          return}
         $("shieldChatResult").innerHTML =
           '<div class="empty"><span class="spin"></span> Sending through shield…</div>';
         try {
@@ -3134,11 +2886,9 @@
             <span style="font-size:13px;font-weight:600;color:var(--rose)">${esc(v.threat || v.threat_type || "threat")}</span>
           </div>
           <div style="font-size:12.5px;color:rgba(255,255,255,.7)">${esc(v.explanation || v.message)}</div>
-        </div>`;
-          } else if (v.error) {
+        </div>`} else if (v.error) {
             $("shieldChatResult").innerHTML =
-              `<div class="empty" style="color:var(--rose)">Error: ${esc(v.error)}</div>`;
-          } else {
+              `<div class="empty" style="color:var(--rose)">Error: ${esc(v.error)}</div>`} else {
             $("shieldChatResult").innerHTML = `
         <div style="background:rgba(255,255,255,.04);border:1px solid var(--border);padding:16px">
           <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
@@ -3148,13 +2898,10 @@
           </div>
           <div style="font-size:13px;color:rgba(255,255,255,.8);line-height:1.7;white-space:pre-wrap">${esc(v.response)}</div>
           ${v.usage ? `<div style="font-family:var(--mono);font-size:9px;color:var(--muted);margin-top:10px">${v.usage.prompt_tokens} prompt + ${v.usage.completion_tokens} completion tokens</div>` : ""}
-        </div>`;
-          }
-          loadShieldTab();
-        } catch (e) {
+        </div>`}
+          loadShieldTab()} catch (e) {
           $("shieldChatResult").innerHTML =
-            `<div class="empty">Error: ${esc(e.message)}</div>`;
-        }
+            `<div class="empty">Error: ${esc(e.message)}</div>`}
       }
 
       /* ── Activity Chart ── */
@@ -3166,15 +2913,13 @@
           if (!canvas) return;
           if (_gwChartInst) {
             _gwChartInst.destroy();
-            _gwChartInst = null;
-          }
+            _gwChartInst = null}
           const hasData =
             d.attacks.some((v) => v > 0) || d.passed.some((v) => v > 0);
           if (!hasData) {
             canvas.parentElement.innerHTML =
               '<div class="empty" style="height:140px;display:flex;align-items:center;justify-content:center">No requests yet - send some through the gateway to see activity here.</div>';
-            return;
-          }
+            return}
           _gwChartInst = new Chart(canvas, {
             type: "line",
             data: {
@@ -3244,8 +2989,7 @@
                 },
               },
             },
-          });
-        } catch (e) {}
+          })} catch (e) {}
       }
 
       /* ── API Guard / Gateway ── */
@@ -3265,8 +3009,7 @@
           // show / hide integration section
           const integ = $("gwIntegration");
           if (integ) integ.style.display = _demoMode ? "none" : "";
-          if (!_demoMode && !$("gwSnippet").textContent) showSnippet("openai");
-        } catch (e) {}
+          if (!_demoMode && !$("gwSnippet").textContent) showSnippet("openai")} catch (e) {}
         try {
           const st = await (await fetch("/api/gateway/stats")).json();
           $("gwKeys").textContent = st.total_keys || 0;
@@ -3279,12 +3022,10 @@
           $("gwSavedSub").textContent =
             st.total_blocked > 0
               ? "attacks cost $0 each when blocked"
-              : "no attacks yet";
-        } catch (e) {}
+              : "no attacks yet"} catch (e) {}
         loadGwKeys();
         loadGatewayEvents();
-        loadGwChart();
-      }
+        loadGwChart()}
 
       /* live activity feed */
       let _gwEventPoll = null;
@@ -3297,8 +3038,7 @@
           if (!ev.length) {
             $("gwEvents").innerHTML =
               '<div class="empty">No requests yet. Send one through the Test Console above.</div>';
-            return;
-          }
+            return}
           $("gwEvents").innerHTML = ev
             .map((e) => {
               const d = new Date(e.timestamp * 1000);
@@ -3311,14 +3051,11 @@
               let layerTag, body;
               if (!blocked) {
                 layerTag =
-                  '<span class="layer-tag lt-fw">passed · forwarded</span>';
-              } else if (e.layer === "regex-shield") {
+                  '<span class="layer-tag lt-fw">passed · forwarded</span>'} else if (e.layer === "regex-shield") {
                 layerTag =
-                  '<span class="layer-tag lt-l1">caught by regex shield</span>';
-              } else {
+                  '<span class="layer-tag lt-l1">caught by regex shield</span>'} else {
                 layerTag =
-                  '<span class="layer-tag lt-l2">caught by Security LLM</span>';
-              }
+                  '<span class="layer-tag lt-l2">caught by Security LLM</span>'}
               if (blocked) {
                 const sevCol =
                   e.severity === "critical"
@@ -3340,8 +3077,7 @@
             <span style="color:var(--teal);font-family:var(--mono);font-size:9.5px;margin-left:auto">+$${(e.cost_saved_usd || 0).toFixed(5)} saved</span>
           </div>
           ${chainHtml ? `<div style="margin-top:4px;font-family:var(--mono);font-size:9.5px;color:rgba(255,255,255,.45)">chain: ${chainHtml}</div>` : ""}
-          ${e.explanation ? `<div style="margin-top:6px;padding:6px 9px;border-left:2px solid var(--violet);background:rgba(169,156,255,.05);font-size:11px;color:rgba(255,255,255,.6);font-style:italic;line-height:1.5">Security LLM: ${esc(e.explanation)}</div>` : ""}`;
-              } else {
+          ${e.explanation ? `<div style="margin-top:6px;padding:6px 9px;border-left:2px solid var(--violet);background:rgba(169,156,255,.05);font-size:11px;color:rgba(255,255,255,.6);font-style:italic;line-height:1.5">Security LLM: ${esc(e.explanation)}</div>` : ""}`} else {
                 body = `<div class="ev-msg"><span style="color:var(--teal);font-weight:700;font-size:10px;font-family:var(--mono)">PASS</span> <span style="color:rgba(255,255,255,.5)">·</span> "${esc(e.message)}"</div>
           <div class="ev-meta">
             <span class="fbadge fb-low">forwarded</span>${layerTag}
@@ -3349,35 +3085,29 @@
             ${e.judge_latency_ms ? `<span style="color:var(--muted);font-family:var(--mono);font-size:9px">judge ${e.judge_latency_ms}ms</span>` : ""}
             <span style="color:var(--muted);font-family:var(--mono);font-size:9.5px;margin-left:auto">$${(e.cost_usd || 0).toFixed(5)}</span>
           </div>
-          ${e.response_preview ? `<div style="margin-top:6px;padding:6px 9px;border-left:2px solid var(--teal);background:rgba(58,208,164,.05);font-size:11px;color:rgba(255,255,255,.65);line-height:1.5">${esc(e.response_preview)}</div>` : ""}`;
-              }
-              return `<div class="event-row"><span class="ev-time">${when}</span><div class="ev-body">${body}</div></div>`;
-            })
+          ${e.response_preview ? `<div style="margin-top:6px;padding:6px 9px;border-left:2px solid var(--teal);background:rgba(58,208,164,.05);font-size:11px;color:rgba(255,255,255,.65);line-height:1.5">${esc(e.response_preview)}</div>` : ""}`}
+              return `<div class="event-row"><span class="ev-time">${when}</span><div class="ev-body">${body}</div></div>`})
             .join("");
           // visual ping when new events arrive
           if (ev.length > _gwLastEventCount) {
             const dot = $("gwLiveDot");
             if (dot) {
               dot.style.background = "var(--rose)";
-              setTimeout(() => (dot.style.background = "var(--teal)"), 400);
-            }
+              setTimeout(() => (dot.style.background = "var(--teal)"), 400)}
           }
-          _gwLastEventCount = ev.length;
-        } catch (e) {}
+          _gwLastEventCount = ev.length} catch (e) {}
       }
 
       /* judge inspector */
       function judgePreset(text) {
         $("judgeInput").value = text;
-        runJudge();
-      }
+        runJudge()}
       async function runJudge() {
         const text = $("judgeInput").value.trim();
         if (!text) {
           $("judgeResult").innerHTML =
             '<div class="empty">Type something first.</div>';
-          return;
-        }
+          return}
         $("judgeResult").innerHTML =
           '<div class="empty"><span class="spin"></span> AgentShield LLM is thinking…</div>';
         try {
@@ -3399,20 +3129,17 @@
         <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px"><span class="fbadge fb-low">SAFE</span><span style="font-size:12px;color:var(--teal);font-weight:600">Security LLM would allow this</span></div>
         <div style="font-size:11.5px;color:rgba(255,255,255,.7)">${esc(v.reason || "")}</div>
         <div style="font-family:var(--mono);font-size:9.5px;color:var(--muted);margin-top:7px">attack similarity: ${sim} · ${v.latency_ms || 0}ms</div>
-      </div>`;
-          } else {
+      </div>`} else {
             $("judgeResult").innerHTML =
               `<div style="background:var(--rose-bg);border:1px solid rgba(240,106,130,.3);padding:12px">
         <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px"><span class="fbadge fb-crit">BLOCKED</span><span style="font-size:12px;color:var(--rose);font-weight:600">${esc(v.threat || "unsafe")}</span></div>
         <div style="font-size:11.5px;color:rgba(255,255,255,.7);margin-bottom:6px">${esc(v.reason || "")}</div>
         ${v.model_said ? `<div style="margin-top:6px;padding:7px 10px;border-left:2px solid var(--violet);background:rgba(169,156,255,.05);font-size:11px;color:rgba(255,255,255,.65);font-style:italic;line-height:1.5">Model said: "${esc(v.model_said)}"</div>` : ""}
         <div style="font-family:var(--mono);font-size:9.5px;color:var(--muted);margin-top:7px">attack similarity: ${sim} · ${v.latency_ms || 0}ms</div>
-      </div>`;
-          }
+      </div>`}
         } catch (e) {
           $("judgeResult").innerHTML =
-            `<div class="empty">Error: ${esc(e.message)}</div>`;
-        }
+            `<div class="empty">Error: ${esc(e.message)}</div>`}
       }
 
       async function loadGwKeys() {
@@ -3433,9 +3160,8 @@
               : "<option>- create a key first -</option>";
           if (!keys.length) {
             $("gwKeyList").innerHTML =
-              '<div class="empty" id="gwEmptyState" style="padding:20px 12px;text-align:left"><div style="font-size:13px;font-weight:600;color:var(--ink);margin-bottom:12px">Get started in 3 steps</div><div style="display:flex;flex-direction:column;gap:8px"><div style="display:flex;align-items:center;gap:10px;font-size:12px"><span style="width:20px;height:20px;border-radius:50%;background:rgba(196,241,53,.12);border:1px solid rgba(196,241,53,.2);color:var(--lime);font-size:10px;display:grid;place-items:center;flex-shrink:0;font-family:var(--mono)">1</span><span style="color:rgba(255,255,255,.65)">Paste your provider key above (OpenAI, Anthropic, Groq…)</span></div><div style="display:flex;align-items:center;gap:10px;font-size:12px"><span style="width:20px;height:20px;border-radius:50%;background:rgba(196,241,53,.12);border:1px solid rgba(196,241,53,.2);color:var(--lime);font-size:10px;display:grid;place-items:center;flex-shrink:0;font-family:var(--mono)">2</span><span style="color:rgba(255,255,255,.65)">Click <b style="color:var(--ink)">+ New virtual key</b> and set a budget</span></div><div style="display:flex;align-items:center;gap:10px;font-size:12px"><span style="width:20px;height:20px;border-radius:50%;background:rgba(196,241,53,.12);border:1px solid rgba(196,241,53,.2);color:var(--lime);font-size:10px;display:grid;place-items:center;flex-shrink:0;font-family:var(--mono)">3</span><span style="color:rgba(255,255,255,.65)">Replace your real key with the <code style="font-family:var(--mono);font-size:10px;background:rgba(255,255,255,.07);padding:1px 5px">agk-…</code> virtual key in your app</span></div></div></div>';
-            return;
-          }
+              '<div class="empty" id="gwEmptyState" style="padding:20px 12px;text-align:left"><div style="font-size:13px;font-weight:600;color:var(--ink);margin-bottom:12px">Get started in 3 steps</div><div style="display:flex;flex-direction:column;gap:8px"><div style="display:flex;align-items:center;gap:10px;font-size:12px"><span style="width:20px;height:20px;background:rgba(196,241,53,.12);border:1px solid rgba(196,241,53,.2);color:var(--lime);font-size:10px;display:grid;place-items:center;flex-shrink:0;font-family:var(--mono)">1</span><span style="color:rgba(255,255,255,.65)">Paste your provider key above (OpenAI, Anthropic, Groq…)</span></div><div style="display:flex;align-items:center;gap:10px;font-size:12px"><span style="width:20px;height:20px;background:rgba(196,241,53,.12);border:1px solid rgba(196,241,53,.2);color:var(--lime);font-size:10px;display:grid;place-items:center;flex-shrink:0;font-family:var(--mono)">2</span><span style="color:rgba(255,255,255,.65)">Click <b style="color:var(--ink)">+ New virtual key</b> and set a budget</span></div><div style="display:flex;align-items:center;gap:10px;font-size:12px"><span style="width:20px;height:20px;background:rgba(196,241,53,.12);border:1px solid rgba(196,241,53,.2);color:var(--lime);font-size:10px;display:grid;place-items:center;flex-shrink:0;font-family:var(--mono)">3</span><span style="color:rgba(255,255,255,.65)">Replace your real key with the <code style="font-family:var(--mono);font-size:10px;background:rgba(255,255,255,.07);padding:1px 5px">agk-…</code> virtual key in your app</span></div></div></div>';
+            return}
           $("gwKeyList").innerHTML = keys
             .map((k) => {
               const col =
@@ -3463,8 +3189,7 @@
                 const bpct = Math.round(
                   (k.blocked_count / k.request_count) * 100,
                 );
-                return `<div style="display:flex;align-items:center;gap:6px;margin-top:4px"><div style="flex:1;height:3px;background:rgba(255,255,255,.07);border-radius:2px;overflow:hidden"><div style="width:${bpct}%;height:100%;background:var(--rose);border-radius:2px;transition:width .4s"></div></div><span style="font-family:var(--mono);font-size:9px;color:var(--muted);white-space:nowrap">${bpct}% attack rate</span></div>`;
-              })()
+                return `<div style="display:flex;align-items:center;gap:6px;margin-top:4px"><div style="flex:1;height:3px;background:rgba(255,255,255,.07);overflow:hidden"><div style="width:${bpct}%;height:100%;background:var(--rose);transition:width .4s"></div></div><span style="font-family:var(--mono);font-size:9px;color:var(--muted);white-space:nowrap">${bpct}% attack rate</span></div>`})()
             : ""
         }
         ${(() => {
@@ -3474,8 +3199,7 @@
             const expired = k.is_expired;
             tags.push(
               `<span class="fbadge ${expired ? "fb-crit" : "fb-low"}" title="Key expiry">${expired ? "expired" : "expires"} ${exp.toLocaleDateString()}</span>`,
-            );
-          }
+            )}
           if (k.allowed_models && k.allowed_models.length)
             tags.push(
               `<span class="fbadge fb-info" title="Model allowlist">${k.allowed_models.length} model${k.allowed_models.length > 1 ? "s" : ""} only</span>`,
@@ -3490,15 +3214,12 @@
             );
           return tags.length
             ? `<div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:6px">${tags.join("")}</div>`
-            : "";
-        })()}
+            : ""})()}
         <div style="display:flex;gap:8px;margin-top:8px">
           ${k.enabled ? `<button class="mm-try" onclick="gwRevoke('${esc(k.key)}')">Revoke key</button>` : `<button class="mm-try" style="background:var(--teal);color:#000" onclick="gwEnable('${esc(k.key)}')">Re-enable key</button>`}
         </div>
-      </div>`;
-            })
-            .join("");
-        } catch (e) {}
+      </div>`})
+            .join("")} catch (e) {}
       }
 
       const _PROVIDER_PREFIXES = {
@@ -3531,24 +3252,20 @@
         const sel = $("gwProviderSel");
         if (!key) {
           hint.textContent = "";
-          return;
-        }
+          return}
         let detected = "";
         for (const [prefix, prov] of Object.entries(_PROVIDER_PREFIXES)) {
           if (key.startsWith(prefix)) {
             detected = prov;
-            break;
-          }
+            break}
         }
         if (!detected && key.startsWith("sk-")) detected = "openai";
         if (!detected && /^[0-9a-f]{32}$/.test(key)) detected = "mistral";
         if (detected) {
           sel.value = detected;
-          hint.innerHTML = `Detected: <b style="color:${_PROVIDER_COLORS[detected] || "var(--teal)"}">${_PROVIDER_LABELS[detected] || detected}</b>`;
-        } else {
+          hint.innerHTML = `Detected: <b style="color:${_PROVIDER_COLORS[detected] || "var(--teal)"}">${_PROVIDER_LABELS[detected] || detected}</b>`} else {
           hint.innerHTML =
-            '<span style="color:var(--muted)">Unknown prefix - select provider manually</span>';
-        }
+            '<span style="color:var(--muted)">Unknown prefix - select provider manually</span>'}
       }
 
       async function gwConnectKey() {
@@ -3559,8 +3276,7 @@
         if (!key) {
           msg.innerHTML =
             '<span style="color:var(--rose)">Paste a key first.</span>';
-          return;
-        }
+          return}
         msg.innerHTML = '<span class="spin"></span> Connecting…';
         try {
           const body = { api_key: key };
@@ -3581,13 +3297,11 @@
               esc(v.detail || v.error || "failed") +
               "</span>";
           if (v.ok) toast("Provider key connected");
-          loadGatewayTab();
-        } catch (e) {
+          loadGatewayTab()} catch (e) {
           msg.innerHTML =
             '<span style="color:var(--rose)">Error: ' +
             esc(e.message) +
-            "</span>";
-        }
+            "</span>"}
       }
 
       /* Integration / SDK snippet */
@@ -3657,9 +3371,7 @@ curl ${base}/v1/chat/completions \\
         ["openai", "anthropic", "groq", "curl"].forEach((t) => {
           const b = $("snip-" + t);
           if (b)
-            b.style.borderColor = t === type ? "var(--lime)" : "transparent";
-        });
-      }
+            b.style.borderColor = t === type ? "var(--lime)" : "transparent"})}
 
       async function gwDisconnectKey() {
         const msg = $("gwUpstreamMsg");
@@ -3668,13 +3380,11 @@ curl ${base}/v1/chat/completions \\
           await fetch("/api/gateway/upstream", { method: "DELETE" });
           msg.innerHTML =
             '<span style="color:var(--muted)">Disconnected. Back to local demo upstream.</span>';
-          loadGatewayTab();
-        } catch (e) {
+          loadGatewayTab()} catch (e) {
           msg.innerHTML =
             '<span style="color:var(--rose)">Error: ' +
             esc(e.message) +
-            "</span>";
-        }
+            "</span>"}
       }
 
       function showCreateKey() {
@@ -3683,19 +3393,17 @@ curl ${base}/v1/chat/completions \\
           const el = $("gwNewKey") || {};
           $("gwModal").style.display = "flex";
           $("gwNewKey").innerHTML =
-            `<div style="background:var(--amber-bg);border:1px solid rgba(245,166,74,.35);padding:14px;border-radius:8px;text-align:center">
+            `<div style="background:var(--amber-bg);border:1px solid rgba(245,166,74,.35);padding:14px;text-align:center">
       <div style="font-size:13px;font-weight:600;color:var(--amber);margin-bottom:6px">Demo Mode</div>
       <div style="font-size:12px;color:rgba(255,255,255,.65);line-height:1.6">Connect a real provider key first to create virtual keys and protect real traffic.<br>Paste your key in the <b>Connect key</b> box above.</div>
     </div>`;
           // hide the form fields
           ["gwName", "gwBudget", "gwRate"].forEach((id) => {
             const e = $(id);
-            if (e && e.parentElement) e.parentElement.style.display = "none";
-          });
+            if (e && e.parentElement) e.parentElement.style.display = "none"});
           const btn = $("gwModal").querySelector(".run-full");
           if (btn) btn.style.display = "none";
-          return;
-        }
+          return}
         // real mode - show form, reset all fields
         [
           "gwName",
@@ -3714,30 +3422,25 @@ curl ${base}/v1/chat/completions \\
           else if (id === "gwRate") e.value = "30";
           else if (id === "gwVelMax") e.value = "0";
           else if (id === "gwVelWindow") e.value = "60";
-          else e.value = "";
-        });
+          else e.value = ""});
         const btn = $("gwModal").querySelector(".run-full");
         if (btn) btn.style.display = "";
         $("gwModal").style.display = "flex";
-        $("gwNewKey").innerHTML = "";
-      }
+        $("gwNewKey").innerHTML = ""}
       function closeCreateKey() {
         // always restore form fields on close
         ["gwName", "gwBudget", "gwRate"].forEach((id) => {
           const e = $(id);
-          if (e && e.parentElement) e.parentElement.style.display = "";
-        });
+          if (e && e.parentElement) e.parentElement.style.display = ""});
         const btn = $("gwModal").querySelector(".run-full");
         if (btn) btn.style.display = "";
-        $("gwModal").style.display = "none";
-      }
+        $("gwModal").style.display = "none"}
 
       // Map masked key -> full key for keys created in this session (so the test
       // console can use them - the server only ever returns full keys at creation).
       const _FULL_KEYS = {};
       function _mask(k) {
-        return k.slice(0, 8) + "..." + k.slice(-4);
-      }
+        return k.slice(0, 8) + "..." + k.slice(-4)}
 
       async function gwCreate() {
         const body = {
@@ -3766,8 +3469,7 @@ curl ${base}/v1/chat/completions \\
         const velWin = parseInt($("gwVelWindow").value) || 60;
         if (velMax > 0) {
           body.velocity_max_usd = velMax;
-          body.velocity_window_sec = velWin;
-        }
+          body.velocity_window_sec = velWin}
         try {
           const k = await (
             await fetch("/api/gateway/keys", {
@@ -3782,15 +3484,13 @@ curl ${base}/v1/chat/completions \\
           const snipEl = $("gwSnippet");
           if (snipEl && snipEl.textContent) showSnippet("openai");
           $("gwNewKey").innerHTML =
-            `<div style="background:var(--teal-bg);border:1px solid rgba(58,208,164,.3);padding:12px;border-radius:8px">
+            `<div style="background:var(--teal-bg);border:1px solid rgba(58,208,164,.3);padding:12px;">
       <div style="font-size:11px;color:var(--muted);margin-bottom:6px">Save this key - it won't be shown again. Use it as your API key with the integration snippet below.</div>
       <code style="font-family:var(--mono);font-size:11px;color:var(--teal);word-break:break-all">${esc(k.key)}</code></div>`;
           toast("Virtual key created");
-          loadGatewayTab();
-        } catch (e) {
+          loadGatewayTab()} catch (e) {
           $("gwNewKey").innerHTML =
-            '<div class="empty">Error creating key.</div>';
-        }
+            '<div class="empty">Error creating key.</div>'}
       }
 
       async function gwRevoke(key) {
@@ -3800,8 +3500,7 @@ curl ${base}/v1/chat/completions \\
           body: JSON.stringify({ key }),
         });
         toast("Key revoked", "warn");
-        loadGatewayTab();
-      }
+        loadGatewayTab()}
 
       async function gwEnable(key) {
         await fetch("/api/gateway/keys/enable", {
@@ -3809,8 +3508,7 @@ curl ${base}/v1/chat/completions \\
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ key }),
         });
-        loadGatewayTab();
-      }
+        loadGatewayTab()}
 
       async function gwTest() {
         const maskedKey = $("gwTestKey").value;
@@ -3820,11 +3518,10 @@ curl ${base}/v1/chat/completions \\
         if (!msg) {
           $("gwTestResult").innerHTML =
             '<div class="empty">Type a message.</div>';
-          return;
-        }
+          return}
         if (_demoMode) {
           $("gwTestResult").innerHTML =
-            `<div style="background:var(--amber-bg);border:1px solid rgba(245,166,74,.35);padding:12px;border-radius:8px">
+            `<div style="background:var(--amber-bg);border:1px solid rgba(245,166,74,.35);padding:12px;">
       <span class="fbadge fb-high" style="margin-bottom:8px;display:inline-block">Demo Mode</span>
       <div style="font-size:12px;color:rgba(255,255,255,.7);line-height:1.6">Connect a real provider key to test actual upstream forwarding. The Security LLM will still analyse the request - but responses will come from the local demo model.</div>
     </div>`;
@@ -3848,17 +3545,14 @@ curl ${base}/v1/chat/completions \\
             if (v.analyst_report) {
               $("gwTestResult").innerHTML =
                 renderAnalystReport(v.analyst_report) +
-                `<div style="margin-top:8px;font-family:var(--mono);font-size:10px;color:var(--teal);text-align:right">+$${(v.cost_saved_usd || 0).toFixed(5)} saved (never reached upstream)</div>`;
-            } else {
+                `<div style="margin-top:8px;font-family:var(--mono);font-size:10px;color:var(--teal);text-align:right">+$${(v.cost_saved_usd || 0).toFixed(5)} saved (never reached upstream)</div>`} else {
               $("gwTestResult").innerHTML =
                 `<div style="background:var(--rose-bg);border:1px solid rgba(240,106,130,.3);padding:12px">
           <div style="display:flex;gap:8px;align-items:center;margin-bottom:6px;flex-wrap:wrap"><span class="fbadge fb-crit">BLOCKED</span><b style="font-size:12px;color:var(--rose)">${esc(v.threat)}</b></div>
-          <div style="font-size:12px;color:rgba(255,255,255,.75)">${esc(v.message || "")}</div></div>`;
-            }
+          <div style="font-size:12px;color:rgba(255,255,255,.75)">${esc(v.message || "")}</div></div>`}
           } else if (v.error) {
             $("gwTestResult").innerHTML =
-              `<div style="background:var(--rose-bg);border:1px solid rgba(240,106,130,.3);padding:12px;border-radius:8px;font-size:12px;color:var(--rose)">${esc(v.error)}</div>`;
-          } else {
+              `<div style="background:var(--rose-bg);border:1px solid rgba(240,106,130,.3);padding:12px;font-size:12px;color:var(--rose)">${esc(v.error)}</div>`} else {
             const layersOK = (v.passed_layers || [])
               .map(
                 (l) =>
@@ -3866,15 +3560,12 @@ curl ${base}/v1/chat/completions \\
               )
               .join(" ");
             $("gwTestResult").innerHTML =
-              `<div style="background:rgba(255,255,255,.04);border:1px solid var(--border);padding:12px;border-radius:8px">
+              `<div style="background:rgba(255,255,255,.04);border:1px solid var(--border);padding:12px;">
         <div style="display:flex;gap:6px;align-items:center;margin-bottom:6px;flex-wrap:wrap"><span class="fbadge fb-low">OK</span>${layersOK}<span style="font-family:var(--mono);font-size:9px;color:var(--muted);margin-left:auto">via ${esc(v.upstream)} · $${(v.cost_usd || 0).toFixed(5)}</span></div>
-        <div style="font-size:12.5px;color:rgba(255,255,255,.85);line-height:1.6;white-space:pre-wrap">${esc(v.response)}</div></div>`;
-          }
-          loadGatewayTab();
-        } catch (e) {
+        <div style="font-size:12.5px;color:rgba(255,255,255,.85);line-height:1.6;white-space:pre-wrap">${esc(v.response)}</div></div>`}
+          loadGatewayTab()} catch (e) {
           $("gwTestResult").innerHTML =
-            '<div class="empty">Error: ' + esc(e.message) + "</div>";
-        }
+            '<div class="empty">Error: ' + esc(e.message) + "</div>"}
       }
 
       /* ── My LLM ── */
@@ -3891,17 +3582,14 @@ curl ${base}/v1/chat/completions \\
         $("mmChat").innerHTML = `<div class="mm-msg mm-bot">
     <div class="mm-avatar">⛨</div>
     <div class="mm-bubble">I'm your <b>Security Console</b>. Ask me anything about your API-key activity - spend, blocked attacks, virtual keys, money saved, or anomalies. Every answer comes from <b>live gateway data</b>, not a chatbot.</div>
-  </div>`;
-      }
+  </div>`}
 
       function mmCopyLast() {
         if (!_lastBotResponse) return;
         navigator.clipboard.writeText(_lastBotResponse).then(() => {
           const b = $("mmCopyBtn");
           b.textContent = "Copied!";
-          setTimeout(() => (b.textContent = "Copy"), 1500);
-        });
-      }
+          setTimeout(() => (b.textContent = "Copy"), 1500)})}
 
       function mmExportAudit() {
         fetch("/api/llm/audit")
@@ -3913,9 +3601,7 @@ curl ${base}/v1/chat/completions \\
             const a = document.createElement("a");
             a.href = URL.createObjectURL(blob);
             a.download = "audit-log.json";
-            a.click();
-          });
-      }
+            a.click()})}
 
       function mmAppend(role, text, blocked) {
         const wrap = document.createElement("div");
@@ -3926,13 +3612,11 @@ curl ${base}/v1/chat/completions \\
         chat.appendChild(wrap);
         chat.scrollTop = chat.scrollHeight;
         if (role === "bot" && text !== "…") _lastBotResponse = text;
-        return wrap;
-      }
+        return wrap}
 
       function tryMyModel(text) {
         $("mmInput").value = text;
-        sendMyModel();
-      }
+        sendMyModel()}
 
       async function sendMyModel() {
         const inp = $("mmInput");
@@ -3956,18 +3640,14 @@ curl ${base}/v1/chat/completions \\
           const v = await r.json();
           thinking.remove();
           if (v.error) {
-            mmAppend("bot", "[!] " + v.error);
-          } else {
-            mmAppend("bot", v.answer || "No data.");
-          }
+            mmAppend("bot", "[!] " + v.error)} else {
+            mmAppend("bot", v.answer || "No data.")}
           st.textContent = "live data";
-          st.style.color = "var(--lime)";
-        } catch (e) {
+          st.style.color = "var(--lime)"} catch (e) {
           thinking.remove();
           mmAppend("bot", "[!] " + e.message);
           st.textContent = "live data";
-          st.style.color = "var(--lime)";
-        }
+          st.style.color = "var(--lime)"}
       }
 
       /* ── Shield tools ── */
@@ -3976,8 +3656,7 @@ curl ${base}/v1/chat/completions \\
         if (!text) {
           $("redactResult").innerHTML =
             '<div class="empty">Paste some text first.</div>';
-          return;
-        }
+          return}
         $("redactResult").innerHTML = '<div class="empty">Redacting…</div>';
         try {
           const r = await fetch("/api/shield/redact", {
@@ -3995,11 +3674,9 @@ curl ${base}/v1/chat/completions \\
           ${changed ? '<button class="cpbtn" style="margin-left:auto" onclick="navigator.clipboard.writeText(document.getElementById(\'redactOut\').textContent)">Copy result</button>' : ""}
         </div>
         <pre id="redactOut" style="font-size:12px;color:rgba(255,255,255,.8);white-space:pre-wrap;line-height:1.6;margin:0">${esc(v.redacted || text)}</pre>
-      </div>`;
-        } catch (e) {
+      </div>`} catch (e) {
           $("redactResult").innerHTML =
-            `<div class="empty">Error: ${esc(e.message)}</div>`;
-        }
+            `<div class="empty">Error: ${esc(e.message)}</div>`}
       }
 
       async function runSecretScan() {
@@ -4007,8 +3684,7 @@ curl ${base}/v1/chat/completions \\
         if (!text) {
           $("secretResult").innerHTML =
             '<div class="empty">Paste some text first.</div>';
-          return;
-        }
+          return}
         $("secretResult").innerHTML = '<div class="empty">Scanning…</div>';
         try {
           const r = await fetch("/api/shield/secrets", {
@@ -4021,8 +3697,7 @@ curl ${base}/v1/chat/completions \\
             $("secretResult").innerHTML =
               `<div style="border:1px solid rgba(58,208,164,.3);padding:12px;background:var(--teal-bg)">
         <span class="fbadge fb-low">CLEAN</span>
-        <span style="font-size:12px;color:rgba(255,255,255,.7);margin-left:10px">No secrets or PII detected.</span></div>`;
-          } else {
+        <span style="font-size:12px;color:rgba(255,255,255,.7);margin-left:10px">No secrets or PII detected.</span></div>`} else {
             $("secretResult").innerHTML =
               `<div style="border:1px solid rgba(240,106,130,.3);padding:12px;background:var(--rose-bg)">
         <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
@@ -4039,20 +3714,17 @@ curl ${base}/v1/chat/completions \\
         </div>`,
           )
           .join("")}
-      </div>`;
-          }
+      </div>`}
         } catch (e) {
           $("secretResult").innerHTML =
-            `<div class="empty">Error: ${esc(e.message)}</div>`;
-        }
+            `<div class="empty">Error: ${esc(e.message)}</div>`}
       }
 
       /* ── auto-refresh the Protect tab (stats + live feed) every 3s ── */
       setInterval(() => {
         const active = document.querySelector(".nav-tabs a.on");
         if (active && active.textContent.trim() === "Protect")
-          loadGatewayEvents();
-      }, 3000);
+          loadGatewayEvents()}, 3000);
 
       /* ── Tool Guard ── */
       function loadToolGuardTab() {}
@@ -4060,8 +3732,7 @@ curl ${base}/v1/chat/completions \\
         $("tgTool").value = tool;
         $("tgArgs").value = args;
         $("tgIntent").value = intent;
-        runToolVerify();
-      }
+        runToolVerify()}
       function _sevColor(sev) {
         return sev === "critical"
           ? "var(--rose)"
@@ -4071,8 +3742,7 @@ curl ${base}/v1/chat/completions \\
               ? "var(--amber)"
               : sev === "low"
                 ? "var(--amber)"
-                : "var(--teal)";
-      }
+                : "var(--teal)"}
       function _decisionBadge(decision) {
         if (decision === "block")
           return '<span class="fbadge fb-crit">BLOCK</span>';
@@ -4080,8 +3750,7 @@ curl ${base}/v1/chat/completions \\
           return '<span class="fbadge fb-crit">REQUIRE HUMAN</span>';
         if (decision === "review")
           return '<span class="fbadge fb-high">REVIEW</span>';
-        return '<span class="fbadge fb-low">ALLOW</span>';
-      }
+        return '<span class="fbadge fb-low">ALLOW</span>'}
       function renderAnalystReport(r) {
         const col = _sevColor(r.severity);
         const sigs = (r.signals || [])
@@ -4121,17 +3790,14 @@ curl ${base}/v1/chat/completions \\
       ${sigs ? `<div style="margin-bottom:12px"><div style="font-family:var(--mono);font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;margin-bottom:4px">threat signals (${(r.signals || []).length})</div>${sigs}</div>` : ""}
       ${r.recommended_action ? `<div style="font-size:11.5px;color:rgba(255,255,255,.7);background:rgba(255,255,255,.03);padding:10px 12px;border-left:2px solid var(--violet)"><b style="color:var(--violet);font-family:var(--mono);font-size:9px;text-transform:uppercase;letter-spacing:.1em;display:block;margin-bottom:5px">recommended action</b>${esc(r.recommended_action)}</div>` : ""}
       <div style="font-family:var(--mono);font-size:9px;color:var(--muted);margin-top:10px;text-align:right">- ${esc(r.analyst || "AgentShield Security LLM")}</div>
-    </div>`;
-      }
+    </div>`}
       async function runToolVerify() {
         let args = {};
         try {
-          args = JSON.parse($("tgArgs").value || "{}");
-        } catch (e) {
+          args = JSON.parse($("tgArgs").value || "{}")} catch (e) {
           $("tgResult").innerHTML =
             '<div class="empty" style="color:var(--rose)">Invalid JSON in arguments.</div>';
-          return;
-        }
+          return}
         $("tgResult").innerHTML =
           '<div class="empty"><span class="spin"></span> Security LLM evaluating tool call…</div>';
         try {
@@ -4165,19 +3831,16 @@ curl ${base}/v1/chat/completions \\
       <span style="background:rgba(255,255,255,.04);padding:3px 7px"><span style="color:var(--muted)">intent match</span> ${r.intent_consistent ? '<b style="color:var(--teal)">yes</b>' : '<b style="color:var(--rose)">no</b>'}</span>
       <span style="background:rgba(255,255,255,.04);padding:3px 7px"><span style="color:var(--muted)">args risk</span> ${r.arguments_risk}</span>
     </div>`;
-          $("tgResult").innerHTML = renderAnalystReport(report) + extras;
-        } catch (e) {
+          $("tgResult").innerHTML = renderAnalystReport(report) + extras} catch (e) {
           $("tgResult").innerHTML =
-            `<div class="empty">Error: ${esc(e.message)}</div>`;
-        }
+            `<div class="empty">Error: ${esc(e.message)}</div>`}
       }
       async function runMemoryScan() {
         const content = $("memInput").value.trim();
         if (!content) {
           $("memResult").innerHTML =
             '<div class="empty">Type some memory content first.</div>';
-          return;
-        }
+          return}
         $("memResult").innerHTML =
           '<div class="empty"><span class="spin"></span> Scanning memory write…</div>';
         try {
@@ -4188,19 +3851,16 @@ curl ${base}/v1/chat/completions \\
               body: JSON.stringify({ content, agent_id: "demo" }),
             })
           ).json();
-          $("memResult").innerHTML = renderAnalystReport(r);
-        } catch (e) {
+          $("memResult").innerHTML = renderAnalystReport(r)} catch (e) {
           $("memResult").innerHTML =
-            `<div class="empty">Error: ${esc(e.message)}</div>`;
-        }
+            `<div class="empty">Error: ${esc(e.message)}</div>`}
       }
       async function runContentScan() {
         const content = $("ctInput").value;
         if (!content.trim()) {
           $("ctResult").innerHTML =
             '<div class="empty">Paste some external content first.</div>';
-          return;
-        }
+          return}
         $("ctResult").innerHTML =
           '<div class="empty"><span class="spin"></span> Scanning external content…</div>';
         try {
@@ -4214,13 +3874,10 @@ curl ${base}/v1/chat/completions \\
           let extra = "";
           if (r.sanitized_content) {
             extra = `<div style="margin-top:10px"><div style="font-family:var(--mono);font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;margin-bottom:4px">sanitized content (safe to forward)</div>
-        <div style="background:#0a0a0a;border:1px solid var(--border);padding:10px;font-family:var(--mono);font-size:11px;color:rgba(255,255,255,.6);max-height:120px;overflow:auto;white-space:pre-wrap">${esc(r.sanitized_content.slice(0, 600))}</div></div>`;
-          }
-          $("ctResult").innerHTML = renderAnalystReport(r) + extra;
-        } catch (e) {
+        <div style="background:#0a0a0a;border:1px solid var(--border);padding:10px;font-family:var(--mono);font-size:11px;color:rgba(255,255,255,.6);max-height:120px;overflow:auto;white-space:pre-wrap">${esc(r.sanitized_content.slice(0, 600))}</div></div>`}
+          $("ctResult").innerHTML = renderAnalystReport(r) + extra} catch (e) {
           $("ctResult").innerHTML =
-            `<div class="empty">Error: ${esc(e.message)}</div>`;
-        }
+            `<div class="empty">Error: ${esc(e.message)}</div>`}
       }
 
       /* ── Red Team ── */
@@ -4269,11 +3926,10 @@ curl ${base}/v1/chat/completions \\
           <span>${esc(c.category)}</span>
           <span style="font-family:var(--mono);color:${col}">${pct}% (${c.blocked}/${c.total})</span>
         </div>
-        <div style="height:5px;background:rgba(255,255,255,.06);border-radius:3px;overflow:hidden">
+        <div style="height:5px;background:rgba(255,255,255,.06);overflow:hidden">
           <div style="height:100%;width:${pct}%;background:${col}"></div>
         </div>
-      </div>`;
-            })
+      </div>`})
             .join("");
           $("rtTestCount").textContent = r.total_tests + " tests";
           $("rtResults").innerHTML = (r.results || [])
@@ -4294,13 +3950,10 @@ curl ${base}/v1/chat/completions \\
           <span style="font-family:var(--mono);font-size:9px;color:var(--muted);margin-left:auto">${esc(t.decision)}</span>
         </div>
         <div style="color:rgba(255,255,255,.7);line-height:1.5">${esc(t.payload)}</div>
-      </div>`;
-            })
-            .join("");
-        } catch (e) {
+      </div>`})
+            .join("")} catch (e) {
           $("rtResults").innerHTML =
-            `<div class="empty">Error: ${esc(e.message)}</div>`;
-        }
+            `<div class="empty">Error: ${esc(e.message)}</div>`}
       }
 
       /* ── Users modal ── */
@@ -4316,8 +3969,7 @@ curl ${base}/v1/chat/completions \\
           if (!users.length) {
             $("usersBody").innerHTML =
               '<div class="empty">No users registered yet.</div>';
-            return;
-          }
+            return}
           const fmt = (ts) => {
             if (!ts) return "-";
             const sec = Math.floor(Date.now() / 1000) - ts;
@@ -4325,8 +3977,7 @@ curl ${base}/v1/chat/completions \\
             if (sec < 3600) return Math.floor(sec / 60) + "m ago";
             if (sec < 86400) return Math.floor(sec / 3600) + "h ago";
             if (sec < 604800) return Math.floor(sec / 86400) + "d ago";
-            return new Date(ts * 1000).toLocaleDateString();
-          };
+            return new Date(ts * 1000).toLocaleDateString()};
           $("usersBody").innerHTML = `
       <div style="padding:4px 0 8px;font-size:11px;color:var(--muted);border-bottom:1px solid var(--border);margin-bottom:4px">
         ${users.length} user${users.length > 1 ? "s" : ""} registered
@@ -4358,15 +4009,12 @@ curl ${base}/v1/chat/completions \\
           </div>
         </div>`,
         )
-        .join("")}`;
-        } catch (e) {
+        .join("")}`} catch (e) {
           $("usersBody").innerHTML =
-            `<div class="empty">Error: ${esc(e.message)}</div>`;
-        }
+            `<div class="empty">Error: ${esc(e.message)}</div>`}
       }
       function closeUsersModal() {
-        $("usersModal").style.display = "none";
-      }
+        $("usersModal").style.display = "none"}
 
       /* ── Security Settings (2FA) ── */
       async function showSecModal() {
@@ -4381,13 +4029,12 @@ curl ${base}/v1/chat/completions \\
           if (s.is_demo) {
             $("secBody").innerHTML = `
         <div style="padding:20px 4px">
-          <div style="background:rgba(245,166,74,.08);border:1px solid rgba(245,166,74,.25);border-radius:8px;padding:16px 18px;line-height:1.7">
+          <div style="background:rgba(245,166,74,.08);border:1px solid rgba(245,166,74,.25);padding:16px 18px;line-height:1.7">
             <div style="font-size:13px;font-weight:700;margin-bottom:6px;color:var(--amber)">Read-only demo account</div>
             <div style="font-size:12px;color:rgba(255,255,255,.7)">This is a shared public demo, so account settings - password, 2FA, email, provider keys and webhooks - are locked. <a href="/login#signup" style="color:var(--lime)">Sign up for a free account</a> to unlock everything.</div>
           </div>
         </div>`;
-            return;
-          }
+            return}
           $("secBody").innerHTML = `
       <div style="padding:6px 0 18px">
         <div style="font-size:12.5px;color:var(--muted);line-height:1.7;margin-bottom:18px">
@@ -4397,7 +4044,7 @@ curl ${base}/v1/chat/completions \\
         <!-- Gmail setup -->
         <div style="background:rgba(255,255,255,.02);border:1px solid ${configured ? "rgba(58,208,164,.2)" : "rgba(245,166,74,.25)"};border-radius:8px;padding:14px 16px;margin-bottom:12px">
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
-            <div style="font-size:13px;font-weight:600">Gmail <span style="font-family:var(--mono);font-size:10px;padding:2px 7px;border-radius:4px;margin-left:6px;${configured ? "background:rgba(58,208,164,.1);color:var(--teal);border:1px solid rgba(58,208,164,.2)" : "background:rgba(245,166,74,.1);color:var(--amber);border:1px solid rgba(245,166,74,.2)"}">${configured ? "CONNECTED" : "NOT SET"}</span></div>
+            <div style="font-size:13px;font-weight:600">Gmail <span style="font-family:var(--mono);font-size:10px;padding:2px 7px;margin-left:6px;${configured ? "background:rgba(58,208,164,.1);color:var(--teal);border:1px solid rgba(58,208,164,.2)" : "background:rgba(245,166,74,.1);color:var(--amber);border:1px solid rgba(245,166,74,.2)"}">${configured ? "CONNECTED" : "NOT SET"}</span></div>
             ${configured ? `<button class="mm-try" style="font-size:10px;color:var(--rose);border-color:rgba(240,106,130,.3)" onclick="disconnectGmail()">Remove</button>` : ""}
           </div>
           ${
@@ -4405,31 +4052,31 @@ curl ${base}/v1/chat/completions \\
               ? `<div style="font-size:11.5px;color:var(--muted)">Gmail is connected. Codes are sent automatically on login when 2FA is enabled.</div>`
               : `<div style="font-size:11.5px;color:var(--muted);margin-bottom:12px;line-height:1.65">Connect your Gmail to send verification codes. You need a Gmail App Password - <a href="https://myaccount.google.com/apppasswords" target="_blank" style="color:var(--lime)">get one here</a>.</div>
                <div class="field" style="margin-bottom:8px"><label style="display:block;font-family:var(--mono);font-size:9.5px;text-transform:uppercase;letter-spacing:.12em;color:var(--muted);margin-bottom:6px">Gmail address</label>
-                 <input id="gmailUser" type="email" placeholder="your@gmail.com" style="width:100%;background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:6px;outline:none;padding:9px 12px;font-size:13px;color:var(--ink)">
+                 <input id="gmailUser" type="email" placeholder="your@gmail.com" style="width:100%;background:rgba(255,255,255,.04);border:1px solid var(--border);outline:none;padding:9px 12px;font-size:13px;color:var(--ink)">
                </div>
                <div class="field" style="margin-bottom:12px"><label style="display:block;font-family:var(--mono);font-size:9.5px;text-transform:uppercase;letter-spacing:.12em;color:var(--muted);margin-bottom:6px">App password <span style="color:rgba(255,255,255,.25);text-transform:none;letter-spacing:0">(from myaccount.google.com/apppasswords)</span></label>
-                 <input id="gmailPass" type="password" placeholder="xxxx xxxx xxxx xxxx" style="width:100%;background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:6px;outline:none;padding:9px 12px;font-family:var(--mono);font-size:13px;color:var(--ink)">
+                 <input id="gmailPass" type="password" placeholder="xxxx xxxx xxxx xxxx" style="width:100%;background:rgba(255,255,255,.04);border:1px solid var(--border);outline:none;padding:9px 12px;font-family:var(--mono);font-size:13px;color:var(--ink)">
                </div>
-               <button class="run-full" style="width:auto;padding:0 16px;font-size:11px;border-radius:7px" onclick="connectGmail()" id="gmailConnectBtn">Connect Gmail</button>
+               <button class="run-full" style="width:auto;padding:0 16px;font-size:11px;" onclick="connectGmail()" id="gmailConnectBtn">Connect Gmail</button>
                <div id="gmailMsg" style="margin-top:8px;font-size:11.5px"></div>`
           }
         </div>
 
-        <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 16px;background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:8px;margin-bottom:10px">
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 16px;background:rgba(255,255,255,.03);border:1px solid var(--border);margin-bottom:10px">
           <div>
             <div style="font-size:13px;font-weight:600;margin-bottom:3px">Two-factor authentication</div>
             <div style="font-size:11.5px;color:var(--muted)">Protect your account with email verification</div>
           </div>
           <div style="display:flex;align-items:center;gap:10px">
-            <span style="font-family:var(--mono);font-size:10px;padding:3px 8px;border-radius:4px;${enabled ? "background:rgba(58,208,164,.1);color:var(--teal);border:1px solid rgba(58,208,164,.2)" : "background:rgba(255,255,255,.05);color:var(--muted);border:1px solid var(--border)"}">${enabled ? "ENABLED" : "DISABLED"}</span>
-            <button class="run-full" style="width:auto;padding:0 14px;font-size:10px;border-radius:6px" onclick="toggle2FA(${!enabled})">${enabled ? "Disable" : "Enable"}</button>
+            <span style="font-family:var(--mono);font-size:10px;padding:3px 8px;${enabled ? "background:rgba(58,208,164,.1);color:var(--teal);border:1px solid rgba(58,208,164,.2)" : "background:rgba(255,255,255,.05);color:var(--muted);border:1px solid var(--border)"}">${enabled ? "ENABLED" : "DISABLED"}</span>
+            <button class="run-full" style="width:auto;padding:0 14px;font-size:10px;" onclick="toggle2FA(${!enabled})">${enabled ? "Disable" : "Enable"}</button>
           </div>
         </div>
 
         ${
           enabled
             ? `
-        <div style="padding:12px 16px;background:rgba(255,255,255,.02);border:1px solid var(--border);border-radius:8px;margin-bottom:10px">
+        <div style="padding:12px 16px;background:rgba(255,255,255,.02);border:1px solid var(--border);margin-bottom:10px">
           <div style="font-size:12.5px;font-weight:500;margin-bottom:8px">Send a test code</div>
           <div style="font-size:11.5px;color:var(--muted);margin-bottom:10px">Confirm your email is receiving codes before your next login.</div>
           <button class="mm-try" onclick="testOTP()" id="testOTPBtn">Send test code to ${esc(s.email)}</button>
@@ -4438,7 +4085,7 @@ curl ${base}/v1/chat/completions \\
             : ""
         }
 
-        <div style="padding:12px 16px;background:rgba(255,255,255,.02);border:1px solid var(--border);border-radius:8px;margin-bottom:12px">
+        <div style="padding:12px 16px;background:rgba(255,255,255,.02);border:1px solid var(--border);margin-bottom:12px">
           <div style="font-size:12px;font-weight:600;margin-bottom:10px;color:rgba(255,255,255,.8)">Account security info</div>
           <div style="font-size:11.5px;color:var(--muted);line-height:1.75">
             <div>Account locked after 5 failed login attempts (15 min lockout)</div>
@@ -4448,22 +4095,22 @@ curl ${base}/v1/chat/completions \\
         </div>
 
         <!-- Change password -->
-        <div style="padding:14px 16px;background:rgba(255,255,255,.02);border:1px solid var(--border);border-radius:8px;margin-bottom:12px">
+        <div style="padding:14px 16px;background:rgba(255,255,255,.02);border:1px solid var(--border);margin-bottom:12px">
           <div style="font-size:13px;font-weight:600;margin-bottom:12px">Change password</div>
           <div class="field" style="margin-bottom:8px">
             <label style="display:block;font-family:var(--mono);font-size:9px;text-transform:uppercase;letter-spacing:.12em;color:var(--muted);margin-bottom:5px">Current password</label>
-            <input id="pwCurrent" type="password" placeholder="••••••••" style="width:100%;background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:6px;outline:none;padding:8px 12px;font-size:13px;color:var(--ink)">
+            <input id="pwCurrent" type="password" placeholder="••••••••" style="width:100%;background:rgba(255,255,255,.04);border:1px solid var(--border);outline:none;padding:8px 12px;font-size:13px;color:var(--ink)">
           </div>
           <div class="field" style="margin-bottom:10px">
             <label style="display:block;font-family:var(--mono);font-size:9px;text-transform:uppercase;letter-spacing:.12em;color:var(--muted);margin-bottom:5px">New password</label>
-            <input id="pwNew" type="password" placeholder="Min 8 characters" style="width:100%;background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:6px;outline:none;padding:8px 12px;font-size:13px;color:var(--ink)">
+            <input id="pwNew" type="password" placeholder="Min 8 characters" style="width:100%;background:rgba(255,255,255,.04);border:1px solid var(--border);outline:none;padding:8px 12px;font-size:13px;color:var(--ink)">
           </div>
           <button class="mm-try" onclick="changePassword()" id="pwBtn">Update password</button>
           <div id="pwMsg" style="margin-top:8px;font-size:11.5px"></div>
         </div>
 
         <!-- Webhooks -->
-        <div style="padding:14px 16px;background:rgba(255,255,255,.02);border:1px solid var(--border);border-radius:8px">
+        <div style="padding:14px 16px;background:rgba(255,255,255,.02);border:1px solid var(--border);">
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
             <div style="font-size:13px;font-weight:600">Webhooks</div>
             <button class="mm-try" style="font-size:10px" onclick="showAddWebhook()">+ Add</button>
@@ -4473,14 +4120,14 @@ curl ${base}/v1/chat/completions \\
           <div id="webhookForm" style="display:none;margin-top:12px;border-top:1px solid var(--border);padding-top:12px">
             <div class="field" style="margin-bottom:8px">
               <label style="display:block;font-family:var(--mono);font-size:9px;text-transform:uppercase;letter-spacing:.12em;color:var(--muted);margin-bottom:5px">Name</label>
-              <input id="whName" type="text" placeholder="My server" style="width:100%;background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:6px;outline:none;padding:8px 12px;font-size:12px;color:var(--ink)">
+              <input id="whName" type="text" placeholder="My server" style="width:100%;background:rgba(255,255,255,.04);border:1px solid var(--border);outline:none;padding:8px 12px;font-size:12px;color:var(--ink)">
             </div>
             <div class="field" style="margin-bottom:10px">
               <label style="display:block;font-family:var(--mono);font-size:9px;text-transform:uppercase;letter-spacing:.12em;color:var(--muted);margin-bottom:5px">URL</label>
-              <input id="whUrl" type="url" placeholder="https://yourserver.com/webhook" style="width:100%;background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:6px;outline:none;padding:8px 12px;font-size:12px;color:var(--ink)">
+              <input id="whUrl" type="url" placeholder="https://yourserver.com/webhook" style="width:100%;background:rgba(255,255,255,.04);border:1px solid var(--border);outline:none;padding:8px 12px;font-size:12px;color:var(--ink)">
             </div>
             <div style="display:flex;gap:8px">
-              <button class="run-full" style="width:auto;padding:0 14px;font-size:10px;border-radius:6px" onclick="createWebhook()" id="whBtn">Create webhook</button>
+              <button class="run-full" style="width:auto;padding:0 14px;font-size:10px;" onclick="createWebhook()" id="whBtn">Create webhook</button>
               <button class="mm-try" onclick="$('webhookForm').style.display='none'">Cancel</button>
             </div>
             <div id="whMsg" style="margin-top:8px;font-size:11.5px"></div>
@@ -4488,15 +4135,12 @@ curl ${base}/v1/chat/completions \\
         </div>
       </div>
     `;
-          loadWebhooks();
-        } catch (e) {
+          loadWebhooks()} catch (e) {
           $("secBody").innerHTML =
-            `<div class="empty">Error: ${esc(e.message)}</div>`;
-        }
+            `<div class="empty">Error: ${esc(e.message)}</div>`}
       }
       function closeSecModal() {
-        $("secModal").style.display = "none";
-      }
+        $("secModal").style.display = "none"}
 
       async function changePassword() {
         const cur = document.getElementById("pwCurrent")?.value;
@@ -4506,8 +4150,7 @@ curl ${base}/v1/chat/completions \\
         if (!cur || !nw) {
           msg.innerHTML =
             '<span style="color:var(--rose)">Fill in both fields.</span>';
-          return;
-        }
+          return}
         btn.disabled = true;
         btn.textContent = "Updating…";
         msg.innerHTML = "";
@@ -4522,13 +4165,10 @@ curl ${base}/v1/chat/completions \\
           msg.innerHTML =
             '<span style="color:var(--teal)">Password updated successfully.</span>';
           document.getElementById("pwCurrent").value = "";
-          document.getElementById("pwNew").value = "";
-        } catch (e) {
-          msg.innerHTML = `<span style="color:var(--rose)">${esc(e.message)}</span>`;
-        }
+          document.getElementById("pwNew").value = ""} catch (e) {
+          msg.innerHTML = `<span style="color:var(--rose)">${esc(e.message)}</span>`}
         btn.disabled = false;
-        btn.textContent = "Update password";
-      }
+        btn.textContent = "Update password"}
 
       async function loadWebhooks() {
         try {
@@ -4540,8 +4180,7 @@ curl ${base}/v1/chat/completions \\
           if (!whs.length) {
             el.innerHTML =
               '<div class="empty" style="font-size:11.5px">No webhooks yet.</div>';
-            return;
-          }
+            return}
           el.innerHTML = whs
             .map(
               (w) => `
@@ -4554,16 +4193,14 @@ curl ${base}/v1/chat/completions \\
         <button class="mm-try" style="font-size:9.5px;color:var(--rose);border-color:rgba(240,106,130,.25);flex-shrink:0" onclick="deleteWebhook('${esc(w.id)}')">Remove</button>
       </div>`,
             )
-            .join("");
-        } catch (e) {}
+            .join("")} catch (e) {}
       }
 
       function showAddWebhook() {
         const f = document.getElementById("webhookForm");
         if (f) {
           f.style.display = "";
-          document.getElementById("whName")?.focus();
-        }
+          document.getElementById("whName")?.focus()}
       }
 
       async function createWebhook() {
@@ -4574,8 +4211,7 @@ curl ${base}/v1/chat/completions \\
         if (!name || !url) {
           msg.innerHTML =
             '<span style="color:var(--rose)">Enter a name and URL.</span>';
-          return;
-        }
+          return}
         btn.disabled = true;
         btn.textContent = "Creating…";
         msg.innerHTML = "";
@@ -4597,18 +4233,14 @@ curl ${base}/v1/chat/completions \\
           secBanner.style.cssText =
             "margin-top:10px;padding:10px 13px;background:rgba(196,241,53,.07);border:1px solid rgba(196,241,53,.2);border-radius:6px;font-size:11px;line-height:1.7";
           secBanner.innerHTML = `<b style="color:var(--lime)">Webhook secret (save this - shown once):</b><br><code style="font-family:var(--mono);font-size:10px;color:var(--ink);word-break:break-all">${esc(v.secret)}</code><br><span style="color:var(--muted)">Use to verify the <code style="font-family:var(--mono);font-size:9.5px">X-AgentShield-Signature</code> header on incoming requests.</span>`;
-          document.getElementById("webhookList").after(secBanner);
-        } catch (e) {
-          msg.innerHTML = `<span style="color:var(--rose)">${esc(e.message)}</span>`;
-        }
+          document.getElementById("webhookList").after(secBanner)} catch (e) {
+          msg.innerHTML = `<span style="color:var(--rose)">${esc(e.message)}</span>`}
         btn.disabled = false;
-        btn.textContent = "Create webhook";
-      }
+        btn.textContent = "Create webhook"}
 
       async function deleteWebhook(id) {
         await fetch(`/api/gateway/webhooks/${id}`, { method: "DELETE" });
-        loadWebhooks();
-      }
+        loadWebhooks()}
 
       async function connectGmail() {
         const user = document.getElementById("gmailUser")?.value.trim();
@@ -4618,8 +4250,7 @@ curl ${base}/v1/chat/completions \\
         if (!user || !pass) {
           msg.innerHTML =
             '<span style="color:var(--rose)">Enter your Gmail address and app password.</span>';
-          return;
-        }
+          return}
         btn.disabled = true;
         btn.textContent = "Connecting…";
         msg.innerHTML = "";
@@ -4635,14 +4266,12 @@ curl ${base}/v1/chat/completions \\
         } catch (e) {
           msg.innerHTML = `<span style="color:var(--rose)">${esc(e.message)}</span>`;
           btn.disabled = false;
-          btn.textContent = "Connect Gmail";
-        }
+          btn.textContent = "Connect Gmail"}
       }
 
       async function disconnectGmail() {
         await fetch("/api/auth/gmail-config", { method: "DELETE" });
-        showSecModal();
-      }
+        showSecModal()}
 
       async function toggle2FA(enable) {
         try {
@@ -4654,12 +4283,9 @@ curl ${base}/v1/chat/completions \\
           const v = await r.json();
           if (r.ok && v.ok) {
             showSecModal();
-            return;
-          }
-          alert(v.detail || "Could not update 2FA settings.");
-        } catch (e) {
-          alert("Could not update 2FA settings.");
-        }
+            return}
+          alert(v.detail || "Could not update 2FA settings.")} catch (e) {
+          alert("Could not update 2FA settings.")}
       }
 
       async function testOTP() {
@@ -4673,16 +4299,12 @@ curl ${base}/v1/chat/completions \\
           if (v.ok) {
             msg.innerHTML = v.dev_mode
               ? '<span style="color:var(--amber)">Dev mode - check server console for the code.</span>'
-              : '<span style="color:var(--teal)">Test code sent. Check your inbox.</span>';
-          } else {
-            msg.innerHTML = `<span style="color:var(--rose)">${esc(v.detail || "Failed")}</span>`;
-          }
+              : '<span style="color:var(--teal)">Test code sent. Check your inbox.</span>'} else {
+            msg.innerHTML = `<span style="color:var(--rose)">${esc(v.detail || "Failed")}</span>`}
         } catch (e) {
-          msg.innerHTML = `<span style="color:var(--rose)">${esc(e.message)}</span>`;
-        }
+          msg.innerHTML = `<span style="color:var(--rose)">${esc(e.message)}</span>`}
         btn.disabled = false;
-        btn.textContent = "Send test code";
-      }
+        btn.textContent = "Send test code"}
 
       /* ── auth ── */
       let _IS_DEMO = false;
@@ -4691,8 +4313,7 @@ curl ${base}/v1/chat/completions \\
           const r = await fetch("/api/auth/me");
           if (!r.ok) {
             window.location.href = "/login";
-            return;
-          }
+            return}
           const u = await r.json();
           const first = (u.name || "Analyst").split(" ")[0];
           $("meName").textContent = first;
@@ -4703,13 +4324,11 @@ curl ${base}/v1/chat/completions \\
             .slice(0, 2)
             .toUpperCase();
           _IS_DEMO = !!u.is_demo;
-          if (_IS_DEMO) applyDemoMode();
-        } catch (e) {}
+          if (_IS_DEMO) applyDemoMode()} catch (e) {}
       }
 
       function demoSignup() {
-        window.location.href = "/login#signup";
-      }
+        window.location.href = "/login#signup"}
 
       /* Demo-locked features prompt for signup instead of acting (server also blocks). */
       function demoGate(feature) {
@@ -4720,15 +4339,13 @@ curl ${base}/v1/chat/completions \\
           )
         )
           demoSignup();
-        return true;
-      }
+        return true}
 
       function applyDemoMode() {
         // show the banner
         const bar = $("demoModeBar");
         if (bar) {
-          bar.style.display = "flex";
-        }
+          bar.style.display = "flex"}
         // label the account chip
         const nm = $("meName");
         if (nm) nm.textContent = "Demo";
@@ -4742,19 +4359,15 @@ curl ${base}/v1/chat/completions \\
           up.innerHTML =
             '<div style="text-align:center;padding:6px 4px"><div style="font-size:13px;font-weight:600;margin-bottom:4px">Connect your own provider key with a free account</div>' +
             '<div style="font-size:11.5px;color:var(--muted);margin-bottom:12px;line-height:1.6">The demo runs on a local model so you can see the firewall work without a key. Sign up to route your real OpenAI / Anthropic / Groq traffic through AgentShield.</div>' +
-            '<button class="run-full" style="width:auto;padding:0 18px;margin:0 auto" onclick="demoSignup()">Sign up free →</button></div>';
-        }
+            '<button class="run-full" style="width:auto;padding:0 18px;margin:0 auto" onclick="demoSignup()">Sign up free →</button></div>'}
         // land on the Test tab - the self-test shows the firewall blocking attacks with
         // zero setup, the best first impression of the demo.
         const tabs = document.querySelectorAll(".nav-tabs a");
-        if (tabs[2]) showTab("redteam", tabs[2]);
-      }
+        if (tabs[2]) showTab("redteam", tabs[2])}
       async function logout() {
         try {
-          await fetch("/api/auth/logout", { method: "POST" });
-        } catch (e) {}
-        window.location.href = "/login";
-      }
+          await fetch("/api/auth/logout", { method: "POST" })} catch (e) {}
+        window.location.href = "/login"}
 
       /* ── Quick scan bar ── */
       async function runQuickScan() {
@@ -4763,8 +4376,7 @@ curl ${base}/v1/chat/completions \\
         const text = input.value.trim();
         if (!text) {
           input.focus();
-          return;
-        }
+          return}
         result.innerHTML = '<span class="spin"></span>';
         try {
           const r = await fetch("/api/shield/scan", {
@@ -4779,11 +4391,8 @@ curl ${base}/v1/chat/completions \\
             ? `<span style="color:var(--rose);font-weight:700">BLOCKED</span> <span style="color:var(--muted);font-size:10.5px">(score: ${score})</span>`
             : `<span style="color:var(--teal);font-weight:700">✓ SAFE</span> <span style="color:var(--muted);font-size:10.5px">(score: ${score})</span>`;
           setTimeout(() => {
-            if (result.textContent) result.innerHTML = "";
-          }, 8000);
-        } catch (e) {
-          result.innerHTML = `<span style="color:var(--rose)">${esc(e.message)}</span>`;
-        }
+            if (result.textContent) result.innerHTML = ""}, 8000)} catch (e) {
+          result.innerHTML = `<span style="color:var(--rose)">${esc(e.message)}</span>`}
       }
 
       /* ── Toast notifications ── */
@@ -4795,18 +4404,14 @@ curl ${base}/v1/chat/completions \\
         a.appendChild(t);
         setTimeout(() => {
           t.style.animation = "toastOut .2s forwards";
-          setTimeout(() => t.remove(), 200);
-        }, duration);
-      }
+          setTimeout(() => t.remove(), 200)}, duration)}
 
       /* ── Key search filter ── */
       function filterKeys(q) {
         q = q.toLowerCase();
         document.querySelectorAll(".gwrow").forEach((row) => {
           const name = row.querySelector("b")?.textContent?.toLowerCase() || "";
-          row.style.display = q === "" || name.includes(q) ? "" : "none";
-        });
-      }
+          row.style.display = q === "" || name.includes(q) ? "" : "none"})}
 
       /* ── Collapsible sections ── */
       function toggleCollapse(id, header) {
@@ -4816,11 +4421,9 @@ curl ${base}/v1/chat/completions \\
           header.querySelector("span:last-child");
         if (el.style.display === "none") {
           el.style.display = "";
-          if (ch) ch.textContent = "▾";
-        } else {
+          if (ch) ch.textContent = "▾"} else {
           el.style.display = "none";
-          if (ch) ch.textContent = "▸";
-        }
+          if (ch) ch.textContent = "▸"}
       }
 
       /* ── Red Team export ── */
@@ -4828,8 +4431,7 @@ curl ${base}/v1/chat/completions \\
       function exportRedTeam() {
         if (!_rtLastResults) {
           alert("Run the full suite first.");
-          return;
-        }
+          return}
         const blob = new Blob([JSON.stringify(_rtLastResults, null, 2)], {
           type: "application/json",
         });
@@ -4839,8 +4441,7 @@ curl ${base}/v1/chat/completions \\
           "agentshield-redteam-" +
           new Date().toISOString().slice(0, 10) +
           ".json";
-        a.click();
-      }
+        a.click()}
 
       /* ── init ── */
       loadUser();

@@ -16,8 +16,7 @@
         margin: 0;
         padding: 0;
         scrollbar-width: thin;
-        scrollbar-color: rgba(255, 255, 255, 0.08) transparent;
-      }
+        scrollbar-color: rgba(255, 255, 255, 0.08) transparent}
       :root {
         --bg: #000;
         --panel: #111;
@@ -27,20 +26,17 @@
         --border2: rgba(255, 255, 255, 0.18);
         --lime: #c4f135;
         --mono: "JetBrains Mono", ui-monospace, monospace;
-        --trans: 0.16s cubic-bezier(0.25, 0, 0.3, 1);
-      }
+        --trans: 0.16s cubic-bezier(0.25, 0, 0.3, 1)}
       html,
       body {
         height: 100%;
         background: var(--bg);
         color: var(--ink);
         font-family: "Inter", system-ui, sans-serif;
-        -webkit-font-smoothing: antialiased;
-      }
+        -webkit-font-smoothing: antialiased}
       a {
         color: inherit;
-        text-decoration: none;
-      }
+        text-decoration: none}
 
       /* ambient glows */
       body::before {
@@ -56,8 +52,7 @@
           transparent 65%
         );
         pointer-events: none;
-        z-index: 0;
-      }
+        z-index: 0}
       body::after {
         content: "";
         position: fixed;
@@ -72,8 +67,7 @@
         );
         filter: blur(60px);
         pointer-events: none;
-        z-index: 0;
-      }
+        z-index: 0}
 
       .page {
         min-height: 100vh;
@@ -83,8 +77,7 @@
         justify-content: center;
         padding: 40px 20px;
         position: relative;
-        z-index: 1;
-      }
+        z-index: 1}
 
       /* back link */
       .back {
@@ -96,11 +89,9 @@
         text-transform: uppercase;
         letter-spacing: 0.08em;
         color: rgba(255, 255, 255, 0.3);
-        transition: color var(--trans);
-      }
+        transition: color var(--trans)}
       .back:hover {
-        color: rgba(255, 255, 255, 0.65);
-      }
+        color: rgba(255, 255, 255, 0.65)}
 
       /* logo */
       .logo {
@@ -109,8 +100,7 @@
         gap: 8px;
         font-weight: 700;
         font-size: 14px;
-        margin-bottom: 40px;
-      }
+        margin-bottom: 40px}
       .logo .mk {
         width: 28px;
         height: 28px;
@@ -118,9 +108,7 @@
         display: grid;
         place-items: center;
         font-size: 13px;
-        border-radius: 6px;
-        background: rgba(196, 241, 53, 0.06);
-      }
+        background: rgba(196, 241, 53, 0.06)}
 
       /* card */
       .card {
@@ -128,31 +116,26 @@
         max-width: 390px;
         background: rgba(17, 17, 17, 0.8);
         border: 1px solid rgba(255, 255, 255, 0.1);
-        border-radius: 14px;
         padding: 32px;
         box-shadow:
           0 24px 80px rgba(0, 0, 0, 0.5),
           0 0 0 1px rgba(255, 255, 255, 0.04) inset;
         backdrop-filter: blur(12px);
-        -webkit-backdrop-filter: blur(12px);
-      }
+        -webkit-backdrop-filter: blur(12px)}
       .card h1 {
         font-size: 23px;
         font-weight: 700;
-        letter-spacing: -0.02em;
-      }
+        letter-spacing: -0.02em}
       .card .lead {
         font-size: 13.5px;
         color: var(--muted);
         margin-top: 6px;
         margin-bottom: 24px;
-        line-height: 1.5;
-      }
+        line-height: 1.5}
 
       /* fields */
       .field {
-        margin-bottom: 14px;
-      }
+        margin-bottom: 14px}
       .field label {
         display: block;
         font-family: var(--mono);
@@ -160,29 +143,24 @@
         text-transform: uppercase;
         letter-spacing: 0.14em;
         color: var(--muted);
-        margin-bottom: 7px;
-      }
+        margin-bottom: 7px}
       .field input {
         width: 100%;
         background: rgba(255, 255, 255, 0.04);
         border: 1px solid var(--border);
         outline: none;
-        border-radius: 6px;
         padding: 11px 13px;
         font-family: "Inter", sans-serif;
         font-size: 13.5px;
         color: var(--ink);
         transition:
           border-color var(--trans),
-          box-shadow var(--trans);
-      }
+          box-shadow var(--trans)}
       .field input:focus {
         border-color: rgba(196, 241, 53, 0.4);
-        box-shadow: 0 0 0 3px rgba(196, 241, 53, 0.07);
-      }
+        box-shadow: 0 0 0 3px rgba(196, 241, 53, 0.07)}
       .field input::placeholder {
-        color: rgba(255, 255, 255, 0.18);
-      }
+        color: rgba(255, 255, 255, 0.18)}
 
       /* name field slide animation */
       #nameField {
@@ -191,12 +169,10 @@
           max-height 0.22s cubic-bezier(0.25, 0, 0.3, 1),
           opacity 0.2s;
         max-height: 0;
-        opacity: 0;
-      }
+        opacity: 0}
       #nameField.visible {
         max-height: 80px;
-        opacity: 1;
-      }
+        opacity: 1}
 
       /* submit */
       .btn {
@@ -209,32 +185,26 @@
         font-family: var(--mono);
         font-size: 11.5px;
         font-weight: 700;
-        border-radius: 6px;
         text-transform: uppercase;
         letter-spacing: 0.1em;
         cursor: pointer;
         transition:
           opacity var(--trans),
-          transform var(--trans);
-      }
+          transform var(--trans)}
       .btn:hover {
-        opacity: 0.9;
-      }
+        opacity: 0.9}
       .btn:not(:disabled):active {
         transform: scale(0.98);
-        opacity: 1;
-      }
+        opacity: 1}
       .btn:disabled {
         opacity: 0.4;
-        cursor: default;
-      }
+        cursor: default}
 
       /* error */
       .msg {
         margin-top: 12px;
         font-size: 12.5px;
         padding: 10px 13px;
-        border-radius: 6px;
         background: rgba(240, 106, 130, 0.1);
         border: 1px solid rgba(240, 106, 130, 0.25);
         color: #f06a82;
@@ -245,44 +215,36 @@
           max-height 0.2s,
           opacity 0.18s,
           padding 0.2s,
-          margin 0.2s;
-      }
+          margin 0.2s}
       .msg.show {
         max-height: 60px;
-        opacity: 1;
-      }
+        opacity: 1}
 
       /* demo box */
       .demo {
         margin-top: 18px;
         background: rgba(255, 255, 255, 0.04);
         border: 1px solid var(--border);
-        border-radius: 6px;
         padding: 11px 14px;
         font-family: var(--mono);
         font-size: 11px;
         color: rgba(255, 255, 255, 0.35);
-        line-height: 1.9;
-      }
+        line-height: 1.9}
       .demo span {
-        color: rgba(255, 255, 255, 0.65);
-      }
+        color: rgba(255, 255, 255, 0.65)}
 
       /* alt link */
       .alt {
         margin-top: 18px;
         font-size: 13px;
         color: var(--muted);
-        text-align: center;
-      }
+        text-align: center}
       .alt a {
         color: var(--lime);
         font-weight: 500;
-        transition: opacity var(--trans);
-      }
+        transition: opacity var(--trans)}
       .alt a:hover {
-        opacity: 0.75;
-      }
+        opacity: 0.75}
     </style>
   </head>
   <body>
@@ -431,8 +393,7 @@
                 logo_alignment: "left",
                 width: 280,
               },
-            );
-          }
+            )}
         })
         .catch(() => {});
 
@@ -451,13 +412,11 @@
           });
           const j = await r.json();
           if (!r.ok) throw new Error(j.detail || "Google Sign-In failed");
-          window.location.href = "/app";
-        } catch (err) {
+          window.location.href = "/app"} catch (err) {
           msg.textContent = err.message;
           msg.className = "msg show";
           btn.disabled = false;
-          btn.textContent = isSignup ? "Sign up \u2192" : "Log in \u2192";
-        }
+          btn.textContent = isSignup ? "Sign up \u2192" : "Log in \u2192"}
       }
 
       function toggleMode() {
@@ -477,8 +436,7 @@
         document.getElementById("toggleAuth").innerHTML = isSignup
           ? '<a href="#" onclick="toggleMode();return false">Already have an account? <b>Log in</b></a>'
           : '<a href="#" onclick="toggleMode();return false">Don\'t have an account? <b>Sign up</b></a>';
-        document.getElementById("msg").className = "msg";
-      }
+        document.getElementById("msg").className = "msg"}
 
       async function doSubmit(e) {
         e.preventDefault();
@@ -505,18 +463,14 @@
           if (!r.ok) throw new Error(j.detail || "Failed");
           if (j.requires_2fa) {
             _tempToken = j.temp_token;
-            showOTPStep(j.dev_mode);
-          } else {
-            window.location.href = "/app";
-          }
+            showOTPStep(j.dev_mode)} else {
+            window.location.href = "/app"}
         } catch (err) {
           msg.textContent = err.message;
           msg.className = "msg show";
           btn.disabled = false;
-          btn.textContent = isSignup ? "Sign up →" : "Log in →";
-        }
-        return false;
-      }
+          btn.textContent = isSignup ? "Sign up →" : "Log in →"}
+        return false}
 
       function showOTPStep(devMode) {
         document.getElementById("loginForm").style.display = "none";
@@ -527,8 +481,7 @@
           : "We sent a 6-digit code to your email. It expires in 10 minutes.";
         document.getElementById("googleDivider").style.display = "none";
         document.getElementById("googleButton").style.display = "none";
-        setTimeout(() => document.getElementById("otpInput").focus(), 100);
-      }
+        setTimeout(() => document.getElementById("otpInput").focus(), 100)}
 
       async function doOTPSubmit(e) {
         e.preventDefault();
@@ -538,8 +491,7 @@
         if (otp.length !== 6 || !/^\d+$/.test(otp)) {
           msg.textContent = "Enter the 6-digit code from your email.";
           msg.className = "msg show";
-          return;
-        }
+          return}
         msg.className = "msg";
         btn.disabled = true;
         btn.textContent = "Verifying…";
@@ -551,17 +503,14 @@
           });
           const j = await r.json();
           if (!r.ok) throw new Error(j.detail || "Invalid code");
-          window.location.href = "/app";
-        } catch (err) {
+          window.location.href = "/app"} catch (err) {
           msg.textContent = err.message;
           msg.className = "msg show";
           btn.disabled = false;
           btn.textContent = "Verify →";
           document.getElementById("otpInput").value = "";
-          document.getElementById("otpInput").focus();
-        }
-        return false;
-      }
+          document.getElementById("otpInput").focus()}
+        return false}
 
       function backToLogin() {
         _tempToken = null;
@@ -576,8 +525,7 @@
         document.getElementById("msg").className = "msg";
         if (_googleClientId) {
           document.getElementById("googleDivider").style.display = "flex";
-          document.getElementById("googleButton").style.display = "flex";
-        }
+          document.getElementById("googleButton").style.display = "flex"}
       }
 
       if (window.location.hash === "#signup") toggleMode();
