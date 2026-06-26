@@ -27,7 +27,7 @@ def get_batch(data: torch.Tensor, block_size: int, batch_size: int, device: str)
 
 
 def train(
-    steps: int = 1500,
+    steps: int = 3000,
     batch_size: int = 16,
     block_size: int = 256,
     n_layer: int = 6,

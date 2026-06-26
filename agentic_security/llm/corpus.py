@@ -57,6 +57,16 @@ def _load_real_attacks() -> list[str]:
 
 REAL_ATTACKS: list[str] = _load_real_attacks()
 
+# ── Simple greetings ──
+GREETINGS = [
+    "hello", "hi", "hey", "howdy", "greetings", "good morning",
+    "good afternoon", "good evening", "what's up", "sup", "yo",
+    "hi there", "hello there", "hey there", "how are you",
+    "how's it going", "how are you doing", "what's new",
+    "nice to meet you", "pleased to meet you", "good to see you",
+    "morning", "afternoon", "evening",
+]
+
 # ── Identity ──
 IDENTITY_Q = [
     "who are you", "what are you", "what is your name", "introduce yourself",

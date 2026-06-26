@@ -54,7 +54,7 @@ def train(force: bool = False) -> None:
 
     from xgboost import XGBClassifier
     from .corpus import (
-        ATTACK_Q, HARMFUL_Q, REAL_ATTACKS,
+        GREETINGS, ATTACK_Q, HARMFUL_Q, REAL_ATTACKS,
         IDENTITY_Q, CAP_Q, SEC_QA, CODE_QA, GEN_QA, SMALL_QA,
     )
 
@@ -72,7 +72,7 @@ def train(force: bool = False) -> None:
     attack_texts = deduped
 
     # ── Build safe examples (label=0) ──
-    safe_texts = list(IDENTITY_Q) + list(CAP_Q)
+    safe_texts = list(GREETINGS) + list(IDENTITY_Q) + list(CAP_Q)
     safe_texts += [q for q, _ in SEC_QA]
     safe_texts += [q for q, _ in CODE_QA]
     safe_texts += [q for q, _ in GEN_QA]

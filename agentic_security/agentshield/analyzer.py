@@ -209,21 +209,23 @@ def _attack_similarity_signal(text: str) -> ThreatSignal | None:
         score = _attack_match_score(text)
     except Exception:
         return None
-    if score < 0.20:
+    if score < 0.22:
         return None
     # Suppress signal if the input strongly matches a known benign question
     # (educational security terms like "sql injection" or "prompt injection"
     # have the same keywords as attack phrases after stopword removal).
     try:
         benign = _question_match_score(text)
-        if benign >= 0.45:
+        if benign >= 0.40:
             return None
     except Exception:
         pass
+    # Weight proportional to similarity so weak signals don't dominate
+    weight = min(0.95, 0.4 + score * 0.6)
     return ThreatSignal(
         name="known_attack_pattern",
         confidence=min(1.0, score),
-        weight=0.95,
+        weight=round(weight, 2),
         explanation=f"Input matches known attack phrasings the Security LLM was trained to refuse (similarity {score:.0%}).",
         layer="security-llm",
     )
@@ -541,11 +543,14 @@ def analyze_threat(text: str, *, source: str = "user", context: dict | None = No
         if llm:
             signals.append(llm)
 
-    # Hybrid-layer (XGBoost+MiniLM via LangGraph) - runs in parallel with existing
-    # signals; only adds a signal if it also votes "attack".
-    graph_sig = _safe(_guard_graph_signal, cleaned)
-    if graph_sig:
-        signals.append(graph_sig)
+    # Hybrid-layer (XGBoost+MiniLM via LangGraph) - only as a confirmer when
+    # there is already some suspicion, to avoid false positives on trivially
+    # benign inputs like short greetings ("hello", "hi") that the XGBoost
+    # classifier was never trained on.
+    if pre_score >= 25:
+        graph_sig = _safe(_guard_graph_signal, cleaned)
+        if graph_sig:
+            signals.append(graph_sig)
 
     # Compose final report
     score = _compose_risk_score(signals)

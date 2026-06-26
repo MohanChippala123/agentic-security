@@ -59,6 +59,14 @@ _INJECTION_PATTERNS = [
      ThreatType.ENCODING_ATTACK, 0.85, "Base64 encoding smuggle attempt"),
     (re.compile(r"(hypothetically|for\s+educational\s+purposes|in\s+a\s+fictional|role[- ]?play|pretend)\s+.{0,30}(how\s+to|explain|create|make|build)", re.I),
      ThreatType.JAILBREAK, 0.78, "Fictional/educational framing bypass"),
+    (re.compile(r"remove\s+(all|any|every|the|your)\s+(your\s+)?(permissions?|restrictions?|safeguards?|constraints?|limitations?|boundaries?|protocols?)", re.I),
+     ThreatType.PROMPT_INJECTION, 0.88, "Permission/restriction removal attempt"),
+    (re.compile(r"you\s+(have|are)\s+(no|zero|none|without|free\s+from)\s+(permissions?|restrictions?|safeguards?|constraints?|limitations?|rules)", re.I),
+     ThreatType.JAILBREAK, 0.90, "Claiming no restrictions"),
+    (re.compile(r"ignore\s+(your\s+)?(safety|ethics?|protocols?|training|boundaries?|guidelines?)", re.I),
+     ThreatType.PROMPT_INJECTION, 0.91, "Safety override attempt"),
+    (re.compile(r"(you.?(are|can|will)\s+)?(now\s+)?(allowed|free|permitted)\s+to\s+(do|say|answer|respond|provide|give|ignore|bypass)\s+(anything|everything|whatever)", re.I),
+     ThreatType.JAILBREAK, 0.89, "Blank-check permission bypass"),
 ]
 
 # ── Harmful-content detection (order-independent) ──
