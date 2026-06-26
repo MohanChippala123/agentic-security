@@ -138,6 +138,33 @@ def read_token(token: str | None) -> dict | None:
 
 # ── bootstrap ────────────────────────────────────────────────────────────────
 
+# ── Google OAuth ──────────────────────────────────────────────────────────────
+
+def google_auth(google_sub: str, email: str, name: str) -> dict:
+    email = email.strip().lower()
+    existing = db.user_get_by_google(google_sub)
+    if existing:
+        db.user_record_login(existing["email"])
+        return {"email": existing["email"], "name": existing["name"]}
+
+    existing_email = db.user_get(email)
+    if existing_email:
+        if existing_email.get("google_sub"):
+            raise ValueError("This Google account is already linked to another user.")
+        db.user_link_google(email, google_sub)
+        db.user_record_login(email)
+        return {"email": email, "name": existing_email["name"]}
+
+    name = name.strip() or email.split("@")[0]
+    salt = secrets.token_hex(16)
+    import hashlib
+    pw = secrets.token_hex(32)
+    dk = hashlib.pbkdf2_hmac("sha256", pw.encode(), bytes.fromhex(salt), _PBKDF2_ROUNDS)
+    db.user_create_google(email, name, salt, dk.hex(), google_sub)
+    db.user_record_login(email)
+    return {"email": email, "name": name}
+
+
 def seed_demo_account() -> None:
     """Migrate any legacy users.json on first run only.
     Never creates fake or demo accounts - real users sign up themselves."""

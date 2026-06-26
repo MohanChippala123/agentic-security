@@ -134,11 +134,12 @@ app = FastAPI(
 
 _CSP = (
     "default-src 'self'; "
-    "script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; "
+    "script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://accounts.google.com; "
     "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net; "
     "font-src 'self' https://fonts.gstatic.com; "
     "img-src 'self' data: blob:; "
     "connect-src 'self' ws: wss:; "
+    "frame-src https://accounts.google.com; "
     "frame-ancestors 'none'; "
     "base-uri 'self'; "
     "form-action 'self'"
@@ -313,6 +314,43 @@ def verify_otp(req: OTPVerifyRequest) -> JSONResponse:
     resp = JSONResponse({"ok": True, "name": user["name"]})
     _set_session(resp, email)
     return resp
+
+
+def _google_client_id() -> str:
+    return os.environ.get("GOOGLE_CLIENT_ID", "").strip()
+
+
+class GoogleAuthRequest(BaseModel):
+    credential: str = Field(..., description="Google ID token from the frontend")
+
+
+@app.post("/api/auth/google")
+def google_auth(req: GoogleAuthRequest) -> JSONResponse:
+    cid = _google_client_id()
+    if not cid:
+        raise HTTPException(status_code=500, detail="Google Sign-In is not configured.")
+    try:
+        from google.oauth2 import id_token
+        from google.auth.transport import requests as grequests
+        info = id_token.verify_oauth2_token(req.credential, grequests.Request(), cid)
+    except Exception as exc:
+        raise HTTPException(status_code=401, detail=f"Invalid Google token: {exc}")
+    email = (info.get("email") or "").strip().lower()
+    if not email:
+        raise HTTPException(status_code=400, detail="Google account has no email.")
+    try:
+        user = auth.google_auth(info["sub"], email, info.get("name", ""))
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
+    resp = JSONResponse({"ok": True, "name": user["name"]})
+    _set_session(resp, user["email"])
+    return resp
+
+
+@app.get("/api/auth/google-config")
+def google_config() -> dict:
+    cid = _google_client_id()
+    return {"client_id": cid} if cid else {}
 
 
 class TwoFARequest(BaseModel):

@@ -128,6 +128,7 @@ def connect() -> sqlite3.Connection:
         "ALTER TABLE users ADD COLUMN twofa_enabled INTEGER NOT NULL DEFAULT 0",
         "ALTER TABLE users ADD COLUMN failed_attempts INTEGER NOT NULL DEFAULT 0",
         "ALTER TABLE users ADD COLUMN locked_until REAL",
+        "ALTER TABLE users ADD COLUMN google_sub TEXT",
         # Virtual key security features
         "ALTER TABLE virtual_keys ADD COLUMN expires_at REAL",                           # key TTL
         "ALTER TABLE virtual_keys ADD COLUMN allowed_models TEXT NOT NULL DEFAULT '[]'", # model allowlist
@@ -166,6 +167,14 @@ def user_create(email: str, name: str, salt: str, hash_: str) -> None:
     get().execute(
         "INSERT INTO users (email, name, salt, hash, created_at) VALUES (?,?,?,?,?)",
         (email, name, salt, hash_, time.time()),
+    )
+    get().commit()
+
+
+def user_create_google(email: str, name: str, salt: str, hash_: str, google_sub: str) -> None:
+    get().execute(
+        "INSERT INTO users (email, name, salt, hash, google_sub, created_at) VALUES (?,?,?,?,?,?)",
+        (email, name, salt, hash_, google_sub, time.time()),
     )
     get().commit()
 
@@ -233,6 +242,16 @@ def user_set_twofa(email: str, enabled: bool) -> None:
     get().execute(
         "UPDATE users SET twofa_enabled=? WHERE email=?", (1 if enabled else 0, email)
     )
+    get().commit()
+
+
+def user_get_by_google(sub: str) -> dict | None:
+    row = get().execute("SELECT * FROM users WHERE google_sub=?", (sub,)).fetchone()
+    return dict(row) if row else None
+
+
+def user_link_google(email: str, sub: str) -> None:
+    get().execute("UPDATE users SET google_sub=? WHERE email=?", (sub, email))
     get().commit()
 
 

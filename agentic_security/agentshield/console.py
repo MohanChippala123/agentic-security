@@ -7,15 +7,16 @@ Architecture:
      with that context as a system prompt - so every answer is grounded in real data.
   4. Fall back to deterministic keyword matching if no provider key is configured.
 
-This is a completely separate LLM from the security firewall. The firewall uses
-the from-scratch transformer + XGBoost. The Console uses a real conversational
-model with gateway data injected as context.
+Security:
+  All user-supplied strings (key names, event messages) are sanitized before
+  insertion into the LLM prompt to prevent prompt injection via stored data.
 """
 
 from __future__ import annotations
 
 import json
 import os
+import re
 import time
 from typing import Any
 
@@ -23,6 +24,14 @@ from ..shield import gateway as gw
 
 
 # ── Formatting helpers ────────────────────────────────────────────────────────
+
+_INJECT_RE = re.compile(r'["\'{}[\]()<>;|`$]')
+
+def _sanitize(s: str, max_len: int = 200) -> str:
+    s = s.replace("\n", " ").replace("\r", " ").replace("\0", "")
+    s = _INJECT_RE.sub("", s)
+    return s[:max_len]
+
 
 def _fmt_usd(x: float) -> str:
     return f"${x:,.4f}" if x < 1 else f"${x:,.2f}"
@@ -82,8 +91,9 @@ def _build_context(user: str) -> str:
                 anomaly = " [NEAR BUDGET LIMIT]"
             if block_rate >= 40 and k["request_count"] >= 5:
                 anomaly += " [HIGH BLOCK RATE - possible attack]"
+            name = _sanitize(k["name"])
             lines.append(
-                f"- {k['name']} [{status}]{anomaly}: "
+                f"- {name} [{status}]{anomaly}: "
                 f"spent {_fmt_usd(k['spent_usd'])} of {_fmt_usd(k['budget_usd'])} ({k['pct_used']}%), "
                 f"{k['request_count']} requests, {k['blocked_count']} blocked ({block_rate:.0f}% block rate), "
                 f"rate limit {k['rate_limit_per_min']}/min"
@@ -105,11 +115,12 @@ def _build_context(user: str) -> str:
     # ── Anomalies ──
     anomalies = []
     for k in keys:
+        name = _sanitize(k["name"])
         if k["pct_used"] >= 90:
-            anomalies.append(f"Key '{k['name']}' is at {k['pct_used']}% of its budget.")
+            anomalies.append(f"Key '{name}' is at {k['pct_used']}% of its budget.")
         block_rate = k["blocked_count"] / max(1, k["request_count"]) if k["request_count"] else 0
         if block_rate >= 0.4 and k["request_count"] >= 5:
-            anomalies.append(f"Key '{k['name']}' has a {block_rate*100:.0f}% block rate ({k['blocked_count']}/{k['request_count']}) - may be under active attack.")
+            anomalies.append(f"Key '{name}' has a {block_rate*100:.0f}% block rate ({k['blocked_count']}/{k['request_count']}) - may be under active attack.")
     if anomalies:
         lines.append("=== ANOMALIES ===")
         for a in anomalies:
@@ -122,17 +133,24 @@ def _build_context(user: str) -> str:
         for e in events[:20]:
             ts = time.strftime("%H:%M:%S", time.localtime(e.get("timestamp", 0)))
             if e.get("outcome") == "blocked":
+                kn = _sanitize(e.get("key_name", ""))
+                th = _sanitize(e.get("threat", ""))
+                msg = _sanitize(e.get("message", ""))
                 lines.append(
-                    f"[{ts}] BLOCKED | key={e.get('key_name','')} | "
-                    f"threat={e.get('threat','')} | risk={e.get('risk_score','?')} | "
-                    f"severity={e.get('severity','')} | msg=\"{e.get('message','')}\" | "
+                    f"[{ts}] BLOCKED | key={kn} | "
+                    f"threat={th} | risk={e.get('risk_score','?')} | "
+                    f"severity={e.get('severity','')} | msg=\"{msg}\" | "
                     f"saved={_fmt_usd(e.get('cost_saved_usd',0))}"
                 )
             else:
+                kn = _sanitize(e.get("key_name", ""))
+                msg = _sanitize(e.get("message", ""))
+                md = _sanitize(e.get("model", ""))
+                up = _sanitize(e.get("upstream", ""))
                 lines.append(
-                    f"[{ts}] PASSED  | key={e.get('key_name','')} | "
-                    f"model={e.get('model','')} | upstream={e.get('upstream','')} | "
-                    f"cost={_fmt_usd(e.get('cost_usd',0))} | msg=\"{e.get('message','')}\" | "
+                    f"[{ts}] PASSED  | key={kn} | "
+                    f"model={md} | upstream={up} | "
+                    f"cost={_fmt_usd(e.get('cost_usd',0))} | msg=\"{msg}\" | "
                     f"risk={e.get('risk_score','?')}"
                 )
         lines.append("")
