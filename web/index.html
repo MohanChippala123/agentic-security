@@ -1074,7 +1074,7 @@
         background: rgba(255, 255, 255, 0.03);
         border: 1px solid var(--border);
         color: var(--ink);
-        padding: 8px 11px;
+        padding: 8px 12px;
         font-size: 11.5px;
         cursor: pointer;
         font-family: "Inter", sans-serif;
@@ -1360,11 +1360,7 @@
             being forwarded. Your real key never leaves the server.
           </p>
         </div>
-        <button
-          class="run-full"
-          style="width: auto; padding: 0 16px"
-          onclick="showCreateKey()"
-        >
+        <button class="run-full" style="width: auto" onclick="showCreateKey()">
           + New virtual key
         </button>
       </div>
@@ -1407,11 +1403,7 @@
             font-family: &quot;Inter&quot;, sans-serif;
           "
         />
-        <button
-          class="run-full"
-          style="width: auto; padding: 0 16px; font-size: 11.5px"
-          onclick="runQuickScan()"
-        >
+        <button class="run-full" style="width: auto" onclick="runQuickScan()">
           Scan
         </button>
         <div
@@ -1478,11 +1470,7 @@
             <option value="together">Together AI</option>
             <option value="cohere">Cohere</option>
           </select>
-          <button
-            class="run-full"
-            style="width: auto; padding: 0 16px"
-            onclick="gwConnectKey()"
-          >
+          <button class="run-full" style="width: auto" onclick="gwConnectKey()">
             Connect key
           </button>
           <button
@@ -2197,11 +2185,7 @@
           </p>
         </div>
         <div style="display: flex; gap: 8px">
-          <button
-            class="run-full"
-            style="width: auto; padding: 0 22px; font-size: 11px"
-            onclick="runRedTeam()"
-          >
+          <button class="run-full" style="width: auto" onclick="runRedTeam()">
             Run full suite
           </button>
           <button
@@ -2716,7 +2700,7 @@
             />
             <button
               class="run-full"
-              style="width: auto; padding: 0 18px"
+              style="width: auto"
               onclick="sendMyModel()"
             >
               Ask
@@ -4369,7 +4353,7 @@ curl ${base}/v1/chat/completions \\
                <div class="field" style="margin-bottom:12px"><label style="display:block;font-family:var(--mono);font-size:9.5px;text-transform:uppercase;letter-spacing:.12em;color:var(--muted);margin-bottom:6px">App password <span style="color:rgba(255,255,255,.25);text-transform:none;letter-spacing:0">(from myaccount.google.com/apppasswords)</span></label>
                  <input id="gmailPass" type="password" placeholder="xxxx xxxx xxxx xxxx" style="width:100%;background:rgba(255,255,255,.04);border:1px solid var(--border);outline:none;padding:9px 12px;font-family:var(--mono);font-size:13px;color:var(--ink)">
                </div>
-               <button class="run-full" style="width:auto;padding:0 16px;font-size:11px;" onclick="connectGmail()" id="gmailConnectBtn">Connect Gmail</button>
+               <button class="run-full" style="width:auto" onclick="connectGmail()" id="gmailConnectBtn">Connect Gmail</button>
                <div id="gmailMsg" style="margin-top:8px;font-size:11.5px"></div>`
           }
         </div>
@@ -4381,7 +4365,7 @@ curl ${base}/v1/chat/completions \\
           </div>
           <div style="display:flex;align-items:center;gap:10px">
             <span style="font-family:var(--mono);font-size:10px;padding:3px 8px;${enabled ? "background:rgba(58,208,164,.1);color:var(--teal);border:1px solid rgba(58,208,164,.2)" : "background:rgba(255,255,255,.05);color:var(--muted);border:1px solid var(--border)"}">${enabled ? "ENABLED" : "DISABLED"}</span>
-            <button class="run-full" style="width:auto;padding:0 14px;font-size:10px;" onclick="toggle2FA(${!enabled})">${enabled ? "Disable" : "Enable"}</button>
+            <button class="run-full" style="width:auto" onclick="toggle2FA(${!enabled})">${enabled ? "Disable" : "Enable"}</button>
           </div>
         </div>
 
@@ -4439,7 +4423,7 @@ curl ${base}/v1/chat/completions \\
               <input id="whUrl" type="url" placeholder="https://yourserver.com/webhook" style="width:100%;background:rgba(255,255,255,.04);border:1px solid var(--border);outline:none;padding:8px 12px;font-size:12px;color:var(--ink)">
             </div>
             <div style="display:flex;gap:8px">
-              <button class="run-full" style="width:auto;padding:0 14px;font-size:10px;" onclick="createWebhook()" id="whBtn">Create webhook</button>
+              <button class="run-full" style="width:auto" onclick="createWebhook()" id="whBtn">Create webhook</button>
               <button class="mm-try" onclick="$('webhookForm').style.display='none'">Cancel</button>
             </div>
             <div id="whMsg" style="margin-top:8px;font-size:11.5px"></div>
@@ -4701,7 +4685,7 @@ curl ${base}/v1/chat/completions \\
           up.innerHTML =
             '<div style="text-align:center;padding:6px 4px"><div style="font-size:13px;font-weight:600;margin-bottom:4px">Connect your own provider key with a free account</div>' +
             '<div style="font-size:11.5px;color:var(--muted);margin-bottom:12px;line-height:1.6">The demo runs on a local model so you can see the firewall work without a key. Sign up to route your real OpenAI / Anthropic / Groq traffic through AgentShield.</div>' +
-            '<button class="run-full" style="width:auto;padding:0 18px;margin:0 auto" onclick="demoSignup()">Sign up free →</button></div>';
+            '<button class="run-full" style="margin:0 auto" onclick="demoSignup()">Sign up free →</button></div>';
         }
         // land on the Test tab - the self-test shows the firewall blocking attacks with
         // zero setup, the best first impression of the demo.
