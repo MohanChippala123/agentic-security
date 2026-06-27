@@ -1,0 +1,11 @@
+__pycache__
+*.pyc
+.git
+.gitignore
+.env*
+tests
+data
+*.log
+*.pt
+*.md
+train.py
