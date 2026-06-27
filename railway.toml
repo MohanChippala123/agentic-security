@@ -2,11 +2,8 @@
 builder = "NIXPACKS"
 
 [deploy]
-startCommand = "python -m agentic_security serve --host 0.0.0.0 --workers 1"
+startCommand = "python -m agentic_security serve --host 0.0.0.0"
 healthcheckPath = "/api/health"
 healthcheckTimeout = 300
 restartPolicyType = "ON_FAILURE"
 restartPolicyMaxRetries = 3
-
-[service]
-railway_env = "production"
