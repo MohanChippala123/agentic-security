@@ -3087,21 +3087,33 @@
 
       /* ── Activity Chart ── */
       let _gwChartInst = null;
+      let _gwChartEmpty = null;
       async function loadGwChart() {
         try {
           const d = await (await fetch("/api/gateway/chart?days=7")).json();
           const canvas = $("gwChart");
-          if (!canvas) return;
-          if (_gwChartInst) {
-            _gwChartInst.destroy();
-            _gwChartInst = null;
-          }
+          const ctr = canvas && canvas.parentElement;
+          if (!canvas || !ctr) return;
           const hasData =
             d.attacks.some((v) => v > 0) || d.passed.some((v) => v > 0);
           if (!hasData) {
-            canvas.parentElement.innerHTML =
-              '<div class="empty" style="height:140px;display:flex;align-items:center;justify-content:center">No requests yet - send some through the gateway to see activity here.</div>';
+            if (!_gwChartEmpty) {
+              _gwChartEmpty = document.createElement("div");
+              _gwChartEmpty.className = "empty";
+              _gwChartEmpty.style.cssText =
+                "height:140px;display:flex;align-items:center;justify-content:center";
+              _gwChartEmpty.textContent =
+                "No requests yet - send some through the gateway to see activity here.";
+            }
+            canvas.style.display = "none";
+            if (!_gwChartEmpty.parentNode) ctr.appendChild(_gwChartEmpty);
             return;
+          }
+          if (_gwChartEmpty && _gwChartEmpty.parentNode) _gwChartEmpty.remove();
+          canvas.style.display = "";
+          if (_gwChartInst) {
+            _gwChartInst.destroy();
+            _gwChartInst = null;
           }
           _gwChartInst = new Chart(canvas, {
             type: "line",
@@ -3975,11 +3987,13 @@ curl ${base}/v1/chat/completions \\
         }
       }
 
-      /* ── auto-refresh the Protect tab (stats + live feed) every 3s ── */
+      /* ── auto-refresh the Protect tab (stats + live feed + chart) every 3s ── */
       setInterval(() => {
         const active = document.querySelector(".nav-tabs a.on");
-        if (active && active.textContent.trim() === "Protect")
+        if (active && active.textContent.trim() === "Protect") {
           loadGatewayEvents();
+          loadGwChart();
+        }
       }, 3000);
 
       /* ── Tool Guard ── */
