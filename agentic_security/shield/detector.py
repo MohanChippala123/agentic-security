@@ -12,6 +12,13 @@ from dataclasses import dataclass, field
 from enum import Enum
 from typing import Optional
 
+_HYBRID_AVAIL = False
+try:
+    from ..llm.hybrid_layer import predict as _hybrid_predict, is_available as _hybrid_avail
+    _HYBRID_AVAIL = _hybrid_avail()
+except ImportError:
+    pass
+
 
 class ThreatType(str, Enum):
     PROMPT_INJECTION = "prompt_injection"
@@ -240,6 +247,15 @@ def _parse_llm_verdict(raw: str, original: str, elapsed: float) -> Optional[Thre
     )
 
 
+def _local_qwen_client():
+    """Create an OpenAI client pointing at the local Qwen security server."""
+    try:
+        from openai import OpenAI as _OpenAI
+        return _OpenAI(base_url="http://127.0.0.1:8001/v1", api_key="local")
+    except Exception:
+        return None
+
+
 def full_scan(text: str, client=None, model: str = "gpt-4o-mini") -> ThreatVerdict:
     """Run all detection layers. Returns a verdict."""
     # Layer 1: patterns (< 1ms)
@@ -247,9 +263,42 @@ def full_scan(text: str, client=None, model: str = "gpt-4o-mini") -> ThreatVerdi
     if v:
         return v
 
-    # Layer 2: LLM analysis (if available)
-    if client:
-        v = detect_llm(text, client, model)
+    # Layer 1b: hybrid layer (MiniLM + XGBoost, ~50ms, no API key needed)
+    if _HYBRID_AVAIL:
+        try:
+            start = time.perf_counter()
+            h = _hybrid_predict(text)
+            lat = (time.perf_counter() - start) * 1000
+            attack_prob = h.get("attack_probability", 0.0)
+            if attack_prob >= 0.40:
+                conf = round(min(attack_prob + 0.15, 0.98), 2)
+                return ThreatVerdict(
+                    blocked=True,
+                    threat_type=ThreatType.PROMPT_INJECTION,
+                    confidence=conf,
+                    explanation=f"hybrid layer: {attack_prob:.0%} attack probability — likely {h.get('verdict', 'suspicious')}.",
+                    layer="hybrid",
+                    latency_ms=lat,
+                    original_input=text,
+                )
+            # pass through with dynamic confidence
+            conf = round(1.0 - attack_prob, 2)
+            return ThreatVerdict(
+                blocked=False,
+                threat_type=ThreatType.CLEAN,
+                confidence=conf,
+                explanation=f"No threats detected (hybrid layer: {attack_prob:.0%} attack probability).",
+                layer="hybrid",
+                latency_ms=lat,
+                original_input=text,
+            )
+        except Exception:
+            pass  # fall through
+
+    # Layer 2: LLM analysis — try local Qwen first, fall back to provided client
+    llm = client or _local_qwen_client()
+    if llm:
+        v = detect_llm(text, llm, model if client else "qwen")
         if v:
             return v
 

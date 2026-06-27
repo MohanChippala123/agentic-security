@@ -30,10 +30,10 @@ def train(
     steps: int = 3000,
     batch_size: int = 16,
     block_size: int = 256,
-    n_layer: int = 6,
+    n_layer: int = 8,
     n_head: int = 8,
     n_embd: int = 256,
-    lr: float = 3e-4,
+    lr: float = 5e-4,
     eval_every: int = 500,
     grad_accum: int = 1,
     device: str | None = None,
@@ -68,26 +68,29 @@ def train(
     compiled_ok = model.try_compile()
     print(f"  model: {model.num_params():,} params on {device}" + (" (compiled)" if compiled_ok else ""))
 
-    opt = torch.optim.AdamW(model.parameters(), lr=lr, weight_decay=0.01)
+    opt = torch.optim.AdamW(model.parameters(), lr=lr, weight_decay=0.01, betas=(0.9, 0.95))
+    scaler = torch.amp.GradScaler(device=device) if device == "cuda" else None
+
+    LS = 0.05
 
     @torch.no_grad()
-    def estimate_loss(d: torch.Tensor, iters: int = 5) -> float:
+    def estimate_loss(d: torch.Tensor, iters: int = 2) -> float:
         model.eval()
         losses = []
         for _ in range(iters):
             x, y = get_batch(d, block_size, batch_size, device)
-            _, loss = model(x, y)
+            _, loss = model(x, y, label_smooth=LS)
             losses.append(loss.item())
         model.train()
         return sum(losses) / len(losses)
 
-    warmup = max(50, steps // 20)
+    warmup = max(100, steps // 10)
 
     def lr_at(step: int) -> float:
         if step < warmup:
             return lr * step / warmup
         prog = (step - warmup) / max(1, steps - warmup)
-        return 0.1 * lr + 0.5 * (1 + math.cos(math.pi * prog)) * (lr - 0.1 * lr)
+        return 0.05 * lr + 0.5 * (1 + math.cos(math.pi * prog)) * (lr - 0.05 * lr)
 
     print(f"Training for {steps} steps (grad_accum={grad_accum})...")
     start = time.time()
@@ -101,7 +104,7 @@ def train(
         for g in opt.param_groups:
             g["lr"] = lr_at(step)
         x, y = get_batch(train_data, block_size, batch_size, device)
-        _, loss = model(x, y)
+        _, loss = model(x, y, label_smooth=LS)
         loss = loss / grad_accum
         loss.backward()
         accum_loss += loss.item()

@@ -6,6 +6,10 @@ import re
 import time
 from typing import Any
 
+
+def _import_err(provider: str, pkg: str) -> dict:
+    return {"error": f"SDK not installed: '{pkg}' is required for {provider}. Run: pip install {pkg}", "provider": provider, "model": ""}
+
 # ── Pricing: USD per 1K tokens (input, output) ────────────────────────────────
 PROVIDER_PRICING: dict[str, dict[str, tuple[float, float]]] = {
     "openai": {
@@ -159,7 +163,10 @@ def _latency(t0: float) -> float:
 
 
 def _call_openai(messages, model, api_key, max_tokens, temperature, t0):
-    from openai import OpenAI
+    try:
+        from openai import OpenAI
+    except ImportError:
+        return _import_err("openai", "openai")
     client = OpenAI(api_key=api_key)
     resp = client.chat.completions.create(
         model=model, messages=messages,
@@ -173,9 +180,11 @@ def _call_openai(messages, model, api_key, max_tokens, temperature, t0):
 
 
 def _call_anthropic(messages, model, api_key, max_tokens, temperature, t0):
-    from anthropic import Anthropic
+    try:
+        from anthropic import Anthropic
+    except ImportError:
+        return _import_err("anthropic", "anthropic")
     client = Anthropic(api_key=api_key)
-    # Separate system message from conversation
     system = ""
     conv = []
     for m in messages:
@@ -195,7 +204,10 @@ def _call_anthropic(messages, model, api_key, max_tokens, temperature, t0):
 
 
 def _call_groq(messages, model, api_key, max_tokens, temperature, t0):
-    from groq import Groq
+    try:
+        from groq import Groq
+    except ImportError:
+        return _import_err("groq", "groq")
     client = Groq(api_key=api_key)
     resp = client.chat.completions.create(
         model=model, messages=messages,
@@ -209,10 +221,12 @@ def _call_groq(messages, model, api_key, max_tokens, temperature, t0):
 
 
 def _call_gemini(messages, model, api_key, max_tokens, temperature, t0):
-    import google.generativeai as genai
+    try:
+        import google.generativeai as genai
+    except ImportError:
+        return _import_err("gemini", "google-generativeai")
     genai.configure(api_key=api_key)
     gmodel = genai.GenerativeModel(model)
-    # Convert messages to Gemini format
     parts = "\n".join(
         f"{m.get('role','user').upper()}: {m.get('content','')}"
         for m in messages if m.get("role") != "system"
@@ -226,7 +240,10 @@ def _call_gemini(messages, model, api_key, max_tokens, temperature, t0):
 
 
 def _call_mistral(messages, model, api_key, max_tokens, temperature, t0):
-    from mistralai import Mistral
+    try:
+        from mistralai import Mistral
+    except ImportError:
+        return _import_err("mistral", "mistralai")
     client = Mistral(api_key=api_key)
     resp = client.chat.complete(
         model=model, messages=messages,
@@ -240,7 +257,10 @@ def _call_mistral(messages, model, api_key, max_tokens, temperature, t0):
 
 
 def _call_together(messages, model, api_key, max_tokens, temperature, t0):
-    from together import Together
+    try:
+        from together import Together
+    except ImportError:
+        return _import_err("together", "together")
     client = Together(api_key=api_key)
     resp = client.chat.completions.create(
         model=model, messages=messages,
@@ -254,9 +274,11 @@ def _call_together(messages, model, api_key, max_tokens, temperature, t0):
 
 
 def _call_cohere(messages, model, api_key, max_tokens, temperature, t0):
-    import cohere
+    try:
+        import cohere
+    except ImportError:
+        return _import_err("cohere", "cohere")
     client = cohere.Client(api_key)
-    # Convert to Cohere chat format
     history = []
     last_msg = ""
     for m in messages:

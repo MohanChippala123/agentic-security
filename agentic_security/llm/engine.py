@@ -1,4 +1,4 @@
-"""agentic-1 engine - runs OUR from-scratch model behind a security firewall.
+"""agentic-2 engine - runs our from-scratch BPE model behind a security firewall.
 
 No external API. The model weights are loaded from our own trained checkpoint.
 The "prevents all agent attacks" guarantee comes from the deterministic shield:
@@ -21,22 +21,22 @@ from ..shield.sanitizer import sanitize_input, redact_pii
 
 # ── Model identity ──
 MODEL_NAME = "agentshield-llm"
-MODEL_VERSION = "1.0.0"
+MODEL_VERSION = "2.0.0"
 MODEL_DESCRIPTION = (
-    "AgentShield Security LLM. From-scratch GPT-style transformer with a built-in "
+    "AgentShield Security LLM. From-scratch GPT-style transformer with built-in "
     "security firewall - no external APIs, no pretrained weights, hardened against "
-    "prompt injection, jailbreaks, and data exfiltration."
+    "prompt injection, jailbreaks, and data exfiltration. v2: BPE tokenizer, 12-layer."
 )
 
-CKPT_PATH = Path(__file__).parent / "checkpoint.pt"
+CKPT_PATH = Path(__file__).parent / "normal_checkpoint.pt"
 SEP = "###"
 
 _CONF_THRESHOLD = 0.35
 _ADAPTIVE_WINDOW = 50
 _gen_metrics: list[dict] = []
 _gen_metrics_lock = threading.Lock()
-_MAX_GEN_TOKENS = 256
-_GEN_TIMEOUT = 15.0
+_MAX_GEN_TOKENS = 512
+_GEN_TIMEOUT = 30.0
 
 # ── Semantic cache ──
 _CACHE_SIZE = 64
@@ -173,7 +173,7 @@ def _question_match_score(text: str) -> float:
 
 def _load_qa_entries() -> None:
     global _QA_ENTRIES
-    from .corpus import SEC_QA, CODE_QA, GEN_QA, SMALL_QA, EDGE_QA, IDENTITY_Q, IDENTITY_A, CAP_Q, CAP_A
+    from .corpus import SEC_QA, CODE_QA, GEN_QA, SMALL_QA, EDGE_QA, IDENTITY_Q, IDENTITY_A, CAP_Q, CAP_A, LONG_QA, COMPARE_QA, ELI5_QA, MORE_GEN_QA, MORE_CODE_QA, MORE_EDGE_QA
     pairs: list[tuple[str, str]] = []
     for q, a in SEC_QA:
         pairs.append((q, a))
@@ -184,6 +184,18 @@ def _load_qa_entries() -> None:
     for q, a in SMALL_QA:
         pairs.append((q, a))
     for q, a in EDGE_QA:
+        pairs.append((q, a))
+    for q, a in LONG_QA:
+        pairs.append((q, a))
+    for q, a in COMPARE_QA:
+        pairs.append((q, a))
+    for q, a in ELI5_QA:
+        pairs.append((q, a))
+    for q, a in MORE_GEN_QA:
+        pairs.append((q, a))
+    for q, a in MORE_CODE_QA:
+        pairs.append((q, a))
+    for q, a in MORE_EDGE_QA:
         pairs.append((q, a))
     for q in IDENTITY_Q:
         pairs.append((q, IDENTITY_A[0]))
@@ -235,7 +247,7 @@ def _ensure_loaded() -> bool:
         try:
             import torch
             from .model import GPT, GPTConfig
-            from .tokenizer import CharTokenizer
+            from .tokenizer import BPETokenizer
 
             ckpt = torch.load(CKPT_PATH, map_location="cpu", weights_only=False)
             cfg = GPTConfig(**ckpt["config"])
@@ -245,7 +257,7 @@ def _ensure_loaded() -> bool:
 
             _torch = torch
             _model = model
-            _tok = CharTokenizer.from_dict(ckpt["tokenizer"])
+            _tok = BPETokenizer.from_dict(ckpt["tokenizer"])
             _load_error = None
             return True
         except Exception as e:  # pragma: no cover
@@ -404,8 +416,8 @@ def _generate(prompt: str, max_new_tokens: int = 200, temperature: float = 0.0) 
         ids = _tok.encode("User: hello\nAgent: ")
     x = _torch.tensor([ids], dtype=_torch.long)
 
-    hash_id = _tok.stoi.get("#")
-    stop_ids = [hash_id] if hash_id is not None else None
+    hash_ids = _tok.encode("#")
+    stop_ids = [hash_ids[-1]] if hash_ids else None
 
     result: list[Any] = [None, 0.0]
     exc: list[BaseException | None] = [None]

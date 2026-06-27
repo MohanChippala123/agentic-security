@@ -1,0 +1,3 @@
+@echo off
+echo Starting local LLM inference server...
+python -m agentic_security.llm.serve

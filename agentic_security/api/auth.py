@@ -130,6 +130,8 @@ def read_token(token: str | None) -> dict | None:
     if data.get("x", 0) < time.time():
         return None
     email = data.get("e")
+    if not email:
+        return None
     user = db.user_get(email)
     if not user:
         return None

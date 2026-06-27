@@ -1,9 +1,7 @@
-"""agentic-1 - a GPT-style transformer built from scratch.
+"""agentic-2 - a GPT-style transformer built from scratch.
 
-No pretrained weights, no external model APIs. Every layer here is written
-by hand on top of raw PyTorch tensor ops (Linear, Embedding, LayerNorm).
-We deliberately do NOT use nn.Transformer / nn.MultiheadAttention - the
-attention mechanism is implemented directly so this is genuinely our model.
+Larger capacity, RoPE, SwiGLU, QK-Norm, Flash Attention.
+Every layer written by hand on raw PyTorch tensor ops.
 """
 
 from __future__ import annotations
@@ -19,12 +17,28 @@ import torch.nn.functional as F
 
 @dataclass
 class GPTConfig:
-    vocab_size: int = 128
-    block_size: int = 128
-    n_layer: int = 6
-    n_head: int = 8
-    n_embd: int = 256
+    vocab_size: int = 4096
+    block_size: int = 512
+    n_layer: int = 12
+    n_head: int = 12
+    n_embd: int = 384
     dropout: float = 0.1
+
+
+def precompute_rope(cfg: GPTConfig, device: torch.device = None) -> tuple[torch.Tensor, torch.Tensor]:
+    hs = cfg.n_embd // cfg.n_head
+    theta = 1.0 / (10000.0 ** (torch.arange(0, hs, 2, device=device).float() / hs))
+    pos = torch.arange(cfg.block_size, device=device).float()
+    freqs = torch.einsum("i,j->ij", pos, theta)
+    return freqs.cos(), freqs.sin()
+
+
+def apply_rope(x: torch.Tensor, cos: torch.Tensor, sin: torch.Tensor) -> torch.Tensor:
+    _, _, T, hs = x.shape
+    cos = cos[:T, :hs // 2].unsqueeze(0).unsqueeze(0)
+    sin = sin[:T, :hs // 2].unsqueeze(0).unsqueeze(0)
+    x0, x1 = x[..., ::2], x[..., 1::2]
+    return torch.stack((x0 * cos - x1 * sin, x0 * sin + x1 * cos), dim=-1).flatten(-2)
 
 
 class SelfAttention(nn.Module):
@@ -33,25 +47,31 @@ class SelfAttention(nn.Module):
         assert cfg.n_embd % cfg.n_head == 0
         self.n_head = cfg.n_head
         self.n_embd = cfg.n_embd
+        self.hs = cfg.n_embd // cfg.n_head
         self.qkv = nn.Linear(cfg.n_embd, 3 * cfg.n_embd)
+        self.qk_norm = nn.LayerNorm(self.hs)
         self.proj = nn.Linear(cfg.n_embd, cfg.n_embd)
         self.resid_drop = nn.Dropout(cfg.dropout)
         self.flash = hasattr(F, "scaled_dot_product_attention")
         if not self.flash:
             mask = torch.tril(torch.ones(cfg.block_size, cfg.block_size))
             self.register_buffer("mask", mask.view(1, 1, cfg.block_size, cfg.block_size))
+        cos, sin = precompute_rope(cfg)
+        self.register_buffer("rope_cos", cos)
+        self.register_buffer("rope_sin", sin)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         B, T, C = x.shape
         q, k, v = self.qkv(x).split(self.n_embd, dim=2)
-        hs = C // self.n_head
-        q = q.view(B, T, self.n_head, hs).transpose(1, 2)
-        k = k.view(B, T, self.n_head, hs).transpose(1, 2)
-        v = v.view(B, T, self.n_head, hs).transpose(1, 2)
+        q = q.view(B, T, self.n_head, self.hs).transpose(1, 2)
+        k = k.view(B, T, self.n_head, self.hs).transpose(1, 2)
+        v = v.view(B, T, self.n_head, self.hs).transpose(1, 2)
+        q = apply_rope(self.qk_norm(q), self.rope_cos, self.rope_sin)
+        k = apply_rope(self.qk_norm(k), self.rope_cos, self.rope_sin)
         if self.flash:
             y = F.scaled_dot_product_attention(q, k, v, is_causal=True)
         else:
-            att = (q @ k.transpose(-2, -1)) * (1.0 / math.sqrt(hs))
+            att = (q @ k.transpose(-2, -1)) * (1.0 / math.sqrt(self.hs))
             att = att.masked_fill(self.mask[:, :, :T, :T] == 0, float("-inf"))
             att = F.softmax(att, dim=-1)
             att = F.dropout(att, p=self.resid_drop.p, training=self.training)
@@ -60,15 +80,16 @@ class SelfAttention(nn.Module):
         return self.resid_drop(self.proj(y))
 
 
-class MLP(nn.Module):
+class SwiGLU(nn.Module):
     def __init__(self, cfg: GPTConfig):
         super().__init__()
-        self.fc = nn.Linear(cfg.n_embd, 4 * cfg.n_embd)
+        self.w1 = nn.Linear(cfg.n_embd, 4 * cfg.n_embd)
+        self.w3 = nn.Linear(cfg.n_embd, 4 * cfg.n_embd)
         self.proj = nn.Linear(4 * cfg.n_embd, cfg.n_embd)
         self.drop = nn.Dropout(cfg.dropout)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        return self.drop(self.proj(F.gelu(self.fc(x))))
+        return self.drop(self.proj(F.silu(self.w1(x)) * self.w3(x)))
 
 
 class Block(nn.Module):
@@ -77,7 +98,7 @@ class Block(nn.Module):
         self.ln1 = nn.LayerNorm(cfg.n_embd)
         self.attn = SelfAttention(cfg)
         self.ln2 = nn.LayerNorm(cfg.n_embd)
-        self.mlp = MLP(cfg)
+        self.mlp = SwiGLU(cfg)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         x = x + self.attn(self.ln1(x))
@@ -90,7 +111,6 @@ class GPT(nn.Module):
         super().__init__()
         self.cfg = cfg
         self.tok_emb = nn.Embedding(cfg.vocab_size, cfg.n_embd)
-        self.pos_emb = nn.Parameter(torch.zeros(1, cfg.block_size, cfg.n_embd))
         self.drop = nn.Dropout(cfg.dropout)
         self.blocks = nn.ModuleList([Block(cfg) for _ in range(cfg.n_layer)])
         self.ln_f = nn.LayerNorm(cfg.n_embd)
@@ -126,12 +146,10 @@ class GPT(nn.Module):
         except Exception:
             return False
 
-    def forward(self, idx: torch.Tensor, targets: torch.Tensor | None = None):
+    def forward(self, idx: torch.Tensor, targets: torch.Tensor | None = None, label_smooth: float = 0.0):
         B, T = idx.shape
         assert T <= self.cfg.block_size, "sequence longer than context window"
-        tok = self.tok_emb(idx)
-        pos = self.pos_emb[:, :T, :]
-        x = self.drop(tok + pos)
+        x = self.drop(self.tok_emb(idx))
         for block in self.blocks:
             x = block(x)
         x = self.ln_f(x)
@@ -143,6 +161,7 @@ class GPT(nn.Module):
                 logits.view(-1, logits.size(-1)),
                 targets.view(-1),
                 ignore_index=-1,
+                label_smoothing=label_smooth,
             )
         return logits, loss
 
