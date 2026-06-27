@@ -2,7 +2,7 @@
 builder = "NIXPACKS"
 
 [deploy]
-startCommand = "python -m agentic_security serve --host 0.0.0.0"
+startCommand = "/opt/venv/bin/python -m agentic_security serve --host 0.0.0.0"
 healthcheckPath = "/api/health"
 healthcheckTimeout = 300
 restartPolicyType = "ON_FAILURE"
