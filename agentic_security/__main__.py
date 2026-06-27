@@ -37,7 +37,8 @@ def cmd_serve(args: argparse.Namespace) -> int:
     port = int(os.environ.get("PORT", args.port))
     host = os.environ.get("HOST", args.host)
     uvicorn.run("agentic_security.api.server:app",
-                host=host, port=port, reload=args.reload)
+                host=host, port=port, reload=args.reload,
+                workers=args.workers)
     return 0
 
 
@@ -52,6 +53,7 @@ def main(argv: list[str] | None = None) -> int:
     p_serve.add_argument("--host", default="0.0.0.0")
     p_serve.add_argument("--port", type=int, default=8000)
     p_serve.add_argument("--reload", action="store_true")
+    p_serve.add_argument("--workers", type=int, default=1)
     p_serve.set_defaults(func=cmd_serve)
 
     args = parser.parse_args(argv)

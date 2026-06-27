@@ -10,7 +10,7 @@ fastapi>=0.110
 uvicorn[standard]>=0.27
 pydantic>=2.6
 google-auth>=2.29
-torch==2.2.2+cpu      # AgentShield Security LLM - CPU-only build (see index above)
+torch>=2.0.0           # AgentShield Security LLM - CPU-only is sufficient
 numpy>=1.26           # tensor / data handling
 
 # ── Hybrid Firewall Layer ────────────────────────────────────────────────────
