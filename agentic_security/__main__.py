@@ -35,7 +35,7 @@ def cmd_serve(args: argparse.Namespace) -> int:
     import uvicorn
 
     port = int(os.environ.get("PORT", args.port))
-    host = os.environ.get("HOST", args.host)
+    host = args.host
     uvicorn.run("agentic_security.api.server:app",
                 host=host, port=port, reload=args.reload,
                 workers=args.workers)
