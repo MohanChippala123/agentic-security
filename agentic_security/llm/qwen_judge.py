@@ -166,7 +166,15 @@ def _start_health_monitor() -> None:
     t.start()
 
 
-# Start monitor as soon as this module is imported
+# Pre-load model in background on import so first request isn't slow.
+# Does NOT block server startup — healthcheck passes immediately.
+def _background_load():
+    time.sleep(2)   # let uvicorn finish binding the port first
+    _load()
+
+threading.Thread(target=_background_load, daemon=True).start()
+
+# Start health monitor after module is imported
 _start_health_monitor()
 
 
