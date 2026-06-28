@@ -92,11 +92,32 @@ def _ensure_model_file() -> bool:
         return False
 
 
+# ── llama-cpp availability (checked before any download) ──────────────────────
+_LLAMA_CPP_OK: bool | None = None
+
+
+def _llama_cpp_available() -> bool:
+    """True only if llama-cpp-python is importable. Avoids a pointless 4GB
+    model download when the inference library isn't installed."""
+    global _LLAMA_CPP_OK
+    if _LLAMA_CPP_OK is None:
+        try:
+            import llama_cpp  # noqa: F401
+            _LLAMA_CPP_OK = True
+        except Exception:
+            _LLAMA_CPP_OK = False
+    return _LLAMA_CPP_OK
+
+
 # ── Load ──────────────────────────────────────────────────────────────────────
 def _load(force: bool = False) -> bool:
     global _llm, _load_error
     if _llm is not None and not force:
         return True
+    # Skip everything (incl. model download) if llama-cpp isn't installed.
+    if not _llama_cpp_available():
+        _load_error = "llama-cpp-python not installed — using keyword/hybrid judge."
+        return False
     with _load_lock:
         if _llm is not None and not force:
             return True
