@@ -7,6 +7,8 @@ import uuid
 from pathlib import Path
 
 import os
+import sys
+print(f"[AgentShield] server.py loading (Python {sys.version})", flush=True)
 
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
@@ -189,8 +191,14 @@ app.add_middleware(
     allow_headers=["Content-Type", "Authorization"],
 )
 
-auth.seed_demo_account()
-db.purge_fake_users()
+try:
+    auth.seed_demo_account()
+except Exception as _e:
+    import logging as _log; _log.warning("seed_demo_account failed: %s", _e)
+try:
+    db.purge_fake_users()
+except Exception as _e:
+    import logging as _log; _log.warning("purge_fake_users failed: %s", _e)
 
 _WEB_DIR = Path(__file__).resolve().parents[2] / "web"
 _MAX_BODY_BYTES = 64 * 1024

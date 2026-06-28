@@ -324,6 +324,7 @@ def vk_get(key: str) -> dict | None:
     d["allowed_models"]  = json.loads(d.get("allowed_models") or "[]")
     d["allowed_hours"]   = json.loads(d.get("allowed_hours")  or "[]")
     d["velocity_spent"]  = json.loads(d.get("velocity_spent") or "[]")
+    d["allowed_ips"]     = json.loads(d.get("allowed_ips")    or "[]")
     d["enabled"] = bool(d["enabled"])
     return d
 
