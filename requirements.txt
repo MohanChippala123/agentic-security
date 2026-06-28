@@ -9,7 +9,7 @@ uvicorn[standard]>=0.27
 pydantic>=2.6
 google-auth>=2.29
 torch==2.2.2+cpu      # CPU-only build — avoids 2GB CUDA download
-numpy>=1.26           # tensor / data handling
+numpy>=1.26,<2.0      # numpy 2.x breaks torch 2.2.2 ABI — must stay on 1.x
 
 huggingface_hub>=0.24
 

@@ -13,10 +13,12 @@ from enum import Enum
 from typing import Optional
 
 _HYBRID_AVAIL = False
+_hybrid_predict = None
+_hybrid_avail = None
 try:
     from ..llm.hybrid_layer import predict as _hybrid_predict, is_available as _hybrid_avail
     _HYBRID_AVAIL = _hybrid_avail()
-except ImportError:
+except Exception:
     pass
 
 
