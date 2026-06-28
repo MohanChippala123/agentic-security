@@ -11,10 +11,7 @@ google-auth>=2.29
 torch==2.2.2+cpu      # CPU-only build — avoids 2GB CUDA download
 numpy>=1.26           # tensor / data handling
 
-# ── Local Security LLM (Qwen2.5-7B, GGUF Q4_K_M, ~4GB RAM, 48-CPU server) ──
-# llama-cpp-python is installed in the Dockerfile with CPU-only CMAKE flags
-# to avoid CUDA/Metal compile errors — do NOT add it here
-huggingface_hub>=0.24     # downloads model file from HuggingFace on first boot
+huggingface_hub>=0.24
 
 # ── Hybrid Firewall Layer ────────────────────────────────────────────────────
 # All-MiniLM-L6-v2 sentence embeddings + XGBoost classifier (Hybrid Layer)
