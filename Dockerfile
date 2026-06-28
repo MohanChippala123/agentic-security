@@ -12,4 +12,5 @@ COPY web/ web/
 RUN mkdir -p data
 
 EXPOSE 8000
-CMD ["python", "-m", "uvicorn", "agentic_security.api.server:app", "--host", "0.0.0.0", "--port", "8000"]
+# Listen on Railway's injected $PORT (falls back to 8000 for local runs)
+CMD ["sh", "-c", "python -m uvicorn agentic_security.api.server:app --host 0.0.0.0 --port ${PORT:-8000}"]
