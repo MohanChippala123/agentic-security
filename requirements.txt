@@ -1,7 +1,7 @@
-# Use the PyTorch CPU wheel index. The default torch wheel bundles ~2GB of CUDA
-# libraries, which overflows Railway's build disk and breaks the deploy. The CPU
-# build (+cpu) is ~200MB and is all this app needs.
+# CPU-only PyTorch (avoids 2GB CUDA bloat on Railway)
 --extra-index-url https://download.pytorch.org/whl/cpu
+# Pre-built llama-cpp-python CPU wheels (avoids C++ compile on Railway)
+--extra-index-url https://abetlen.github.io/llama-cpp-python/whl/cpu
 
 # Core runtime
 cryptography>=42.0    # Fernet AES-128-GCM for upstream key encryption
@@ -13,11 +13,15 @@ google-auth>=2.29
 torch>=2.0.0           # AgentShield Security LLM - CPU-only is sufficient
 numpy>=1.26           # tensor / data handling
 
+# ── Local Security LLM (Qwen2.5-0.5B, GGUF Q4, ~400MB RAM) ─────────────────
+llama-cpp-python>=0.3.2   # CPU inference for local GGUF models
+huggingface_hub>=0.24     # downloads model file from HuggingFace on first boot
+
 # ── Hybrid Firewall Layer ────────────────────────────────────────────────────
 # All-MiniLM-L6-v2 sentence embeddings + XGBoost classifier (Hybrid Layer)
 sentence-transformers>=2.7
-transformers>=4.44  # Qwen2.5-0.5B-Instruct via serve.py
-accelerate>=0.33    # model loading
+transformers>=4.44
+accelerate>=0.33
 xgboost>=2.0
 scikit-learn>=1.3     # preprocessing pipeline for XGBoost
 

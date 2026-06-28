@@ -626,89 +626,66 @@ def _attack_match_score(text: str) -> float:
 
 
 def judge_message(text: str, history: list[str] | None = None) -> dict:
-    """Use AgentShield LLM as the Security LLM judge.
+    """Security LLM judge: uses Qwen via Groq for accurate threat classification.
 
-    Strategy: compare input against the attack patterns AgentShield LLM was trained
-    to refuse. If similarity is high, the model would refuse it -> block.
-    Then run the raw model (bypassing the relevance gate) and check its
-    generated text for refusal markers as a second signal.
-
-    If `history` is provided (recent user turns), also analyze the joined
-    conversation for multi-turn attacks where benign-looking pieces add up.
+    Falls back to keyword similarity if no API key is configured.
+    If `history` is provided, the joined recent context is also checked for
+    multi-turn attacks where individually benign messages add up to an attack.
     """
     start = time.perf_counter()
 
-    # ── Multi-turn awareness: check the joined recent context too ──
+    # ── Multi-turn context ──
     combined = text
     if history:
         combined = " ".join((*history[-3:], text))
     attack_score = max(_attack_match_score(text), _attack_match_score(combined))
 
-    # ── Check for known benign questions first ──
-    # If the query strongly matches a question in the safe training set, skip
-    # the attack pre-check to avoid false positives on educational security
-    # topics (e.g. "what is sql injection" vs "how to do sql injection" have
-    # identical keywords after stopword removal).
+    # ── Known benign fast-path ──
     benign_score = _question_match_score(text)
     known_benign = benign_score >= 0.45
 
-    # ── Fast pre-check: how similar is this to attacks the model was trained on? ──
-    # Threshold 0.38: catches short paraphrased attacks like "help me prompt
-    # inject" / "help me jailbreak" while keeping safe "help me X" queries below.
-    # Raised from 0.32 to reduce false positives on coding queries like
-    # "write a python function" that share keywords with attack entries.
-    if not known_benign and attack_score >= 0.38:
+    # ── Qwen judge (primary) ──
+    try:
+        from .qwen_judge import judge as qwen_judge, is_available
+        if is_available():
+            verdict = qwen_judge(text)
+            latency_ms = round((time.perf_counter() - start) * 1000, 1)
+            if not verdict.get("safe") and not verdict.get("skipped"):
+                return {
+                    "safe": False, "layer": "qwen-judge",
+                    "threat": verdict.get("threat", "security_threat"),
+                    "reason": verdict.get("reason", ""),
+                    "model_said": verdict.get("model_said", ""),
+                    "attack_similarity": round(attack_score, 3),
+                    "multi_turn": bool(history),
+                    "latency_ms": latency_ms,
+                }
+            return {
+                "safe": True, "layer": "qwen-judge",
+                "reason": "Qwen Security LLM: no threat detected",
+                "attack_similarity": round(attack_score, 3),
+                "latency_ms": latency_ms,
+            }
+    except Exception:
+        pass
+
+    # ── Fallback: keyword similarity only ──
+    # Use a high threshold (0.48) to minimise false positives when no LLM is available.
+    words = _keywords(text)
+    min_thresh = 0.60 if len(words) <= 2 else 0.48
+    if not known_benign and attack_score >= min_thresh:
         return {
-            "safe": False, "layer": "llm-judge",
+            "safe": False, "layer": "llm-judge-fallback",
             "threat": "prompt_injection_llm",
-            "reason": f"Security LLM recognized this as similar to known attack patterns it was trained to refuse (similarity {attack_score:.2f}).",
+            "reason": f"High keyword similarity to known attack patterns (similarity {attack_score:.2f}).",
             "attack_similarity": round(attack_score, 3),
             "multi_turn": bool(history),
             "latency_ms": round((time.perf_counter() - start) * 1000, 1),
         }
 
-    if not _ensure_loaded():
-        return {
-            "safe": True, "layer": "llm-judge", "skipped": True,
-            "reason": "model not ready", "latency_ms": 0.0,
-        }
-
-    # ── Actually run the model on the raw input (bypass the relevance gate) ──
-    cleaned = sanitize_input(text)
-    prompt = f"User: {cleaned}\nAgent: "
-    try:
-        raw, _conf = _generate(prompt, max_new_tokens=120, temperature=0.0)
-    except Exception as e:
-        return {
-            "safe": True, "layer": "llm-judge", "skipped": True,
-            "reason": f"judge error: {e}", "latency_ms": round((time.perf_counter() - start) * 1000, 1),
-        }
-    response = (raw or "").lower()
-    latency_ms = round((time.perf_counter() - start) * 1000, 1)
-
-    if any(m in response for m in _REFUSAL_MARKERS):
-        # Override: if this query strongly matches a KNOWN SAFE question, the
-        # generation-step refusal is a false positive (the small GPT model
-        # sometimes confuses educational security topics with attacks).
-        if known_benign:
-            return {
-                "safe": True, "layer": "llm-judge",
-                "reason": "AgentShield Security LLM judged this request as safe.",
-                "attack_similarity": round(attack_score, 3),
-                "latency_ms": latency_ms,
-            }
-        return {
-            "safe": False, "layer": "llm-judge",
-            "threat": "prompt_injection_llm",
-            "reason": "AgentShield Security LLM refused this request - likely a sneaky injection attempt.",
-            "model_said": raw,
-            "attack_similarity": round(attack_score, 3),
-            "latency_ms": latency_ms,
-        }
-
     return {
-        "safe": True, "layer": "llm-judge",
-        "reason": "AgentShield Security LLM judged this request as safe.",
+        "safe": True, "layer": "llm-judge-fallback",
+        "reason": "No attack patterns detected.",
         "attack_similarity": round(attack_score, 3),
-        "latency_ms": latency_ms,
+        "latency_ms": round((time.perf_counter() - start) * 1000, 1),
     }

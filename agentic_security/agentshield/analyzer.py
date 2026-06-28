@@ -203,49 +203,52 @@ def _narrate(signals: list[ThreatSignal], score: int, decision: str, attack_type
 
 
 def _attack_similarity_signal(text: str) -> ThreatSignal | None:
-    """Use the trained Security LLM's attack-question knowledge."""
+    """Keyword Jaccard overlap against known attack phrasings."""
     try:
-        from ..llm.engine import _attack_match_score, _question_match_score  # type: ignore
+        from ..llm.engine import _attack_match_score, _question_match_score, _keywords
         score = _attack_match_score(text)
     except Exception:
         return None
-    if score < 0.22:
-        return None
-    # Suppress signal if the input strongly matches a known benign question
-    # (educational security terms like "sql injection" or "prompt injection"
-    # have the same keywords as attack phrases after stopword removal).
+    # Short inputs (greetings, single words) need a much higher threshold to
+    # avoid false positives — "hi" / "hello" can Jaccard-match attack entries.
     try:
-        benign = _question_match_score(text)
-        if benign >= 0.40:
+        words = _keywords(text)
+        min_thresh = 0.55 if len(words) <= 2 else 0.40
+    except Exception:
+        min_thresh = 0.40
+    if score < min_thresh:
+        return None
+    # Suppress if the input strongly matches a known benign question
+    try:
+        if _question_match_score(text) >= 0.40:
             return None
     except Exception:
         pass
-    # Weight proportional to similarity so weak signals don't dominate
-    weight = min(0.95, 0.4 + score * 0.6)
+    weight = min(0.90, 0.4 + score * 0.55)
     return ThreatSignal(
         name="known_attack_pattern",
         confidence=min(1.0, score),
         weight=round(weight, 2),
-        explanation=f"Input matches known attack phrasings the Security LLM was trained to refuse (similarity {score:.0%}).",
+        explanation=f"Input matches known attack phrasings (similarity {score:.0%}).",
         layer="security-llm",
     )
 
 
 def _llm_refusal_signal(text: str) -> ThreatSignal | None:
-    """Run the Security LLM directly and check if it would refuse this request."""
+    """Ask the Qwen Security LLM judge if this request is a threat."""
     try:
-        from ..llm.engine import judge_message
-        verdict = judge_message(text)
+        from ..llm.qwen_judge import judge
+        verdict = judge(text)
     except Exception:
         return None
-    if verdict.get("safe"):
+    if verdict.get("safe") or verdict.get("skipped"):
         return None
     return ThreatSignal(
-        name=verdict.get("threat", "prompt_injection_llm"),
-        confidence=0.92,
+        name=verdict.get("threat", "security_threat"),
+        confidence=0.90,
         weight=1.0,
-        explanation=f"Security LLM refused this request. Model said: \"{(verdict.get('model_said') or '')[:200]}\"",
-        layer="security-llm",
+        explanation=f"Qwen Security LLM classified as: {verdict.get('threat', 'unknown')}",
+        layer="qwen-judge",
     )
 
 
