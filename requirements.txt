@@ -13,7 +13,7 @@ google-auth>=2.29
 torch>=2.0.0           # AgentShield Security LLM - CPU-only is sufficient
 numpy>=1.26           # tensor / data handling
 
-# ── Local Security LLM (Qwen2.5-0.5B, GGUF Q4, ~400MB RAM) ─────────────────
+# ── Local Security LLM (Qwen2.5-7B, GGUF Q4_K_M, ~4GB RAM, 48-CPU server) ──
 llama-cpp-python>=0.3.2   # CPU inference for local GGUF models
 huggingface_hub>=0.24     # downloads model file from HuggingFace on first boot
 

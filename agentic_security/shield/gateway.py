@@ -78,6 +78,7 @@ class VirtualKey:
     velocity_window_sec: int = 60                 # rolling window for spend velocity
     velocity_max_usd: float = 0.0                 # max spend in window (0 = disabled)
     velocity_spent: list[tuple] = field(default_factory=list) # [(ts, cost), ...]
+    allowed_ips: list[str] = field(default_factory=list)       # empty = all IPs allowed
 
     def public(self, reveal: bool = False) -> dict[str, Any]:
         shown = self.key if reveal else (self.key[:8] + "..." + self.key[-4:])
@@ -100,6 +101,7 @@ class VirtualKey:
             "velocity_window_sec": self.velocity_window_sec,
             "velocity_max_usd": self.velocity_max_usd,
             "is_expired": bool(self.expires_at and time.time() > self.expires_at),
+            "allowed_ips": self.allowed_ips,
         }
 
 
@@ -140,6 +142,7 @@ def _ensure_loaded(user: str) -> None:
             velocity_window_sec=row.get("velocity_window_sec") or 60,
             velocity_max_usd=row.get("velocity_max_usd") or 0.0,
             velocity_spent=row.get("velocity_spent") or [],
+            allowed_ips=row.get("allowed_ips") or [],
         )
         _user_keys[user][vk.key] = vk
     # Load upstream key
@@ -182,6 +185,7 @@ def _persist_key(user: str, vk: VirtualKey) -> None:
             "velocity_window_sec": vk.velocity_window_sec,
             "velocity_max_usd": vk.velocity_max_usd,
             "velocity_spent": vk.velocity_spent,
+            "allowed_ips": vk.allowed_ips,
         })
     except Exception:
         pass  # never let DB errors break a request
@@ -436,6 +440,40 @@ def _record_turn(session_id: str, user_text: str) -> str:
     return " |TURN| ".join(_CONV_STORE[session_id])
 
 
+# ── Replay attack detection ───────────────────────────────────────────────────
+# Same exact payload sent twice within 30s from the same key = flag as replay
+_REPLAY_STORE: dict[str, dict[str, float]] = {}  # key -> {payload_hash: ts}
+_REPLAY_WINDOW_SEC = 30
+
+
+def _is_replay(api_key: str, text: str) -> bool:
+    import hashlib
+    h = hashlib.sha256(text.strip().encode()).hexdigest()[:16]
+    now = time.time()
+    store = _REPLAY_STORE.setdefault(api_key, {})
+    # Prune expired entries
+    expired = [k for k, ts in store.items() if now - ts > _REPLAY_WINDOW_SEC]
+    for k in expired:
+        del store[k]
+    if h in store:
+        return True
+    store[h] = now
+    return False
+
+
+# ── Session anomaly: auto-suspend if >60% block rate after 10+ requests ──────
+
+def _check_anomaly_suspend(vk: VirtualKey) -> bool:
+    """Auto-suspend if >60% of recent requests were blocked (active attack)."""
+    if vk.request_count < 10:
+        return False
+    block_rate = vk.blocked_count / vk.request_count
+    if block_rate >= 0.60 and vk.enabled:
+        vk.enabled = False
+        return True
+    return False
+
+
 # ── Spend velocity guard ───────────────────────────────────────────────────────
 
 def _velocity_ok(vk: VirtualKey, cost: float) -> bool:
@@ -505,6 +543,7 @@ def gateway_chat(
     model: str = DEFAULT_MODEL,
     max_tokens: int = 512,
     source: str = "user",
+    client_ip: str | None = None,
 ) -> dict:
     """Screen, budget-check, and forward a chat request. Isolated to `user`."""
     ku = _keys(user)
@@ -523,6 +562,18 @@ def gateway_chat(
     if not _rate_ok(vk):
         return {"error": f"Rate limit exceeded ({vk.rate_limit_per_min}/min).",
                 "status": 429, "blocked": True, "key": vk.public()}
+
+    # ── Security check 0a: IP allowlist ──────────────────────────────────────
+    if vk.allowed_ips and client_ip:
+        if client_ip not in vk.allowed_ips:
+            vk.blocked_count += 1
+            _persist_key(user, vk)
+            _log_event(user, outcome="blocked", layer="ip-allowlist",
+                       key_name=vk.name, threat="unauthorized_ip",
+                       explanation=f"Request from {client_ip} not in allowlist.",
+                       risk_score=85, severity="high")
+            return {"error": f"IP {client_ip} is not in this key's allowlist.",
+                    "status": 403, "blocked": True, "key": vk.public()}
 
     # ── Security check 1: Key expiry ─────────────────────────────────────────
     if vk.expires_at and time.time() > vk.expires_at:
@@ -582,6 +633,32 @@ def gateway_chat(
     # multiple innocent-looking turns is caught by scanning the concatenation.
     session_id = f"{user}:{api_key}"
     multi_turn_ctx = _record_turn(session_id, user_text)
+
+    # ── Security check 4b: Replay attack detection ───────────────────────────
+    if _is_replay(api_key or "", user_text):
+        vk.blocked_count += 1
+        auto_suspended = _record_block(vk)
+        _check_anomaly_suspend(vk)
+        _persist_key(user, vk)
+        _log_event(user, outcome="blocked", layer="replay-detector",
+                   key_name=vk.name, threat="replay_attack",
+                   explanation="Identical payload seen twice within 30s.",
+                   risk_score=70, severity="high", auto_suspended=auto_suspended)
+        return {"blocked": True, "status": 200, "threat": "replay_attack",
+                "explanation": "AgentShield blocked a replay attack (identical payload repeated within 30s).",
+                "risk_score": 70, "severity": "high",
+                "message": "Blocked: replay attack detected.", "key": vk.public()}
+
+    # ── Security check 4c: Session anomaly auto-suspend ──────────────────────
+    if _check_anomaly_suspend(vk):
+        _persist_key(user, vk)
+        _log_event(user, outcome="blocked", layer="anomaly-detector",
+                   key_name=vk.name, threat="high_block_rate",
+                   explanation=f"Key auto-suspended: {vk.blocked_count}/{vk.request_count} requests blocked (>{60}%).",
+                   risk_score=90, severity="critical")
+        return {"blocked": True, "status": 403, "threat": "high_block_rate",
+                "explanation": "Key auto-suspended due to abnormally high attack rate (>60% of requests blocked).",
+                "message": "Key suspended: active attack pattern detected.", "key": vk.public()}
 
     # ── Layer 2: Full Security LLM analysis ───────────────────────────────────
     from ..agentshield import analyze_threat, record_action

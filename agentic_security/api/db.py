@@ -136,6 +136,7 @@ def connect() -> sqlite3.Connection:
         "ALTER TABLE virtual_keys ADD COLUMN velocity_window_sec INTEGER NOT NULL DEFAULT 60",  # spend velocity
         "ALTER TABLE virtual_keys ADD COLUMN velocity_max_usd REAL NOT NULL DEFAULT 0",         # spend velocity cap
         "ALTER TABLE virtual_keys ADD COLUMN velocity_spent TEXT NOT NULL DEFAULT '[]'",         # (ts, cost) pairs
+        "ALTER TABLE virtual_keys ADD COLUMN allowed_ips TEXT NOT NULL DEFAULT '[]'",            # IP allowlist
     ]:
         try:
             conn.execute(sql)
@@ -266,8 +267,9 @@ def vk_upsert(user_email: str, vk: dict) -> None:
         """INSERT INTO virtual_keys
            (key, user_email, name, budget_usd, spent_usd, rate_limit_per_min,
             enabled, request_count, blocked_count, cost_saved_usd, created_at, recent_blocks,
-            expires_at, allowed_models, allowed_hours, velocity_window_sec, velocity_max_usd, velocity_spent)
-           VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+            expires_at, allowed_models, allowed_hours, velocity_window_sec, velocity_max_usd,
+            velocity_spent, allowed_ips)
+           VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
            ON CONFLICT(key) DO UPDATE SET
              spent_usd=excluded.spent_usd,
              enabled=excluded.enabled,
@@ -280,7 +282,8 @@ def vk_upsert(user_email: str, vk: dict) -> None:
              allowed_hours=excluded.allowed_hours,
              velocity_window_sec=excluded.velocity_window_sec,
              velocity_max_usd=excluded.velocity_max_usd,
-             velocity_spent=excluded.velocity_spent""",
+             velocity_spent=excluded.velocity_spent,
+             allowed_ips=excluded.allowed_ips""",
         (vk["key"], user_email, vk["name"], vk["budget_usd"], vk["spent_usd"],
          vk["rate_limit_per_min"], 1 if vk["enabled"] else 0,
          vk["request_count"], vk["blocked_count"], vk["cost_saved_usd"],
@@ -288,7 +291,8 @@ def vk_upsert(user_email: str, vk: dict) -> None:
          vk.get("expires_at"), json.dumps(vk.get("allowed_models", [])),
          json.dumps(vk.get("allowed_hours", [])),
          vk.get("velocity_window_sec", 60), vk.get("velocity_max_usd", 0),
-         json.dumps(vk.get("velocity_spent", []))),
+         json.dumps(vk.get("velocity_spent", [])),
+         json.dumps(vk.get("allowed_ips", []))),
     )
     get().commit()
 
@@ -305,6 +309,7 @@ def vk_list(user_email: str) -> list[dict]:
         d["allowed_models"]  = json.loads(d.get("allowed_models")  or "[]")
         d["allowed_hours"]   = json.loads(d.get("allowed_hours")   or "[]")
         d["velocity_spent"]  = json.loads(d.get("velocity_spent")  or "[]")
+        d["allowed_ips"]     = json.loads(d.get("allowed_ips")     or "[]")
         d["enabled"] = bool(d["enabled"])
         out.append(d)
     return out
