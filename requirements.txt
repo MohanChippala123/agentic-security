@@ -1,7 +1,5 @@
 # CPU-only PyTorch (avoids 2GB CUDA bloat on Railway)
 --extra-index-url https://download.pytorch.org/whl/cpu
-# Pre-built llama-cpp-python CPU wheels (avoids C++ compile on Railway)
---extra-index-url https://abetlen.github.io/llama-cpp-python/whl/cpu
 
 # Core runtime
 cryptography>=42.0    # Fernet AES-128-GCM for upstream key encryption
@@ -10,11 +8,12 @@ fastapi>=0.110
 uvicorn[standard]>=0.27
 pydantic>=2.6
 google-auth>=2.29
-torch>=2.0.0           # AgentShield Security LLM - CPU-only is sufficient
+torch==2.2.2+cpu      # CPU-only build — avoids 2GB CUDA download
 numpy>=1.26           # tensor / data handling
 
 # ── Local Security LLM (Qwen2.5-7B, GGUF Q4_K_M, ~4GB RAM, 48-CPU server) ──
-llama-cpp-python>=0.3.2   # CPU inference for local GGUF models
+# llama-cpp-python is installed in the Dockerfile with CPU-only CMAKE flags
+# to avoid CUDA/Metal compile errors — do NOT add it here
 huggingface_hub>=0.24     # downloads model file from HuggingFace on first boot
 
 # ── Hybrid Firewall Layer ────────────────────────────────────────────────────
