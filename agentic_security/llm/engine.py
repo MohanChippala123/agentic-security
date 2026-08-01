@@ -551,7 +551,7 @@ def chat(
         else:
             output = (
                 "I'm AgentShield LLM, focused on security and coding help. I don't know that "
-                "one - try asking about prompt injection, securing your AI app, PII, "
+                "one - try asking about something educational, securing your AI app, PII, "
                 "encryption, or a small coding question."
             )
     else:
